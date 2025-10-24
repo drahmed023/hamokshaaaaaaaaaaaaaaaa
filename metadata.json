@@ -1,0 +1,5 @@
+{
+  "name": "Study Spark AI",
+  "description": "An AI-powered application to generate exams, create study aids like flashcards and mind maps, and organize your study schedule with a calendar and tasks.",
+  "requestFramePermissions": []
+}

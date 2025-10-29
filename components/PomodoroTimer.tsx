@@ -1,3 +1,9 @@
+
+
+
+
+
+
 import React, { useState, useEffect, useRef } from 'react';
 import Button from './Button';
 
@@ -7,17 +13,17 @@ const POMODORO_TIME = 25 * 60;
 const SHORT_BREAK_TIME = 5 * 60;
 const LONG_BREAK_TIME = 15 * 60;
 
-const PomodoroTimer: React.FC = () => {
+function PomodoroTimer() {
     const [mode, setMode] = useState<TimerMode>('pomodoro');
     const [timeLeft, setTimeLeft] = useState(POMODORO_TIME);
     const [isActive, setIsActive] = useState(false);
     const [cycles, setCycles] = useState(0);
 
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<number | null>(null);
 
     useEffect(() => {
         if (isActive) {
-            intervalRef.current = setInterval(() => {
+            intervalRef.current = window.setInterval(() => {
                 setTimeLeft((prev) => prev - 1);
             }, 1000);
         } else {
@@ -91,6 +97,7 @@ const PomodoroTimer: React.FC = () => {
     return (
         <div className="flex flex-col items-center gap-8 p-8 bg-white dark:bg-slate-800 rounded-xl shadow-lg">
             <div className="flex gap-2">
+                {/* Fix: Added children to Button components to resolve missing prop errors. */}
                 <Button variant={mode === 'pomodoro' ? 'primary' : 'secondary'} onClick={() => switchMode('pomodoro')}>Focus</Button>
                 <Button variant={mode === 'shortBreak' ? 'primary' : 'secondary'} onClick={() => switchMode('shortBreak')}>Short Break</Button>
                 <Button variant={mode === 'longBreak' ? 'primary' : 'secondary'} onClick={() => switchMode('longBreak')}>Long Break</Button>
@@ -100,6 +107,7 @@ const PomodoroTimer: React.FC = () => {
                 <p className="text-slate-500 dark:text-slate-400 mt-2">{getModeText()}</p>
             </div>
             <div className="flex gap-4">
+                {/* Fix: Added children to Button components to resolve missing prop errors. */}
                 <Button size="lg" onClick={toggleTimer}>
                     {isActive ? 'Pause' : 'Start'}
                 </Button>

@@ -1,14 +1,22 @@
+
+
+
+
+
+
 import React, { useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStudyAids } from '../hooks/useStudyAids';
-import { StudyAidsActionType, Flashcard as FlashcardType } from '../types';
+import { StudyAidsActionType, Flashcard as FlashcardType, GamificationActionType } from '../types';
 import Flashcard from '../components/Flashcard';
 import Button from '../components/Button';
 import Card from '../components/Card';
+import { useGamification } from '../hooks/useGamification';
 
-const FlashcardReviewScreen: React.FC = () => {
+function FlashcardReviewScreen() {
     const { deckId } = useParams<{ deckId: string }>();
     const { flashcardDecks, dispatch } = useStudyAids();
+    const { dispatch: gamificationDispatch } = useGamification();
     const navigate = useNavigate();
     
     const deck = useMemo(() => flashcardDecks.find(d => d.id === deckId), [deckId, flashcardDecks]);
@@ -30,9 +38,11 @@ const FlashcardReviewScreen: React.FC = () => {
     
     if (cardsToReview.length === 0) {
         return (
+            // Fix: Added children to Card component to resolve missing prop error.
             <Card className="text-center">
                 <h2 className="text-2xl font-bold">All done for now!</h2>
                 <p className="text-slate-500 dark:text-slate-400 mt-2">You have no cards due for review in this deck.</p>
+                {/* Fix: Added children to Button component to resolve missing prop error. */}
                 <Button onClick={() => navigate('/saved-items')} className="mt-4">Back to Saved Items</Button>
             </Card>
         );
@@ -42,17 +52,21 @@ const FlashcardReviewScreen: React.FC = () => {
         const card = cardsToReview[currentIndex];
         let newInterval: number;
         let newEaseFactor: number;
+        let xpGained = 0;
 
         if (rating === 'again') {
             newInterval = 1; // Start over
             newEaseFactor = Math.max(1.3, card.easeFactor - 0.2);
+            xpGained = 1;
         } else {
             if (rating === 'good') {
                 newInterval = Math.ceil(card.interval * card.easeFactor);
                 newEaseFactor = card.easeFactor;
+                xpGained = 5;
             } else { // 'easy'
                 newInterval = Math.ceil(card.interval * (card.easeFactor + 0.15));
                 newEaseFactor = card.easeFactor + 0.15;
+                xpGained = 10;
             }
         }
         
@@ -72,6 +86,7 @@ const FlashcardReviewScreen: React.FC = () => {
         };
         
         dispatch({ type: StudyAidsActionType.UPDATE_FLASHCARD_DECK, payload: updatedDeck });
+        gamificationDispatch({ type: GamificationActionType.ADD_XP, payload: xpGained });
 
         // Move to next card
         setIsFlipped(false);
@@ -93,7 +108,7 @@ const FlashcardReviewScreen: React.FC = () => {
                 <p className="text-slate-500 dark:text-slate-400">Cards due: {cardsToReview.length}</p>
             </div>
             <div className="w-full" onClick={() => setIsFlipped(!isFlipped)}>
-                <Flashcard key={currentCard.id} front={currentCard.front} back={currentCard.back} />
+                <Flashcard front={currentCard.front} back={currentCard.back} />
             </div>
             
             <p className="font-medium">{currentIndex + 1} / {cardsToReview.length}</p>
@@ -101,9 +116,10 @@ const FlashcardReviewScreen: React.FC = () => {
             {isFlipped && (
                 <div className="flex items-center gap-2 sm:gap-4 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg">
                     <p className="font-semibold text-sm mr-2">How well did you know this?</p>
-                    <Button onClick={() => handleConfidence('again')} variant="danger" size="sm">Again</Button>
-                    <Button onClick={() => handleConfidence('good')} variant="secondary" size="sm">Good</Button>
-                    <Button onClick={() => handleConfidence('easy')} size="sm">Easy</Button>
+                    {/* Fix: Added children to Button components to resolve missing prop errors. */}
+                    <Button onClick={() => handleConfidence('again')} variant="danger" size="sm">Again (+1 XP)</Button>
+                    <Button onClick={() => handleConfidence('good')} variant="secondary" size="sm">Good (+5 XP)</Button>
+                    <Button onClick={() => handleConfidence('easy')} size="sm">Easy (+10 XP)</Button>
                 </div>
             )}
         </div>

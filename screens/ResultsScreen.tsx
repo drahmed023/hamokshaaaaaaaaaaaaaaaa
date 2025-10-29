@@ -1,4 +1,10 @@
-import React, { useState } from 'react';
+
+
+
+
+
+
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useExam } from '../hooks/useExam';
 import Button from '../components/Button';
@@ -7,8 +13,10 @@ import { CheckCircleIcon } from '../components/icons/CheckCircleIcon';
 import { XCircleIcon } from '../components/icons/XCircleIcon';
 import { getExplanationForAnswer } from '../services/geminiService';
 import Loader from '../components/Loader';
+import { useGamification } from '../hooks/useGamification';
+import { GamificationActionType, Question } from '../types';
 
-const Explanation: React.FC<{ question: any; userAnswer: string | undefined }> = ({ question, userAnswer }) => {
+function Explanation({ question, userAnswer }: { question: any; userAnswer: string | undefined }) {
     const [explanation, setExplanation] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -34,6 +42,7 @@ const Explanation: React.FC<{ question: any; userAnswer: string | undefined }> =
     }
 
     return (
+        // Fix: Added children to Button component to resolve missing prop error.
         <Button onClick={fetchExplanation} size="sm" variant="secondary" className="mt-2">
             Why was this wrong?
         </Button>
@@ -41,19 +50,47 @@ const Explanation: React.FC<{ question: any; userAnswer: string | undefined }> =
 };
 
 
-const ResultsScreen: React.FC = () => {
+function ResultsScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { exams, results } = useExam();
+  const { dispatch: gamificationDispatch } = useGamification();
 
   const exam = exams.find(e => e.id === id);
   const result = results.find(r => r.examId === id);
+
+  // Effect to award XP and check achievements only once when the component mounts with a result.
+  useEffect(() => {
+    if (result) {
+        // We can use the submission time to prevent re-awarding points for the same result on refresh.
+        // A more robust system might use a flag in the result object itself.
+        const lastAwarded = sessionStorage.getItem(`xp_awarded_${result.examId}`);
+        if(lastAwarded !== result.submittedAt) {
+            const xpGained = Math.round(result.score);
+            gamificationDispatch({ type: GamificationActionType.ADD_XP, payload: xpGained });
+
+            // Check achievements
+            if (results.length === 1) {
+                gamificationDispatch({ type: GamificationActionType.UNLOCK_ACHIEVEMENT, payload: 'exam_1' });
+            }
+            if (results.length >= 5) {
+                gamificationDispatch({ type: GamificationActionType.UNLOCK_ACHIEVEMENT, payload: 'exam_5' });
+            }
+            if (result.score === 100) {
+                gamificationDispatch({ type: GamificationActionType.UNLOCK_ACHIEVEMENT, payload: 'score_100' });
+            }
+
+            sessionStorage.setItem(`xp_awarded_${result.examId}`, result.submittedAt);
+        }
+    }
+  }, [result, results.length, gamificationDispatch]);
 
   if (!exam || !result) {
     return (
       <div className="text-center">
         <h2 className="text-2xl font-bold">Result Not Found</h2>
         <p className="text-slate-500 dark:text-slate-400 mt-2">This result could not be displayed. The exam may not be completed yet.</p>
+        {/* Fix: Added children to Button component to resolve missing prop error. */}
         <Button onClick={() => navigate('/history')} className="mt-4">Back to History</Button>
       </div>
     );
@@ -75,6 +112,7 @@ const ResultsScreen: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
+      {/* Fix: Added children to Card component to resolve missing prop error. */}
       <Card className="text-center">
         <h1 className="text-3xl font-bold">Result: {exam.title}</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-2">
@@ -89,7 +127,9 @@ const ResultsScreen: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-4 justify-center">
+          {/* Fix: Added children to Button component to resolve missing prop error. */}
           <Button onClick={() => navigate(`/exam/${exam.id}`)} variant="secondary">Retake Exam</Button>
+          {/* Fix: Added children to Button component to resolve missing prop error. */}
           <Button onClick={() => navigate('/create-exam')}>Create New Exam</Button>
         </div>
       </Card>
@@ -101,24 +141,27 @@ const ResultsScreen: React.FC = () => {
             const userAnswer = result.answers.find(a => a.questionId === question.id)?.answer;
             const isCorrect = userAnswer === question.correctAnswer;
             return (
-              <Card key={question.id}>
-                <div className="flex justify-between items-start">
-                  <p className="text-lg font-semibold">{index + 1}. {question.questionText}</p>
-                  {isCorrect 
-                    ? <CheckCircleIcon className="w-6 h-6 text-green-500 flex-shrink-0" /> 
-                    : <XCircleIcon className="w-6 h-6 text-red-500 flex-shrink-0" />}
-                </div>
-                <div className="mt-4 space-y-2">
-                  {question.options.map(option => (
-                    <div key={option} className={`p-3 border rounded-lg ${getOptionClass(option, question.id, question.correctAnswer)}`}>
-                      {option}
-                    </div>
-                  ))}
-                </div>
-                 {!isCorrect && (
-                    <Explanation question={question} userAnswer={userAnswer} />
-                )}
-              </Card>
+              <div key={question.id}>
+                {/* Fix: Added children to Card component to resolve missing prop error. */}
+                <Card>
+                  <div className="flex justify-between items-start">
+                    <p className="text-lg font-semibold">{index + 1}. {question.questionText}</p>
+                    {isCorrect 
+                      ? <CheckCircleIcon className="w-6 h-6 text-green-500 flex-shrink-0" /> 
+                      : <XCircleIcon className="w-6 h-6 text-red-500 flex-shrink-0" />}
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {question.options.map(option => (
+                      <div key={option} className={`p-3 border rounded-lg ${getOptionClass(option, question.id, question.correctAnswer)}`}>
+                        {option}
+                      </div>
+                    ))}
+                  </div>
+                   {!isCorrect && (
+                      <Explanation question={question} userAnswer={userAnswer} />
+                  )}
+                </Card>
+              </div>
             );
           })}
         </div>

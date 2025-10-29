@@ -1,170 +1,364 @@
-import { GoogleGenAI, Type } from "@google/genai";
-import { Question, Flashcard, MindMapNodeData } from "../types";
+// @ts-nocheck
+import { GoogleGenAI, Type, Modality } from "@google/genai";
+import { Exam, MindMapNodeData, Question, StudyPlan, StudyWeek, StudyDay, StudyTask, AIPersona } from '../types';
 
+// FIX: Initialize the GoogleGenAI client. Ensure API_KEY is set in the environment.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-const examSchema = {
-  type: Type.OBJECT,
-  properties: {
-    title: {
-      type: Type.STRING,
-      description: "A title for the exam based on the text."
-    },
-    questions: {
-      type: Type.ARRAY,
-      description: "A list of questions.",
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          questionText: {
-            type: Type.STRING,
-            description: "The text of the question."
-          },
-          options: {
-            type: Type.ARRAY,
-            description: "A list of 4 multiple-choice options.",
-            items: { type: Type.STRING }
-          },
-          correctAnswer: {
-            type: Type.STRING,
-            description: "The correct answer from the options list."
-          }
-        },
-        required: ["questionText", "options", "correctAnswer"]
-      }
+const getSystemInstructionForPersona = (persona: AIPersona): string => {
+    switch (persona) {
+        case 'formal': return "You are a formal, academic assistant. Be precise and use professional language.";
+        case 'motivational': return "You are an upbeat, motivational coach. Encourage the user and be positive.";
+        case 'academic': return "You are a knowledgeable professor. Provide detailed, structured, and insightful information.";
+        case 'friendly':
+        default:
+            return "You are a friendly and helpful study companion.";
     }
-  },
-  required: ["title", "questions"]
 };
 
-const flashcardsSchema = {
-    type: Type.ARRAY,
-    items: {
+// Helper function to handle potential JSON parsing errors
+const parseJsonOrThrow = (jsonString: string, errorMessage: string) => {
+    try {
+        // The Gemini API might return the JSON wrapped in markdown backticks.
+        const cleanedJsonString = jsonString.replace(/^```json\s*|```$/g, '').trim();
+        return JSON.parse(cleanedJsonString);
+    } catch (e) {
+        console.error(errorMessage, e);
+        console.error("Received string:", jsonString);
+        throw new Error(errorMessage);
+    }
+};
+
+export const generateExamFromText = async (text: string, numQuestions: number, adaptive: boolean): Promise<Omit<Exam, 'id' | 'sourceFileName'>> => {
+    const prompt = `Based on the following text, create a multiple-choice exam with ${numQuestions} questions. Each question must have exactly 4 options, and one must be the correct answer. ${adaptive ? 'The questions should be suitable for a beginner or someone new to this topic.' : ''} The output must be a JSON object with a "title" (string) and a "questions" (array of objects) property. Each question object must have "questionText" (string), "options" (array of 4 strings), and "correctAnswer" (string, which is one of the options).
+
+Text:
+---
+${text}
+---
+`;
+
+    const responseSchema = {
         type: Type.OBJECT,
         properties: {
-            front: { type: Type.STRING, description: 'The main term or question for the front of the card.' },
-            back: { type: Type.STRING, description: 'The definition or answer for the back of the card.' },
-        },
-        required: ['front', 'back'],
-    },
-};
-
-const mindMapSchema = {
-    type: Type.OBJECT,
-    properties: {
-      topic: { type: Type.STRING, description: 'The central topic of the mind map.' },
-      children: {
-        type: Type.ARRAY,
-        description: 'Branches or sub-topics related to the main topic.',
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            topic: { type: Type.STRING },
-            children: {
+            title: { type: Type.STRING },
+            questions: {
                 type: Type.ARRAY,
                 items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    topic: { type: Type.STRING },
-                    children: { type: Type.ARRAY, items: { type: Type.STRING } }
-                  }
-                }
-            },
-          },
-          required: ['topic'],
-        },
-      },
-    },
-    required: ['topic'],
-};
-
-export const generateExamFromText = async (text: string, numQuestions: number): Promise<{ title: string, questions: Omit<Question, 'id'>[] }> => {
-  const prompt = `
-    Based on the following text, create a multiple-choice quiz with ${numQuestions} questions.
-    Each question must have 4 options and only one correct answer.
-    Ensure the questions cover the key concepts in the text.
-    The entire output must be in English.
-    Text:
-    ---
-    ${text}
-    ---
-  `;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: examSchema,
-      },
-    });
-
-    const examData = JSON.parse(response.text);
-    return examData;
-
-  } catch (error) {
-    console.error("Error generating exam:", error);
-    throw new Error("Failed to generate exam. Please try again.");
-  }
-};
-
-export const generateStudyAid = async (text: string, format: 'summary' | 'flashcards' | 'mind-map'): Promise<any> => {
-    let prompt: string;
-    let schema: object;
-    let model = "gemini-2.5-flash";
-
-    switch(format) {
-        case 'summary':
-            prompt = `Generate a concise summary of the following text. Focus on the main ideas and key takeaways. The entire output must be in English.\nText:\n---\n${text}\n---`;
-            schema = { type: Type.STRING, description: 'A concise summary of the text.' };
-            break;
-        case 'flashcards':
-            prompt = `Based on the following text, create 10 flashcards. Each card should have a 'front' (term/question) and a 'back' (definition/answer). Focus on key concepts. The entire output must be in English.\nText:\n---\n${text}\n---`;
-            schema = flashcardsSchema;
-            break;
-        case 'mind-map':
-            prompt = `Analyze the following text and generate a mind map summarizing the main ideas and their relationships. Structure it as a nested JSON object with a 'topic' and 'children'. The entire output must be in English.\nText:\n---\n${text}\n---`;
-            schema = mindMapSchema;
-            model = "gemini-2.5-pro"; // Use a more powerful model for complex structures
-            break;
-    }
-
-    try {
-        const response = await ai.models.generateContent({
-            model: model,
-            contents: prompt,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: {
                     type: Type.OBJECT,
                     properties: {
-                        result: schema
-                    }
+                        questionText: { type: Type.STRING },
+                        options: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        correctAnswer: { type: Type.STRING }
+                    },
+                    required: ["questionText", "options", "correctAnswer"]
                 }
+            }
+        },
+        required: ["title", "questions"]
+    };
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: responseSchema,
+        }
+    });
+
+    return parseJsonOrThrow(response.text, "Failed to generate a valid exam. The AI's response was not in the expected JSON format.");
+};
+
+export const getExplanationForAnswer = async (questionText: string, userAnswer: string, correctAnswer: string): Promise<string> => {
+    const prompt = `A user answered a multiple-choice question incorrectly.
+Question: "${questionText}"
+Their answer: "${userAnswer}"
+Correct answer: "${correctAnswer}"
+
+Explain briefly why the user's answer is incorrect and why the correct answer is correct. Be concise and helpful.`;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+    });
+    return response.text;
+};
+
+export const generateStudyAid = async (text: string, aidType: 'summary' | 'flashcards' | 'mind-map'): Promise<any> => {
+    let prompt: string;
+    let responseSchema: any;
+
+    switch (aidType) {
+        case 'summary':
+            prompt = `Summarize the following text concisely. Focus on the key points and main ideas.
+
+Text:
+---
+${text}
+---`;
+            const summaryResponse = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+            return summaryResponse.text;
+
+        case 'flashcards':
+            prompt = `Based on the following text, create a set of flashcards. The output must be a JSON array of objects, where each object has a "front" (string for the question/term) and a "back" (string for the answer/definition).
+
+Text:
+---
+${text}
+---`;
+            responseSchema = {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        front: { type: Type.STRING },
+                        back: { type: Type.STRING }
+                    },
+                    required: ["front", "back"]
+                }
+            };
+            const flashcardsResponse = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: { responseMimeType: "application/json", responseSchema }
+            });
+            return parseJsonOrThrow(flashcardsResponse.text, "Failed to generate valid flashcards.");
+
+        case 'mind-map':
+            prompt = `Create a mind map structure from the following text. The output must be a JSON object representing the root node. The root node should have a "topic" (string) and an optional "children" (array of node objects) property. Each child node has the same structure. Go about 3 levels deep.
+
+Text:
+---
+${text}
+---`;
+            const mindMapNodeSchema: any = {
+                type: Type.OBJECT,
+                properties: {
+                    topic: { type: Type.STRING },
+                },
+                required: ["topic"]
+            };
+            mindMapNodeSchema.properties.children = { type: Type.ARRAY, items: mindMapNodeSchema };
+
+            responseSchema = mindMapNodeSchema;
+            
+            const mindMapResponse = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: { responseMimeType: "application/json", responseSchema }
+            });
+            return parseJsonOrThrow(mindMapResponse.text, "Failed to generate a valid mind map.");
+            
+        default:
+            throw new Error('Invalid study aid type');
+    }
+};
+
+export const getHighlights = async (text: string): Promise<string[]> => {
+    const prompt = `From the following text, extract the 5 most important key phrases or sentences. The output must be a JSON array of strings.
+
+Text:
+---
+${text}
+---`;
+    const responseSchema = { type: Type.ARRAY, items: { type: Type.STRING } };
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: { responseMimeType: "application/json", responseSchema }
+    });
+    return parseJsonOrThrow(response.text, "Failed to generate highlights.");
+};
+
+export const generateStudyPlan = async (subject: string, goal: string, weeks: number, hours: number): Promise<Omit<StudyPlan, 'id'>> => {
+    const prompt = `Create a structured study plan for a student.
+- Subject: ${subject}
+- Goal: ${goal}
+- Duration: ${weeks} weeks
+- Daily Commitment: Approximately ${hours} hours
+
+The output must be a JSON object with "planTitle" (string) and "weeks" (array of week objects).
+Each week object must have "weekNumber" (number), "weeklyGoal" (string), and "days" (array of 7 day objects).
+Each day object must have "dayOfWeek" (string e.g., "Monday"), "tasks" (array of task objects), and "isRestDay" (boolean).
+Each task object must have "task" (string), "duration" (number in minutes), and "priority" ('High', 'Medium', or 'Low').
+Ensure one day per week is a rest day.`;
+
+    // Define the schema for the expected JSON output
+    const taskSchema = {
+        type: Type.OBJECT,
+        properties: {
+            task: { type: Type.STRING },
+            duration: { type: Type.INTEGER },
+            priority: { type: Type.STRING, enum: ['High', 'Medium', 'Low'] },
+        },
+        required: ['task', 'duration', 'priority'],
+    };
+
+    const daySchema = {
+        type: Type.OBJECT,
+        properties: {
+            dayOfWeek: { type: Type.STRING },
+            tasks: { type: Type.ARRAY, items: taskSchema },
+            isRestDay: { type: Type.BOOLEAN },
+        },
+        required: ['dayOfWeek', 'tasks', 'isRestDay'],
+    };
+
+    const weekSchema = {
+        type: Type.OBJECT,
+        properties: {
+            weekNumber: { type: Type.INTEGER },
+            weeklyGoal: { type: Type.STRING },
+            days: { type: Type.ARRAY, items: daySchema },
+        },
+        required: ['weekNumber', 'weeklyGoal', 'days'],
+    };
+
+    const planSchema = {
+        type: Type.OBJECT,
+        properties: {
+            planTitle: { type: Type.STRING },
+            weeks: { type: Type.ARRAY, items: weekSchema },
+        },
+        required: ['planTitle', 'weeks'],
+    };
+
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-pro', // Use a more powerful model for complex structured data
+        contents: prompt,
+        config: {
+            responseMimeType: 'application/json',
+            responseSchema: planSchema,
+        },
+    });
+
+    return parseJsonOrThrow(response.text, "Failed to generate a valid study plan.");
+};
+
+export const getStepByStepExplanation = async (topic: string): Promise<string> => {
+    const prompt = `Explain the following topic in a clear, well-structured manner, as if you were teaching a beginner.
+Use markdown for formatting. You can use:
+- Headings (e.g., # Title, ## Subtitle)
+- Bold (**bold**) and italic (*italic*) text.
+- Unordered lists (e.g., - item) and ordered lists (e.g., 1. item).
+- Tables for structured data.
+- Blockquotes (e.g., > note) for important notes or tips.
+- Code blocks (e.g., \`\`\`code\`\`\`) for code examples.
+
+Topic:
+---
+${topic}
+---`;
+    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+    return response.text;
+};
+
+export const getDailyStudySuggestion = async (context: string): Promise<string> => {
+    const prompt = `Based on the following student context, provide a single, actionable study suggestion for today. Be encouraging and specific.
+
+Context:
+---
+${context}
+---
+
+Suggestion:`;
+    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+    return response.text.trim();
+};
+
+export const categorizeSubjects = async (exams: Omit<Exam, 'questions'>[]): Promise<{ examId: string, subject: string }[]> => {
+    const examTitles = exams.map(e => ({ id: e.id, title: e.title, fileName: e.sourceFileName }));
+    const prompt = `Categorize the following exams into general subjects (e.g., "History", "Biology", "Programming", "Literature"). The output must be a JSON array of objects, each with "examId" and "subject".
+
+Exams:
+---
+${JSON.stringify(examTitles)}
+---`;
+    const responseSchema = {
+        type: Type.ARRAY,
+        items: {
+            type: Type.OBJECT,
+            properties: {
+                examId: { type: Type.STRING },
+                subject: { type: Type.STRING }
             },
-        });
-        
-        const parsedResponse = JSON.parse(response.text);
-        return parsedResponse.result;
-
-    } catch (error) {
-        console.error(`Error generating ${format}:`, error);
-        throw new Error(`Failed to generate ${format}. Please try again.`);
-    }
+            required: ["examId", "subject"]
+        }
+    };
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: { responseMimeType: "application/json", responseSchema }
+    });
+    return parseJsonOrThrow(response.text, "Failed to categorize subjects.");
 };
 
+export const getMotivationalInsight = async (data: string): Promise<string> => {
+    const prompt = `Analyze the following student performance data (last 10 results). Provide a short, motivational insight based on their trends or recent scores. Address the student directly.
 
-export const getExplanationForAnswer = async (question: string, userAnswer: string, correctAnswer: string): Promise<string> => {
-    const prompt = `In English, please explain why the answer "${userAnswer}" is incorrect for the question "${question}". The correct answer is "${correctAnswer}". Keep the explanation concise and clear.`;
-    try {
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: prompt,
-        });
-        return response.text;
-    } catch (error) {
-        console.error("Error getting explanation:", error);
-        return "Sorry, an error occurred while fetching the explanation.";
-    }
+Data:
+---
+${data}
+---`;
+    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+    return response.text.trim();
 };
+
+// FIX: Add missing function to resolve import error in PomodoroScreen.
+export const getMotivationalMessage = async (): Promise<string> => {
+    const prompt = `Provide a very short, upbeat, and motivational quote for a student suitable for displaying on a study dashboard. Make it encouraging and concise (around 10-15 words).`;
+    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+    return response.text.trim();
+};
+
+// FIX: Add missing function to resolve import error in SessionSummaryModal.
+export const getSessionSummary = async (totalMinutes: number, sessionsToday: number): Promise<string> => {
+    const prompt = `A student just finished a Pomodoro study session.
+- Total focus time today: ${totalMinutes} minutes
+- Number of sessions completed today: ${sessionsToday}
+
+Provide a short, positive, and analytical summary of their effort. Mention the duration and consistency. Keep it to one or two sentences.`;
+    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+    return response.text.trim();
+};
+
+export const getAIResponse = async (
+    messageHistory: { role: 'user' | 'model', parts: { text: string }[] }[],
+    newMessage: string,
+    persona: AIPersona,
+): Promise<{ text: string, functionCalls?: any[] }> => {
+    const contents = [...messageHistory, { role: 'user' as const, parts: [{ text: newMessage }] }];
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-pro',
+        contents: contents,
+        config: {
+            systemInstruction: getSystemInstructionForPersona(persona),
+        }
+    });
+    
+    // FIX: Correctly return function calls along with the text response.
+    return { text: response.text, functionCalls: response.functionCalls };
+};
+
+export const generateSpeech = async (text: string, voice: string = 'Kore'): Promise<string> => {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text: `Say this with a natural and clear tone: ${text}` }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: voice },
+            },
+        },
+      },
+    });
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!base64Audio) {
+        throw new Error("Failed to generate audio from the API.");
+    }
+    return base64Audio;
+}

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useExam } from '../hooks/useExam';
-import { ActionType, Exam } from '../types';
+// FIX: Updated to use renamed ExamActionType to avoid type conflicts.
+import { ExamActionType, Exam } from '../types';
 import { generateExamFromText } from '../services/geminiService';
 import { parseFileToText } from '../utils/fileParser';
 import Button from '../components/Button';
@@ -9,27 +10,43 @@ import Card from '../components/Card';
 import Loader from '../components/Loader';
 import { FileTextIcon } from '../components/icons/FileTextIcon';
 import { SparklesIcon } from '../components/icons/SparklesIcon';
+import { useSmartSettings } from '../hooks/useSmartSettings';
 
-const CreateExamScreen: React.FC = () => {
+function CreateExamScreen() {
   const [text, setText] = useState('');
   const [numQuestions, setNumQuestions] = useState(5);
   const [fileName, setFileName] = useState('');
   const { loading, error, dispatch } = useExam();
+  const { adaptiveLearning } = useSmartSettings();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.content) {
+      setText(location.state.content);
+      setFileName(location.state.fileName || '');
+      // Clear the state to prevent re-populating on refresh
+      navigate('.', { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setFileName(file.name);
-      dispatch({ type: ActionType.SET_LOADING, payload: true });
-      dispatch({ type: ActionType.SET_ERROR, payload: null });
+      // FIX: Using ExamActionType for correct type.
+      dispatch({ type: ExamActionType.SET_LOADING, payload: true });
+      // FIX: Using ExamActionType for correct type.
+      dispatch({ type: ExamActionType.SET_ERROR, payload: null });
       try {
         const content = await parseFileToText(file);
         setText(content);
       } catch (err: any) {
-        dispatch({ type: ActionType.SET_ERROR, payload: err.message });
+        // FIX: Using ExamActionType for correct type.
+        dispatch({ type: ExamActionType.SET_ERROR, payload: err.message });
       } finally {
-        dispatch({ type: ActionType.SET_LOADING, payload: false });
+        // FIX: Using ExamActionType for correct type.
+        dispatch({ type: ExamActionType.SET_LOADING, payload: false });
       }
     }
   };
@@ -37,25 +54,31 @@ const CreateExamScreen: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim()) {
-      dispatch({ type: ActionType.SET_ERROR, payload: 'Please enter text or upload a file.' });
+      // FIX: Using ExamActionType for correct type.
+      dispatch({ type: ExamActionType.SET_ERROR, payload: 'Please enter text or upload a file.' });
       return;
     }
-    dispatch({ type: ActionType.SET_LOADING, payload: true });
-    dispatch({ type: ActionType.SET_ERROR, payload: null });
+    // FIX: Using ExamActionType for correct type.
+    dispatch({ type: ExamActionType.SET_LOADING, payload: true });
+    // FIX: Using ExamActionType for correct type.
+    dispatch({ type: ExamActionType.SET_ERROR, payload: null });
     try {
-      const examData = await generateExamFromText(text, numQuestions);
+      const examData = await generateExamFromText(text, numQuestions, adaptiveLearning);
       const newExam: Exam = {
         ...examData,
         id: Date.now().toString(),
         questions: examData.questions.map((q, index) => ({...q, id: `${Date.now()}-${index}`})),
         sourceFileName: fileName,
       };
-      dispatch({ type: ActionType.ADD_EXAM, payload: newExam });
+      // FIX: Using ExamActionType for correct type.
+      dispatch({ type: ExamActionType.ADD_EXAM, payload: newExam });
       navigate(`/exam/${newExam.id}`);
     } catch (err: any)      {
-      dispatch({ type: ActionType.SET_ERROR, payload: err.message });
+      // FIX: Using ExamActionType for correct type.
+      dispatch({ type: ExamActionType.SET_ERROR, payload: err.message });
     } finally {
-      dispatch({ type: ActionType.SET_LOADING, payload: false });
+      // FIX: Using ExamActionType for correct type.
+      dispatch({ type: ExamActionType.SET_LOADING, payload: false });
     }
   };
 
@@ -66,6 +89,7 @@ const CreateExamScreen: React.FC = () => {
         <p className="text-slate-500 dark:text-slate-400 mt-1">Enter text or upload a file to generate your exam with AI.</p>
       </div>
 
+      {/* Fix: Added children to Card component to resolve missing prop error. */}
       <Card>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -75,8 +99,8 @@ const CreateExamScreen: React.FC = () => {
             <textarea
               id="text-input"
               rows={10}
-              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-slate-400"
-              placeholder="Paste your content here..."
+              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-slate-400"
+              placeholder="Paste your content here or select a file..."
               value={text}
               onChange={(e) => setText(e.target.value)}
               disabled={loading}
@@ -88,10 +112,10 @@ const CreateExamScreen: React.FC = () => {
           <div>
             <label htmlFor="file-upload" className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50">
               <FileTextIcon className="w-5 h-5 text-slate-500" />
-              <span className="font-medium text-indigo-600 dark:text-indigo-400">
-                {fileName ? `Selected: ${fileName}` : 'Choose a file (.txt)'}
+              <span className="font-medium text-primary-600 dark:text-primary-400">
+                {fileName ? `Selected: ${fileName}` : 'Choose a file (.txt, .pdf)'}
               </span>
-              <input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept=".txt" disabled={loading} />
+              <input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept=".txt,.pdf" disabled={loading} />
             </label>
           </div>
 
@@ -106,7 +130,7 @@ const CreateExamScreen: React.FC = () => {
               max="50"
               value={numQuestions}
               onChange={(e) => setNumQuestions(parseInt(e.target.value, 10))}
-              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:border-slate-600"
+              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-slate-700 dark:border-slate-600"
               disabled={loading}
             />
           </div>
@@ -114,6 +138,7 @@ const CreateExamScreen: React.FC = () => {
           {error && <div className="text-red-500 text-sm p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">{error}</div>}
 
           <div className="pt-2">
+            {/* Fix: Added children to Button component to resolve missing prop error. */}
             <Button type="submit" size="lg" disabled={loading || !text} className="w-full">
               {loading ? <Loader text="Generating Exam..."/> : (
                 <div className="flex items-center justify-center gap-2">

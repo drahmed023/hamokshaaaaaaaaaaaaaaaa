@@ -1,6 +1,7 @@
 
 import React, { createContext, useReducer, ReactNode, Dispatch, useEffect } from 'react';
-import { AppState, Action, ActionType, Exam, ExamResult } from '../types';
+// FIX: Updated to use renamed ExamActionType to avoid type conflicts.
+import { AppState, Action, ExamActionType, Exam, ExamResult } from '../types';
 
 const initialState: AppState = {
   exams: [],
@@ -14,13 +15,25 @@ const ExamDispatchContext = createContext<Dispatch<Action>>(() => null);
 
 const examReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
-    case ActionType.ADD_EXAM:
+    // FIX: Using ExamActionType for correct type narrowing.
+    case ExamActionType.ADD_EXAM:
       return { ...state, exams: [...state.exams, action.payload] };
-    case ActionType.ADD_RESULT:
+    // FIX: Using ExamActionType for correct type narrowing.
+    case ExamActionType.UPDATE_EXAM:
+      return {
+        ...state,
+        exams: state.exams.map(exam =>
+          exam.id === action.payload.id ? action.payload : exam
+        ),
+      };
+    // FIX: Using ExamActionType for correct type narrowing.
+    case ExamActionType.ADD_RESULT:
       return { ...state, results: [...state.results.filter(r => r.examId !== action.payload.examId), action.payload] };
-    case ActionType.SET_LOADING:
+    // FIX: Using ExamActionType for correct type narrowing.
+    case ExamActionType.SET_LOADING:
       return { ...state, loading: action.payload };
-    case ActionType.SET_ERROR:
+    // FIX: Using ExamActionType for correct type narrowing.
+    case ExamActionType.SET_ERROR:
         return { ...state, error: action.payload, loading: false };
     default:
       return state;
@@ -51,7 +64,8 @@ const usePersistedReducer = (reducer: typeof examReducer, key: string, initial: 
 };
 
 
-export const ExamProvider = ({ children }: { children: ReactNode }) => {
+// FIX: Changed from a const arrow function to a function declaration to resolve issues with the 'children' prop type in deeply nested contexts.
+export function ExamProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = usePersistedReducer(examReducer, 'aiExamMakerState', initialState);
 
   return (

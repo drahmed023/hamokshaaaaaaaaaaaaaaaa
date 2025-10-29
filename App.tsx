@@ -1,52 +1,137 @@
-import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ExamProvider } from './context/ExamContext';
-import { ThemeProvider } from './context/ThemeContext';
-import { StudyAidsProvider } from './context/StudyAidsContext';
 
+
+
+
+
+
+import React, { useState, ReactNode } from 'react';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { ExamProvider } from './context/ExamContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import Header from './components/Header';
+import Sidebar from './components/Sidebar';
 import HomeScreen from './screens/HomeScreen';
 import CreateExamScreen from './screens/CreateExamScreen';
 import TakeExamScreen from './screens/TakeExamScreen';
 import ResultsScreen from './screens/ResultsScreen';
 import HistoryScreen from './screens/HistoryScreen';
-import PomodoroScreen from './screens/PomodoroScreen';
+import { StudyAidsProvider } from './context/StudyAidsContext';
 import StudyAidsScreen from './screens/StudyAidsScreen';
 import SavedItemsScreen from './screens/SavedItemsScreen';
 import FlashcardReviewScreen from './screens/FlashcardReviewScreen';
 import CalendarScreen from './screens/CalendarScreen';
 import TasksScreen from './screens/TasksScreen';
+import { TasksProvider } from './context/TasksContext';
+import SettingsScreen from './screens/SettingsScreen';
+import SummaryDetailScreen from './screens/SummaryDetailScreen';
+import MindMapScreen from './screens/MindMapScreen';
+import { StudyPlanProvider } from './context/StudyPlanContext';
+import StudyPlanScreen from './screens/StudyPlanScreen';
+import { GamificationProvider } from './context/GamificationContext';
+import AchievementsScreen from './screens/AchievementsScreen';
+import { ToastProvider } from './context/ToastContext';
+import ToastContainer from './components/ToastContainer';
+import { AvatarProvider } from './context/AvatarContext';
+import AICompanion from './components/AICompanion';
+import AnalyticsScreen from './screens/AnalyticsScreen';
+import ExplainerScreen from './screens/ExplainerScreen';
+import { MusicProvider } from './context/MusicContext';
+import MusicPlayer from './components/MusicPlayer';
+import { useGamification } from './hooks/useGamification';
+import { SmartSettingsProvider } from './context/SmartSettingsContext';
+import { AIInteractionProvider } from './context/AIInteractionContext';
+import { PomodoroProvider } from './context/PomodoroContext';
+import GoogleDriveScreen from './screens/GoogleDriveScreen';
 
+// This component composes all the context providers for the app.
+function AppProviders({ children }: { children: ReactNode }) {
+  return (
+    // Fix: Correctly nested context providers to ensure children are passed down and resolve missing children prop errors.
+    <ToastProvider>
+      <ThemeProvider>
+        <AvatarProvider>
+          <MusicProvider>
+            <GamificationProvider>
+              <TasksProvider>
+                <ExamProvider>
+                  <StudyAidsProvider>
+                    <StudyPlanProvider>
+                      <SmartSettingsProvider>
+                        <AIInteractionProvider>
+                          <PomodoroProvider>
+                            {children}
+                          </PomodoroProvider>
+                        </AIInteractionProvider>
+                      </SmartSettingsProvider>
+                    </StudyPlanProvider>
+                  </StudyAidsProvider>
+                </ExamProvider>
+              </TasksProvider>
+            </GamificationProvider>
+          </MusicProvider>
+        </AvatarProvider>
+      </ThemeProvider>
+    </ToastProvider>
+  );
+}
 
+// This component contains the entire UI logic.
+// It sits inside all providers, so it has access to all contexts.
+function AppUI() {
+    const { background, focusMode } = useTheme();
+    const { level } = useGamification();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    
+    const backgroundClass = background === 'default' 
+        ? `level-bg level-bg-${Math.min(level, 5)}`
+        : `bg-${background}`;
+    
+    const focusClass = focusMode ? 'focus-mode' : '';
+
+    return (
+        <div className={`main-bg-transition min-h-screen ${backgroundClass} ${focusClass}`}>
+            <div className="bg-white/10 dark:bg-black/10 min-h-screen">
+                <Header onMenuClick={() => setIsSidebarOpen(true)} />
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+                <main className="container mx-auto px-4 py-8">
+                    <Routes>
+                        <Route path="/" element={<HomeScreen />} />
+                        <Route path="/create-exam" element={<CreateExamScreen />} />
+                        <Route path="/exam/:id" element={<TakeExamScreen />} />
+                        <Route path="/results/:id" element={<ResultsScreen />} />
+                        <Route path="/history" element={<HistoryScreen />} />
+                        <Route path="/study-aids" element={<StudyAidsScreen />} />
+                        <Route path="/saved-items" element={<SavedItemsScreen />} />
+                        <Route path="/review/deck/:deckId" element={<FlashcardReviewScreen />} />
+                        <Route path="/summary/:summaryId" element={<SummaryDetailScreen />} />
+                        <Route path="/mind-map/:mindMapId" element={<MindMapScreen />} />
+                        <Route path="/calendar" element={<CalendarScreen />} />
+                        <Route path="/tasks" element={<TasksScreen />} />
+                        <Route path="/settings" element={<SettingsScreen />} />
+                        <Route path="/study-plan" element={<StudyPlanScreen />} />
+                        <Route path="/achievements" element={<AchievementsScreen />} />
+                        <Route path="/analytics" element={<AnalyticsScreen />} />
+                        <Route path="/explainer" element={<ExplainerScreen />} />
+                        <Route path="/drive" element={<GoogleDriveScreen />} />
+                    </Routes>
+                </main>
+                <AICompanion />
+                <ToastContainer />
+                <MusicPlayer />
+            </div>
+        </div>
+    );
+}
+
+// The main App component now sets up the router first, then the providers.
+// This ensures routing context is available to all components and hooks.
 function App() {
   return (
-    <ThemeProvider>
-      <ExamProvider>
-        <StudyAidsProvider>
-          <Router>
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50 transition-colors duration-200">
-              <Header />
-              <main className="container mx-auto p-4 md:p-8">
-                <Routes>
-                  <Route path="/" element={<HomeScreen />} />
-                  <Route path="/create-exam" element={<CreateExamScreen />} />
-                  <Route path="/exam/:id" element={<TakeExamScreen />} />
-                  <Route path="/results/:id" element={<ResultsScreen />} />
-                  <Route path="/history" element={<HistoryScreen />} />
-                  <Route path="/study-aids" element={<StudyAidsScreen />} />
-                  <Route path="/pomodoro" element={<PomodoroScreen />} />
-                  <Route path="/saved-items" element={<SavedItemsScreen />} />
-                  <Route path="/flashcard-review/:deckId" element={<FlashcardReviewScreen />} />
-                  <Route path="/calendar" element={<CalendarScreen />} />
-                  <Route path="/tasks" element={<TasksScreen />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </main>
-            </div>
-          </Router>
-        </StudyAidsProvider>
-      </ExamProvider>
-    </ThemeProvider>
+    <Router>
+      <AppProviders>
+        <AppUI />
+      </AppProviders>
+    </Router>
   );
 }
 

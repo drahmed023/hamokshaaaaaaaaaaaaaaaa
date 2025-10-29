@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 type ButtonProps = {
   children: React.ReactNode;
@@ -11,7 +11,7 @@ type ButtonProps = {
   type?: 'button' | 'submit' | 'reset';
 };
 
-const Button: React.FC<ButtonProps> = ({
+function Button({
   children,
   onClick,
   variant = 'primary',
@@ -19,12 +19,20 @@ const Button: React.FC<ButtonProps> = ({
   disabled = false,
   className = '',
   type = 'button',
-}) => {
-  const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-colors duration-200';
+}: ButtonProps) {
+  const { buttonShape } = useTheme();
+  let shapeClass = 'rounded-lg'; // Default for 'rounded'
+  if (buttonShape === 'sharp') {
+    shapeClass = 'rounded-sm';
+  } else if (buttonShape === 'pill') {
+    shapeClass = 'rounded-full';
+  }
+
+  const baseStyles = `inline-flex items-center justify-center font-semibold ${shapeClass} shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-colors duration-200`;
 
   const variantStyles = {
-    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500 disabled:bg-indigo-300 dark:disabled:bg-indigo-800 dark:disabled:text-slate-400',
-    secondary: 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 focus:ring-indigo-500 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700',
+    primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 disabled:bg-primary-300 dark:disabled:bg-primary-800/50 dark:disabled:text-slate-400',
+    secondary: 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 focus:ring-primary-500 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700',
     danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-red-300',
   };
 
@@ -44,6 +52,6 @@ const Button: React.FC<ButtonProps> = ({
       {children}
     </button>
   );
-};
+}
 
 export default Button;

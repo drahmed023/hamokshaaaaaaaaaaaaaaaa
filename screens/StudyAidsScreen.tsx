@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useStudyAids } from '../hooks/useStudyAids';
-import { StudyAidsActionType, Flashcard, MindMap, Summary, FlashcardDeck } from '../types';
+import { StudyAidsActionType, Flashcard, MindMap, Summary, FlashcardDeck, GamificationActionType } from '../types';
 import { generateStudyAid } from '../services/geminiService';
 import { parseFileToText } from '../utils/fileParser';
 import Button from '../components/Button';
@@ -10,10 +11,11 @@ import FlashcardComponent from '../components/Flashcard';
 import MindMapNode from '../components/MindMapNode';
 import { SparklesIcon } from '../components/icons/SparklesIcon';
 import { FileTextIcon } from '../components/icons/FileTextIcon';
+import { useGamification } from '../hooks/useGamification';
 
 type AidType = 'summary' | 'flashcards' | 'mind-map';
 
-const StudyAidsScreen: React.FC = () => {
+function StudyAidsScreen() {
     const [text, setText] = useState('');
     const [fileName, setFileName] = useState('');
     const [title, setTitle] = useState('');
@@ -22,7 +24,21 @@ const StudyAidsScreen: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { dispatch } = useStudyAids();
+    const { summaries, flashcardDecks, mindMaps, dispatch } = useStudyAids();
+    const { dispatch: gamificationDispatch } = useGamification();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (location.state?.content) {
+            setText(location.state.content);
+            const passedFileName = location.state.fileName || '';
+            setFileName(passedFileName);
+            setTitle(passedFileName.replace(/\.[^/.]+$/, ""));
+            // Clear the state
+            navigate('.', { replace: true, state: {} });
+        }
+    }, [location, navigate]);
     
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -93,10 +109,20 @@ const StudyAidsScreen: React.FC = () => {
             dispatch({ type: StudyAidsActionType.ADD_MIND_MAP, payload: newMindMap });
         }
         
+        // Gamification
+        gamificationDispatch({ type: GamificationActionType.ADD_XP, payload: 50 });
+        const totalAids = summaries.length + flashcardDecks.length + mindMaps.length + 1;
+        if (totalAids === 1) {
+            gamificationDispatch({ type: GamificationActionType.UNLOCK_ACHIEVEMENT, payload: 'aid_1' });
+        }
+        if (totalAids >= 10) {
+            gamificationDispatch({ type: GamificationActionType.UNLOCK_ACHIEVEMENT, payload: 'aid_10' });
+        }
+
         // Reset form
         setGeneratedContent(null);
         setTitle('');
-        alert(`"${title}" saved successfully!`);
+        alert(`"${title}" saved successfully! You earned 50 XP!`);
     };
 
     return (
@@ -106,6 +132,7 @@ const StudyAidsScreen: React.FC = () => {
                 <p className="text-slate-500 dark:text-slate-400 mt-1">Generate summaries, flashcards, and mind maps automatically.</p>
             </div>
 
+            {/* Fix: Added children to Card component to resolve missing prop error. */}
             <Card>
                 <form onSubmit={handleGenerate} className="space-y-6">
                     <textarea
@@ -117,18 +144,20 @@ const StudyAidsScreen: React.FC = () => {
                         disabled={isLoading}
                     />
                     <div className="flex items-center justify-between flex-wrap gap-4">
-                        <label htmlFor="file-upload" className="flex items-center gap-2 cursor-pointer text-indigo-600 dark:text-indigo-400 font-medium">
+                        <label htmlFor="file-upload" className="flex items-center gap-2 cursor-pointer text-primary-600 dark:text-primary-400 font-medium">
                             <FileTextIcon className="w-5 h-5" />
-                            <span>{fileName || 'Or choose a file (.txt)'}</span>
-                            <input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept=".txt" disabled={isLoading} />
+                            <span>{fileName || 'Or choose a file (.txt, .pdf)'}</span>
+                            <input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept=".txt,.pdf" disabled={isLoading} />
                         </label>
                         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
+                            {/* Fix: Added children to Button components to resolve missing prop errors. */}
                             <Button type="button" size="sm" variant={aidType === 'summary' ? 'primary' : 'secondary'} onClick={() => setAidType('summary')}>Summary</Button>
                             <Button type="button" size="sm" variant={aidType === 'flashcards' ? 'primary' : 'secondary'} onClick={() => setAidType('flashcards')}>Flashcards</Button>
                             <Button type="button" size="sm" variant={aidType === 'mind-map' ? 'primary' : 'secondary'} onClick={() => setAidType('mind-map')}>Mind Map</Button>
                         </div>
                     </div>
                     {error && <div className="text-red-500 text-sm p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">{error}</div>}
+                    {/* Fix: Added children to Button component to resolve missing prop error. */}
                     <Button type="submit" size="lg" disabled={isLoading || !text} className="w-full">
                         {isLoading && !generatedContent ? <Loader text="Generating..." /> : (
                             <div className="flex items-center justify-center gap-2">
@@ -141,6 +170,7 @@ const StudyAidsScreen: React.FC = () => {
             </Card>
 
             {generatedContent && (
+                // Fix: Added children to Card component to resolve missing prop error.
                 <Card>
                     <h2 className="text-2xl font-bold mb-4">Generated {aidType.replace('-', ' ')}</h2>
                      <div className="mb-6">
@@ -153,23 +183,24 @@ const StudyAidsScreen: React.FC = () => {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Enter a title to save..."
-                            className="w-full p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:border-slate-600"
+                            className="w-full p-3 border border-slate-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-slate-700 dark:border-slate-600"
                         />
                     </div>
 
                     {aidType === 'summary' && <p className="whitespace-pre-wrap">{generatedContent}</p>}
                     {aidType === 'flashcards' && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {generatedContent.map((fc: any, index: number) => <FlashcardComponent key={index} front={fc.front} back={fc.back} />)}
+                            {generatedContent.map((fc: any, index: number) => <div key={index}><FlashcardComponent front={fc.front} back={fc.back} /></div>)}
                         </div>
                     )}
                     {aidType === 'mind-map' && (
                          <ul className="list-none p-0">
-                             <MindMapNode node={generatedContent} />
+                             <li className="my-2"><MindMapNode node={generatedContent} /></li>
                          </ul>
                     )}
 
                     <div className="mt-6 border-t pt-4 border-slate-200 dark:border-slate-700">
+                        {/* Fix: Added children to Button component to resolve missing prop error. */}
                         <Button onClick={handleSave} disabled={!title.trim()} className="w-full">
                             Save "{title}"
                         </Button>

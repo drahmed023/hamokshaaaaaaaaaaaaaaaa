@@ -3,7 +3,6 @@
 
 
 
-
 import React, { useState, ReactNode } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { ExamProvider } from './context/ExamContext';
@@ -42,38 +41,6 @@ import { SmartSettingsProvider } from './context/SmartSettingsContext';
 import { AIInteractionProvider } from './context/AIInteractionContext';
 import { PomodoroProvider } from './context/PomodoroContext';
 import GoogleDriveScreen from './screens/GoogleDriveScreen';
-
-// This component composes all the context providers for the app.
-function AppProviders({ children }: { children: ReactNode }) {
-  return (
-    // Fix: Correctly nested context providers to ensure children are passed down and resolve missing children prop errors.
-    <ToastProvider>
-      <ThemeProvider>
-        <AvatarProvider>
-          <MusicProvider>
-            <GamificationProvider>
-              <TasksProvider>
-                <ExamProvider>
-                  <StudyAidsProvider>
-                    <StudyPlanProvider>
-                      <SmartSettingsProvider>
-                        <AIInteractionProvider>
-                          <PomodoroProvider>
-                            {children}
-                          </PomodoroProvider>
-                        </AIInteractionProvider>
-                      </SmartSettingsProvider>
-                    </StudyPlanProvider>
-                  </StudyAidsProvider>
-                </ExamProvider>
-              </TasksProvider>
-            </GamificationProvider>
-          </MusicProvider>
-        </AvatarProvider>
-      </ThemeProvider>
-    </ToastProvider>
-  );
-}
 
 // This component contains the entire UI logic.
 // It sits inside all providers, so it has access to all contexts.
@@ -123,8 +90,41 @@ function AppUI() {
     );
 }
 
-// The main App component now sets up the router first, then the providers.
-// This ensures routing context is available to all components and hooks.
+// FIX: Inlined providers to resolve a cascade of 'children' prop type errors
+// that likely originated from deep nesting and TypeScript type inference issues.
+// RE-FIX: Converted from a const arrow function to a function declaration to help
+// TypeScript's type inference with deeply nested components.
+// FIX: Made the children prop optional to fix a TypeScript error.
+function AppProviders({ children }: { children?: React.ReactNode }) {
+  return (
+    <ToastProvider>
+      <ThemeProvider>
+        <AvatarProvider>
+          <MusicProvider>
+            <GamificationProvider>
+              <TasksProvider>
+                <ExamProvider>
+                  <StudyAidsProvider>
+                    <StudyPlanProvider>
+                      <SmartSettingsProvider>
+                        <AIInteractionProvider>
+                          <PomodoroProvider>
+                            {children}
+                          </PomodoroProvider>
+                        </AIInteractionProvider>
+                      </SmartSettingsProvider>
+                    </StudyPlanProvider>
+                  </StudyAidsProvider>
+                </ExamProvider>
+              </TasksProvider>
+            </GamificationProvider>
+          </MusicProvider>
+        </AvatarProvider>
+      </ThemeProvider>
+    </ToastProvider>
+  );
+}
+
 function App() {
   return (
     <Router>

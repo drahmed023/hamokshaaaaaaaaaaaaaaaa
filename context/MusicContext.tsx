@@ -52,7 +52,7 @@ const usePersistedReducer = (reducer: typeof musicReducer, key: string, initial:
 };
 
 // FIX: Changed from a const arrow function to a function declaration to resolve issues with the 'children' prop type in deeply nested contexts.
-export function MusicProvider({ children }: { children: ReactNode }) {
+export function MusicProvider({ children }: { children?: ReactNode }) {
   const [state, dispatch] = usePersistedReducer(musicReducer, 'musicSettings', initialState);
   
   return (

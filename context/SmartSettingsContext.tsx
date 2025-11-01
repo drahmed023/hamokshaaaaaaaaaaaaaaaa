@@ -54,7 +54,7 @@ const usePersistedReducer = (reducer: typeof smartSettingsReducer, key: string, 
 };
 
 // FIX: Changed from a const arrow function to a function declaration to resolve issues with the 'children' prop type in deeply nested contexts.
-export function SmartSettingsProvider({ children }: { children: ReactNode }) {
+export function SmartSettingsProvider({ children }: { children?: ReactNode }) {
   const [state, dispatch] = usePersistedReducer(smartSettingsReducer, 'smartSettings', initialState);
 
   return (

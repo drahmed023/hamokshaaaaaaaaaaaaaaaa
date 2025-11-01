@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Card from '../components/Card';
 import Loader from '../components/Loader';
 import { FolderIcon } from '../components/icons/FolderIcon';
@@ -7,6 +7,10 @@ import { listItems, isFileContentSupported, GoogleDriveFile } from '../services/
 import FileViewerModal from '../components/FileViewerModal';
 import Button from '../components/Button';
 import { SparklesIcon } from '../components/icons/SparklesIcon';
+import { SearchIcon } from '../components/icons/SearchIcon';
+import { PdfIcon } from '../components/icons/PdfIcon';
+import { DocIcon } from '../components/icons/DocIcon';
+import { TxtIcon } from '../components/icons/TxtIcon';
 
 interface PathSegment {
   id: string;
@@ -15,6 +19,19 @@ interface PathSegment {
 
 const ROOT_FOLDER_ID = '1gb2xHo-rr2OSIJHBsVxUGm01SLsyxgcV';
 
+const FileTypeIcon = ({ mimeType, iconLink }: { mimeType: string, iconLink: string }) => {
+    switch (mimeType) {
+        case 'application/pdf':
+            return <PdfIcon className="w-6 h-6 mr-4 flex-shrink-0" />;
+        case 'application/vnd.google-apps.document':
+            return <DocIcon className="w-6 h-6 mr-4 flex-shrink-0" />;
+        case 'text/plain':
+            return <TxtIcon className="w-6 h-6 mr-4 flex-shrink-0" />;
+        default:
+            return <img src={iconLink} alt="" className="w-6 h-6 mr-4 flex-shrink-0" />;
+    }
+};
+
 function GoogleDriveScreen() {
   const [items, setItems] = useState<GoogleDriveFile[]>([]);
   const [path, setPath] = useState<PathSegment[]>([{ id: ROOT_FOLDER_ID, name: 'Root Folder' }]);
@@ -22,6 +39,7 @@ function GoogleDriveScreen() {
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<GoogleDriveFile | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const currentFolderId = path[path.length - 1].id;
 
@@ -43,10 +61,12 @@ function GoogleDriveScreen() {
 
   const handleFolderClick = (folder: GoogleDriveFile) => {
     setPath(prevPath => [...prevPath, { id: folder.id, name: folder.name }]);
+    setSearchTerm(''); // Reset search when changing folders
   };
 
   const handleBreadcrumbClick = (index: number) => {
     setPath(prevPath => prevPath.slice(0, index + 1));
+    setSearchTerm('');
   };
   
   const handleFileClick = (file: GoogleDriveFile) => {
@@ -57,6 +77,11 @@ function GoogleDriveScreen() {
         window.open(file.webViewLink, '_blank');
     }
   };
+  
+  const filteredItems = useMemo(() => {
+    if (!searchTerm) return items;
+    return items.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [items, searchTerm]);
 
   const Breadcrumbs = () => (
     <nav className="flex items-center text-sm font-medium text-slate-500 dark:text-slate-400 mb-4 flex-wrap">
@@ -85,6 +110,16 @@ function GoogleDriveScreen() {
 
         <Card>
           <Breadcrumbs />
+          <div className="relative mb-4">
+            <input
+              type="search"
+              placeholder="ابحث في المجلد..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-3 pl-10 border border-slate-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-slate-700 dark:border-slate-600"
+            />
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          </div>
           {loading ? (
             <Loader text="Fetching files from Google Drive..." />
           ) : error ? (
@@ -92,15 +127,15 @@ function GoogleDriveScreen() {
               <p className="font-bold">An error occurred:</p>
               <p>{error}</p>
             </div>
-          ) : items.length === 0 ? (
+          ) : filteredItems.length === 0 ? (
             <div className="text-center text-slate-500 dark:text-slate-400 p-12">
               <FolderIcon className="w-16 h-16 mx-auto text-slate-400" />
-              <h2 className="text-xl font-bold mt-4">Folder is Empty</h2>
-              <p className="mt-2">There are no files or folders here.</p>
+              <h2 className="text-xl font-bold mt-4">{searchTerm ? 'No results found' : 'Folder is Empty'}</h2>
+              <p className="mt-2">{searchTerm ? `Your search for "${searchTerm}" did not match any files or folders.` : 'There are no files or folders here.'}</p>
             </div>
           ) : (
             <ul className="space-y-2">
-              {items.map(item => {
+              {filteredItems.map(item => {
                 const isFolder = item.mimeType === 'application/vnd.google-apps.folder';
                 const isSupported = isFileContentSupported(item.mimeType);
                 return (
@@ -116,7 +151,7 @@ function GoogleDriveScreen() {
                       </button>
                     ) : (
                       <div className="flex items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                        <img src={item.iconLink} alt="" className="w-6 h-6 mr-4 flex-shrink-0" />
+                        <FileTypeIcon mimeType={item.mimeType} iconLink={item.iconLink} />
                         <span className="flex-grow font-medium text-slate-800 dark:text-slate-100 truncate">{item.name}</span>
                         <div className="ml-4 flex-shrink-0">
                           {isSupported ? (

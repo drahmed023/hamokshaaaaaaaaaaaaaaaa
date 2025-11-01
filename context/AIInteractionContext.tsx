@@ -53,7 +53,7 @@ const aiInteractionReducer = (state: AIInteractionState, action: AIInteractionAc
 };
 
 // FIX: Changed from a const arrow function to a function declaration to resolve issues with the 'children' prop type in deeply nested contexts.
-export function AIInteractionProvider({ children }: { children: ReactNode }) {
+export function AIInteractionProvider({ children }: { children?: ReactNode }) {
   const [state, dispatch] = useReducer(aiInteractionReducer, initialState);
 
   return (

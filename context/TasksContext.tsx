@@ -11,6 +11,10 @@ const TasksDispatchContext = createContext<Dispatch<TasksAction>>(() => null);
 const tasksReducer = (state: TasksState, action: TasksAction): TasksState => {
   switch (action.type) {
     case TasksActionType.ADD_TASK:
+      // Avoid adding duplicate tasks from study plan sync
+      if (state.tasks.some(t => t.id === action.payload.id)) {
+          return state;
+      }
       return { ...state, tasks: [...state.tasks, action.payload] };
     case TasksActionType.TOGGLE_TASK:
       return {
@@ -20,17 +24,18 @@ const tasksReducer = (state: TasksState, action: TasksAction): TasksState => {
         ),
       };
     case TasksActionType.DELETE_TASK:
-      return {
-        ...state,
-        tasks: state.tasks.filter(task => task.id !== action.payload),
-      };
+      return { ...state, tasks: state.tasks.filter(task => task.id !== action.payload) };
     case TasksActionType.EDIT_TASK:
         return {
             ...state,
-            tasks: state.tasks.map(task =>
+            tasks: state.tasks.map(task => 
                 task.id === action.payload.id ? { ...task, text: action.payload.text } : task
             ),
         };
+    case TasksActionType.SET_TASKS:
+        return { ...state, tasks: action.payload };
+    case TasksActionType.DELETE_PLAN_TASKS:
+        return { ...state, tasks: state.tasks.filter(task => task.planId !== action.payload) };
     default:
       return state;
   }
@@ -58,9 +63,8 @@ const usePersistedReducer = (reducer: typeof tasksReducer, key: string, initial:
     return [state, dispatch] as const;
 };
 
-// FIX: Changed from a const arrow function to a function declaration to resolve issues with the 'children' prop type in deeply nested contexts.
-export function TasksProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = usePersistedReducer(tasksReducer, 'studySparkTasks', initialState);
+export function TasksProvider({ children }: { children?: ReactNode }) {
+  const [state, dispatch] = usePersistedReducer(tasksReducer, 'studySparkTasksState', initialState);
 
   return (
     <TasksStateContext.Provider value={state}>

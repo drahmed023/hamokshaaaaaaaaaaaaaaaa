@@ -1,9 +1,4 @@
 
-
-
-
-
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useExam } from '../hooks/useExam';
@@ -14,7 +9,7 @@ import { XCircleIcon } from '../components/icons/XCircleIcon';
 import { getExplanationForAnswer } from '../services/geminiService';
 import Loader from '../components/Loader';
 import { useGamification } from '../hooks/useGamification';
-import { GamificationActionType, Question } from '../types';
+import { GamificationActionType, Question, ExamActionType } from '../types';
 
 function Explanation({ question, userAnswer }: { question: any; userAnswer: string | undefined }) {
     const [explanation, setExplanation] = useState('');
@@ -53,7 +48,7 @@ function Explanation({ question, userAnswer }: { question: any; userAnswer: stri
 function ResultsScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { exams, results } = useExam();
+  const { exams, results, dispatch } = useExam();
   const { dispatch: gamificationDispatch } = useGamification();
 
   const exam = exams.find(e => e.id === id);
@@ -109,6 +104,13 @@ function ResultsScreen() {
     }
     return 'bg-slate-50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600';
   };
+  
+  const handleRetake = () => {
+    if (window.confirm('Are you sure you want to retake this exam? Your previous result will be deleted.')) {
+      dispatch({ type: ExamActionType.DELETE_RESULT, payload: exam.id });
+      navigate(`/exam/${exam.id}`);
+    }
+  };
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -128,7 +130,7 @@ function ResultsScreen() {
         </div>
         <div className="flex gap-4 justify-center">
           {/* Fix: Added children to Button component to resolve missing prop error. */}
-          <Button onClick={() => navigate(`/exam/${exam.id}`)} variant="secondary">Retake Exam</Button>
+          <Button onClick={handleRetake} variant="secondary">Retake Exam</Button>
           {/* Fix: Added children to Button component to resolve missing prop error. */}
           <Button onClick={() => navigate('/create-exam')}>Create New Exam</Button>
         </div>

@@ -1,9 +1,10 @@
 import React from 'react';
+import type { MouseEventHandler } from 'react';
 import { useTheme } from '../context/ThemeContext';
 
 type ButtonProps = {
-  children: React.ReactNode;
-  onClick?: () => void;
+  children?: React.ReactNode;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
   variant?: 'primary' | 'secondary' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;

@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState } from 'react';
 import { useTasks } from '../hooks/useTasks';
 import { TasksActionType, Task } from '../types';
@@ -14,19 +8,23 @@ import { EditIcon } from '../components/icons/EditIcon';
 import { PlusCircleIcon } from '../components/icons/PlusCircleIcon';
 import { ListChecksIcon } from '../components/icons/ListChecksIcon';
 import { ClipboardListIcon } from '../components/icons/ClipboardListIcon';
+import { usePhoneNumber } from '../hooks/usePhoneNumber';
+import { BellIcon } from '../components/icons/BellIcon';
+import { useNavigate } from 'react-router-dom';
 
 function TasksScreen() {
   const { tasks, dispatch } = useTasks();
   const [newTaskText, setNewTaskText] = useState('');
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTaskText, setEditingTaskText] = useState('');
+  const { phoneNumber } = usePhoneNumber();
+  const navigate = useNavigate();
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (newTaskText.trim()) {
       dispatch({
         type: TasksActionType.ADD_TASK,
-        // FIX: Added source property to align with the updated Task type.
         payload: { id: Date.now().toString(), text: newTaskText, completed: false, source: 'user' },
       });
       setNewTaskText('');
@@ -46,6 +44,18 @@ function TasksScreen() {
     }
   };
   
+  const handleRemind = (task: Task) => {
+    if (!phoneNumber) {
+        alert('Please set your phone number in Settings to use reminders.');
+        navigate('/settings');
+        return;
+    }
+    const message = `Reminder: "${task.text}" ${task.dueDate ? `is due on ${new Date(task.dueDate).toLocaleDateString()}` : ''}.`;
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${phoneNumber.replace('+', '')}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   const completedTasks = tasks.filter(t => t.completed);
   const pendingTasks = tasks.filter(t => !t.completed);
 
@@ -86,7 +96,12 @@ function TasksScreen() {
         </div>
       </div>
       <div className="flex-shrink-0">
-        {!task.completed && <button onClick={() => handleEdit(task)} className="p-1 text-slate-500 hover:text-primary-500"><EditIcon className="w-4 h-4" /></button>}
+        {!task.completed && (
+            <>
+                <button onClick={() => handleRemind(task)} className="p-1 text-slate-500 hover:text-primary-500" title="Send WhatsApp Reminder"><BellIcon className="w-4 h-4" /></button>
+                <button onClick={() => handleEdit(task)} className="p-1 text-slate-500 hover:text-primary-500"><EditIcon className="w-4 h-4" /></button>
+            </>
+        )}
         <button onClick={() => dispatch({ type: TasksActionType.DELETE_TASK, payload: task.id })} className="p-1 text-slate-500 hover:text-red-500"><TrashIcon className="w-4 h-4" /></button>
       </div>
     </li>
@@ -99,7 +114,6 @@ function TasksScreen() {
         <p className="text-slate-500 dark:text-slate-400 mt-1">Stay organized and on track with your study goals.</p>
       </div>
 
-      {/* Fix: Added children to Card component to resolve missing prop error. */}
       <Card>
         <form onSubmit={handleAddTask} className="flex gap-2 mb-6">
           <input
@@ -109,7 +123,6 @@ function TasksScreen() {
             placeholder="Add a new study task..."
             className="w-full p-3 border border-slate-300 rounded-lg dark:bg-slate-700 dark:border-slate-600"
           />
-          {/* Fix: Added children to Button component to resolve missing prop error. */}
           <Button type="submit" className="flex-shrink-0">
              <PlusCircleIcon className="w-5 h-5" />
           </Button>

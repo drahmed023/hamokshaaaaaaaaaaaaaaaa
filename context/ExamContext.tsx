@@ -35,6 +35,11 @@ const examReducer = (state: AppState, action: Action): AppState => {
     // FIX: Using ExamActionType for correct type narrowing.
     case ExamActionType.SET_ERROR:
         return { ...state, error: action.payload, loading: false };
+    case ExamActionType.DELETE_RESULT:
+      return {
+        ...state,
+        results: state.results.filter(r => r.examId !== action.payload),
+      };
     default:
       return state;
   }
@@ -65,7 +70,7 @@ const usePersistedReducer = (reducer: typeof examReducer, key: string, initial: 
 
 
 // FIX: Changed from a const arrow function to a function declaration to resolve issues with the 'children' prop type in deeply nested contexts.
-export function ExamProvider({ children }: { children: ReactNode }) {
+export function ExamProvider({ children }: { children?: ReactNode }) {
   const [state, dispatch] = usePersistedReducer(examReducer, 'aiExamMakerState', initialState);
 
   return (

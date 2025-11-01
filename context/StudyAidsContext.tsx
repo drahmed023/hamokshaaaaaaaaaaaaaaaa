@@ -59,7 +59,7 @@ const usePersistedReducer = (reducer: typeof studyAidsReducer, key: string, init
 };
 
 // FIX: Changed from a const arrow function to a function declaration to resolve issues with the 'children' prop type in deeply nested contexts.
-export function StudyAidsProvider({ children }: { children: ReactNode }) {
+export function StudyAidsProvider({ children }: { children?: ReactNode }) {
   const [state, dispatch] = usePersistedReducer(studyAidsReducer, 'studySparkAidsState', initialState);
 
   return (

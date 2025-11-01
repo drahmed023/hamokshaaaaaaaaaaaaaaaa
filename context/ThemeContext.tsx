@@ -24,7 +24,7 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // FIX: Changed from a const arrow function (React.FC) to a function declaration to resolve issues with the 'children' prop type in deeply nested contexts.
-export function ThemeProvider({ children }: { children: ReactNode }) {
+export function ThemeProvider({ children }: { children?: ReactNode }) {
   const [theme, setTheme] = useState<ThemeName>('light');
   const [accentColor, setAccentColor] = useState<AccentColorName>('indigo');
   const [background, setBackground] = useState<BackgroundName>('default');

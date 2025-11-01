@@ -1,194 +1,412 @@
-
-
-
-
-
-
-import React, { useState } from 'react';
-import { useStudyPlan } from '../hooks/useStudyPlan';
-import { generateStudyPlan } from '../services/geminiService';
-import { StudyPlan, StudyPlanActionType, TasksActionType, Task } from '../types';
+import React, { useState, useEffect, useMemo } from 'react';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Loader from '../components/Loader';
-import { SparklesIcon } from '../components/icons/SparklesIcon';
+import { useStudyPlan } from '../hooks/useStudyPlan';
+import { StudyPlanActionType, StudyDay, StudyPlan, TasksActionType, Task, StudyResource } from '../types';
+import { generateStudyPlan } from '../services/geminiService';
 import { useTasks } from '../hooks/useTasks';
+import { SparklesIcon } from '../components/icons/SparklesIcon';
+import { ClipboardListIcon } from '../components/icons/ClipboardListIcon';
+import { TrashIcon } from '../components/icons/TrashIcon';
+import { CheckBadgeIcon } from '../components/icons/CheckBadgeIcon';
+import { parseFileToText } from '../utils/fileParser';
+import { YouTubeIcon } from '../components/icons/YouTubeIcon';
+import { PdfIcon } from '../components/icons/PdfIcon';
+import { LinkIcon } from '../components/icons/LinkIcon';
 
-function RenderPlanGenerator({ onGenerate }: { onGenerate: (subject: string, goal: string, weeks: number, hours: number) => void }) {
-    const [subject, setSubject] = useState('');
-    const [goal, setGoal] = useState('');
-    const [weeks, setWeeks] = useState(4);
-    const [hours, setHours] = useState(2);
 
-    const handleSubmit = (e: React.FormEvent) => {
+const CreatePlanForm = ({ onPlanCreated }: { onPlanCreated: (plan: StudyPlan) => void }) => {
+    const { loading, error, dispatch } = useStudyPlan();
+    const [isParsingFile, setIsParsingFile] = useState(false);
+    const [inputMode, setInputMode] = useState('describe'); // describe, list, upload
+    const [formData, setFormData] = useState({
+        subject: '', goal: '', topics: '', fileContent: '', fileName: '',
+        examDate: '',
+        studyDays: [] as string[],
+        hours: '2',
+        includeReviews: true,
+    });
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setIsParsingFile(true);
+            dispatch({ type: StudyPlanActionType.SET_ERROR, payload: null });
+            try {
+                const content = await parseFileToText(file);
+                setFormData(prev => ({...prev, fileContent: content, fileName: file.name}));
+            } catch (err: any) {
+                dispatch({ type: StudyPlanActionType.SET_ERROR, payload: err.message });
+            } finally {
+                setIsParsingFile(false);
+            }
+        }
+    };
+
+    const handleDaysChange = (day: string) => {
+        setFormData(prev => {
+            const newDays = prev.studyDays.includes(day)
+                ? prev.studyDays.filter(d => d !== day)
+                : [...prev.studyDays, day];
+            return { ...prev, studyDays: newDays };
+        });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        onGenerate(subject, goal, weeks, hours);
-    };
-
-    return (
-        // Fix: Added children to Card component to resolve missing prop error.
-        <Card>
-            <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold">Create Your AI-Powered Study Plan</h2>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">Tell us your goals, and we'll map out your path to success.</p>
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Subject(s)</label>
-                    <input type="text" id="subject" value={subject} onChange={e => setSubject(e.target.value)} required placeholder="e.g., Mathematics, React Development" className="w-full p-3 border border-slate-300 rounded-lg dark:bg-slate-700 dark:border-slate-600" />
-                </div>
-                <div>
-                    <label htmlFor="goal" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Main Goal</label>
-                    <input type="text" id="goal" value={goal} onChange={e => setGoal(e.target.value)} required placeholder="e.g., Pass the final exam, Build a portfolio project" className="w-full p-3 border border-slate-300 rounded-lg dark:bg-slate-700 dark:border-slate-600" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label htmlFor="weeks" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Study Duration (weeks)</label>
-                        <input type="number" id="weeks" value={weeks} onChange={e => setWeeks(Number(e.target.value))} min="1" max="52" required className="w-full p-3 border border-slate-300 rounded-lg dark:bg-slate-700 dark:border-slate-600" />
-                    </div>
-                    <div>
-                        <label htmlFor="hours" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Hours per Day (approx.)</label>
-                        <input type="number" id="hours" value={hours} onChange={e => setHours(Number(e.target.value))} min="1" max="12" required className="w-full p-3 border border-slate-300 rounded-lg dark:bg-slate-700 dark:border-slate-600" />
-                    </div>
-                </div>
-                <div className="pt-2">
-                    {/* Fix: Added children to Button component to resolve missing prop error. */}
-                    <Button type="submit" size="lg" className="w-full">
-                        <SparklesIcon className="w-5 h-5 mr-2" />
-                        Generate Plan
-                    </Button>
-                </div>
-            </form>
-        </Card>
-    );
-};
-
-function RenderStudyPlan({ plan, onClear }: { plan: StudyPlan; onClear: () => void }) {
-    const [activeWeek, setActiveWeek] = useState(0);
-    const priorityColors = {
-        High: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200',
-        Medium: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200',
-        Low: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200',
-    };
-    return (
-        <div className="space-y-6">
-            <div className="text-center">
-                <h1 className="text-3xl font-bold">{plan.planTitle}</h1>
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-2 p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                {plan.weeks.map((week, index) => (
-                    <React.Fragment key={index}>
-                        {/* Fix: Added children to Button component to resolve missing prop error. */}
-                        <Button variant={activeWeek === index ? 'primary' : 'secondary'} onClick={() => setActiveWeek(index)}>
-                            Week {week.weekNumber}
-                        </Button>
-                    </React.Fragment>
-                ))}
-            </div>
-
-            {/* Fix: Added children to Card component to resolve missing prop error. */}
-            <Card>
-                <div className="text-center mb-4">
-                    <h3 className="text-xl font-bold">Week {plan.weeks[activeWeek].weekNumber} Goal</h3>
-                    <p className="text-slate-500 dark:text-slate-400">{plan.weeks[activeWeek].weeklyGoal}</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {plan.weeks[activeWeek].days.map((day) => (
-                        <div key={day.dayOfWeek} className={`p-4 rounded-lg ${day.isRestDay ? 'bg-green-50 dark:bg-green-900/30' : 'bg-slate-50 dark:bg-slate-800/50'}`}>
-                            <h4 className="font-bold">{day.dayOfWeek}</h4>
-                            {day.isRestDay ? (
-                                <p className="mt-2 text-green-700 dark:text-green-300">Rest Day</p>
-                            ) : (
-                                <ul className="mt-2 space-y-2">
-                                    {day.tasks.map((task, i) => (
-                                        <li key={i} className="p-2 bg-white dark:bg-slate-700 rounded-md shadow-sm">
-                                            <p className="font-medium text-sm">{task.task}</p>
-                                            <div className="flex justify-between items-center text-xs mt-1 text-slate-500 dark:text-slate-400">
-                                                <span>{task.duration} mins</span>
-                                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${priorityColors[task.priority]}`}>{task.priority}</span>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </Card>
-
-            <div className="text-center">
-                {/* Fix: Added children to Button component to resolve missing prop error. */}
-                <Button onClick={onClear} variant="secondary">Create a New Plan</Button>
-            </div>
-        </div>
-    );
-};
-
-function StudyPlanScreen() {
-    const { plan, loading, error, dispatch } = useStudyPlan();
-    const { dispatch: tasksDispatch } = useTasks();
-
-    const handleGenerate = async (subject: string, goal: string, weeks: number, hours: number) => {
         dispatch({ type: StudyPlanActionType.SET_LOADING, payload: true });
+        dispatch({ type: StudyPlanActionType.SET_ERROR, payload: null });
         try {
-            const planData = await generateStudyPlan(subject, goal, weeks, hours);
-            const startDate = new Date();
+            const planData = await generateStudyPlan({ ...formData, inputMode });
             const newPlan: StudyPlan = {
                 ...planData,
                 id: Date.now().toString(),
-                startDate: startDate.toISOString(),
+                createdAt: new Date().toISOString(),
             };
-            dispatch({ type: StudyPlanActionType.SET_PLAN, payload: newPlan });
-
-            // Add plan tasks to the main tasks list
-            let dayOffset = 0;
-            newPlan.weeks.forEach(week => {
-                week.days.forEach(day => {
-                    const taskDate = new Date(startDate);
-                    taskDate.setDate(startDate.getDate() + dayOffset);
-                    if (!day.isRestDay) {
-                        day.tasks.forEach(studyTask => {
-                            const newTask: Task = {
-                                id: `${newPlan.id}-${week.weekNumber}-${day.dayOfWeek}-${studyTask.task.slice(0, 10)}`,
-                                text: studyTask.task,
-                                completed: false,
-                                dueDate: taskDate.toISOString().split('T')[0],
-                                source: 'study_plan',
-                            };
-                            tasksDispatch({ type: TasksActionType.ADD_TASK, payload: newTask });
-                        });
-                    }
-                    dayOffset++;
-                })
-            });
-
+            onPlanCreated(newPlan);
         } catch (err: any) {
             dispatch({ type: StudyPlanActionType.SET_ERROR, payload: err.message });
         }
     };
     
-    const handleClearPlan = () => {
-        if (window.confirm('Are you sure you want to discard this plan and create a new one? This will not remove created tasks.')) {
-            dispatch({ type: StudyPlanActionType.CLEAR_PLAN });
-        }
-    };
-    
-    if (loading) {
-        return <Loader text="Building your personalized plan... This may take a moment." />;
-    }
-
     return (
-        <div className="max-w-6xl mx-auto">
-            {error && <div className="mb-4 text-red-500 text-sm p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">{error}</div>}
-            
-            {plan && !error ? (
-                <RenderStudyPlan plan={plan} onClear={handleClearPlan} />
-            ) : (
-                <RenderPlanGenerator onGenerate={handleGenerate} />
+        <Card>
+            <form onSubmit={handleSubmit} className="space-y-4">
+                 <div>
+                    <label className="block text-sm font-medium">How do you want to provide study material?</label>
+                    <div className="flex gap-2 mt-1 p-1 bg-slate-100 dark:bg-slate-900 rounded-lg">
+                        <Button type="button" size="sm" variant={inputMode === 'describe' ? 'primary' : 'secondary'} onClick={() => setInputMode('describe')}>Describe</Button>
+                        <Button type="button" size="sm" variant={inputMode === 'list' ? 'primary' : 'secondary'} onClick={() => setInputMode('list')}>List Topics</Button>
+                        <Button type="button" size="sm" variant={inputMode === 'upload' ? 'primary' : 'secondary'} onClick={() => setInputMode('upload')}>Upload File</Button>
+                    </div>
+                </div>
+
+                {inputMode === 'describe' && (
+                    <>
+                        <div><label className="block text-sm font-medium">Subject/Topic</label><input type="text" name="subject" value={formData.subject} onChange={handleInputChange} className="mt-1 w-full p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600" required /></div>
+                        <div><label className="block text-sm font-medium">Study Goal</label><input type="text" name="goal" value={formData.goal} onChange={handleInputChange} className="mt-1 w-full p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600" placeholder="e.g., Pass the final exam" required /></div>
+                    </>
+                )}
+                {inputMode === 'list' && <div><label className="block text-sm font-medium">Topics/Lectures</label><textarea name="topics" rows={5} value={formData.topics} onChange={handleInputChange} className="mt-1 w-full p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600" placeholder="Enter one topic per line..." required /></div>}
+                {inputMode === 'upload' && (
+                    <div>
+                        <label className="block text-sm font-medium">Syllabus or Notes File</label>
+                        <input
+                            type="file"
+                            onChange={handleFileChange}
+                            className="mt-1 w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 disabled:opacity-50"
+                            accept=".txt,.pdf"
+                            required
+                            disabled={isParsingFile || loading}
+                        />
+                        {isParsingFile && (
+                            <div className="mt-2 flex items-center gap-2 text-sm text-slate-500">
+                                <svg className="animate-spin h-4 w-4 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Parsing file...</span>
+                            </div>
+                        )}
+                        {!isParsingFile && formData.fileName && (
+                            <p className="mt-2 text-sm text-green-600">
+                                ✓ Loaded: {formData.fileName}
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                 <div><label className="block text-sm font-medium">Final Exam Date</label><input type="date" name="examDate" value={formData.examDate} onChange={handleInputChange} className="mt-1 w-full p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600" required /></div>
+                 <div>
+                    <label className="block text-sm font-medium">Available Days</label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                       {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (<label key={day} className={`px-3 py-1 rounded-full cursor-pointer text-sm ${formData.studyDays.includes(day) ? 'bg-primary-600 text-white' : 'bg-slate-200 dark:bg-slate-700'}`}><input type="checkbox" className="hidden" onChange={() => handleDaysChange(day)} />{day}</label>))}
+                    </div>
+                </div>
+                 <div>
+                    <label className="block text-sm font-medium">Daily Study Time (hours)</label>
+                    <select name="hours" value={formData.hours} onChange={handleInputChange} className="mt-1 w-full p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600">
+                        <option value="1">1 hour</option>
+                        <option value="2">2 hours</option>
+                        <option value="3">3 hours</option>
+                        <option value="4">4 hours</option>
+                        <option value="5">5 hours</option>
+                        <option value="6">6 hours</option>
+                        <option value="7">7 hours</option>
+                        <option value="8">8 hours</option>
+                    </select>
+                </div>
+                 <div className="flex items-center gap-2"><input type="checkbox" id="include-reviews" name="includeReviews" checked={formData.includeReviews} onChange={e => setFormData(p => ({...p, includeReviews: e.target.checked}))} /><label htmlFor="include-reviews">Include review sessions</label></div>
+                {error && <div className="text-red-500 text-sm">{error}</div>}
+                <Button type="submit" size="lg" className="w-full" disabled={loading || isParsingFile}>
+                    <SparklesIcon className="w-5 h-5 mr-2" />
+                    <span>Generate Plan</span>
+                </Button>
+            </form>
+        </Card>
+    );
+};
+
+const ResourceIcon = ({ type }: { type: StudyResource['type'] }) => {
+  switch (type) {
+    case 'video':
+      return <YouTubeIcon className="w-4 h-4 text-red-500 flex-shrink-0" />;
+    case 'article':
+      return <LinkIcon className="w-4 h-4 text-sky-500 flex-shrink-0" />;
+    case 'pdf':
+      return <PdfIcon className="w-4 h-4 flex-shrink-0" />;
+    default:
+      return <LinkIcon className="w-4 h-4 text-slate-500 flex-shrink-0" />;
+  }
+};
+
+const PlanDetails = ({ plan }: { plan: StudyPlan }) => {
+    const planStartDate = useMemo(() => {
+        const date = new Date(plan.createdAt);
+        date.setHours(0, 0, 0, 0); // Normalize to midnight
+        return date;
+    }, [plan.createdAt]);
+
+    const startOfWeekDate = useMemo(() => {
+        const start = new Date(planStartDate);
+        const dayOfWeek = (start.getDay() + 6) % 7; // Monday = 0, Sunday = 6
+        start.setDate(start.getDate() - dayOfWeek);
+        return start;
+    }, [planStartDate]);
+
+    const renderDay = (day: StudyDay, weekIndex: number, dayIndex: number) => {
+        const currentDayDate = new Date(startOfWeekDate);
+        currentDayDate.setDate(startOfWeekDate.getDate() + (weekIndex * 7) + dayIndex);
+
+        const formattedDate = currentDayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+        return (
+            <div key={`${weekIndex}-${day.dayOfWeek}`} className={`p-4 rounded-lg ${day.isRestDay ? 'bg-slate-100 dark:bg-slate-800/50' : 'bg-white dark:bg-slate-700/50'}`}>
+                <h4 className="font-bold">{day.dayOfWeek}</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{formattedDate}</p>
+                {day.isRestDay ? (<p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Rest Day</p>) : (
+                    <ul className="mt-2 space-y-3 text-sm">{day.tasks.map((task, taskIndex) => (
+                        <li key={taskIndex} className="flex flex-col items-start gap-2">
+                            <div className="flex items-start gap-2">
+                                <div className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                                <span>{task.task} <em className="text-slate-400">({task.duration} min)</em></span>
+                            </div>
+                            {task.resources && task.resources.length > 0 && (
+                                <ul className="pl-5 pt-1 space-y-1 w-full border-l border-slate-200 dark:border-slate-600">
+                                    {task.resources.map((resource, resourceIndex) => (
+                                        <li key={resourceIndex}>
+                                            <a href={resource.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-blue-500 hover:underline">
+                                                <ResourceIcon type={resource.type} />
+                                                <span className="truncate" title={resource.title}>{resource.title}</span>
+                                                <span className="text-xs text-slate-400 flex-shrink-0">({resource.source})</span>
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </li>))}
+                    </ul>
+                )}
+            </div>
+        );
+    };
+    return (
+        <div className="space-y-4 mt-4">
+            {plan.weeks.map(week => (
+                <div key={week.weekNumber}>
+                    <h3 className="text-xl font-bold mb-2">Week {week.weekNumber}</h3>
+                    <p className="text-slate-600 dark:text-slate-300 mb-4">{week.weeklyGoal}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
+                        {week.days.map((day, dayIndex) => renderDay(day, week.weekNumber - 1, dayIndex))}
+                    </div>
+                </div>
+            ))}
+            {plan.groundingMetadata && plan.groundingMetadata.length > 0 && (
+                <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">مصادر استعان بها الذكاء الاصطناعي:</h4>
+                    <ul className="list-disc list-inside text-xs space-y-1">
+                        {plan.groundingMetadata.filter(chunk => chunk.web).map((chunk, index) => (
+                            <li key={index}>
+                                <a href={chunk.web!.uri} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                    {chunk.web!.title || chunk.web!.uri}
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             )}
         </div>
     );
 };
+
+function StudyPlanScreen() {
+    const { plans, activePlanId, dispatch, loading } = useStudyPlan();
+    const { dispatch: tasksDispatch } = useTasks();
+    const [view, setView] = useState<'dashboard' | 'create'>('dashboard');
+
+    useEffect(() => {
+        // This effect runs when the active plan changes.
+        // It's responsible for syncing tasks.
+        if (!activePlanId) {
+            // If no plan is active, we might want to clear all plan-related tasks.
+            // Let's find all tasks that come from ANY plan and remove them.
+            const allPlanIds = plans.map(p => p.id);
+            allPlanIds.forEach(planId => {
+                 tasksDispatch({ type: TasksActionType.DELETE_PLAN_TASKS, payload: planId });
+            });
+            return;
+        };
+
+        const activePlan = plans.find(p => p.id === activePlanId);
+        if (!activePlan) return;
+
+        // 1. Clear tasks from any OTHER plan that might be present.
+        plans.forEach(p => {
+            if (p.id !== activePlanId) {
+                tasksDispatch({ type: TasksActionType.DELETE_PLAN_TASKS, payload: p.id });
+            }
+        });
+
+        // 2. Calculate and add tasks for the new active plan
+        const planStartDate = new Date(activePlan.createdAt);
+        const newTasks: Task[] = [];
+        
+        // This date logic is simplified. A real-world app would need a more robust library.
+        const dayMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        activePlan.weeks.forEach((week, weekIndex) => {
+            week.days.forEach((day) => {
+                const dayOfWeekIndex = dayMap.indexOf(day.dayOfWeek);
+                if (dayOfWeekIndex === -1) return;
+
+                const dayOffset = (weekIndex * 7) + dayOfWeekIndex - new Date(activePlan.createdAt).getDay();
+                
+                const taskDate = new Date(planStartDate);
+                taskDate.setDate(planStartDate.getDate() + dayOffset);
+
+
+                if (!day.isRestDay) {
+                    day.tasks.forEach(t => {
+                        const taskId = `${activePlan.id}-${taskDate.toISOString().split('T')[0]}-${t.task.slice(0, 10)}`;
+                        newTasks.push({
+                            id: taskId,
+                            text: t.task,
+                            completed: false,
+                            dueDate: taskDate.toISOString().split('T')[0],
+                            source: 'study_plan',
+                            planId: activePlan.id,
+                        });
+                    });
+                }
+            });
+        });
+        
+        // Use a batch add if available, otherwise one by one.
+        // Adding one by one might cause many re-renders, but is simpler to implement.
+        // To avoid duplicates, we can first clear all tasks for this plan ID and then add them all.
+        tasksDispatch({ type: TasksActionType.DELETE_PLAN_TASKS, payload: activePlanId });
+        newTasks.forEach(task => tasksDispatch({ type: TasksActionType.ADD_TASK, payload: task }));
+
+    }, [activePlanId, plans, tasksDispatch]);
+
+    const handlePlanCreated = (newPlan: StudyPlan) => {
+        dispatch({ type: StudyPlanActionType.ADD_PLAN, payload: newPlan });
+        setView('dashboard');
+    };
+
+    const handleDeletePlan = (planId: string) => {
+        if (window.confirm("Are you sure you want to delete this plan and all its associated tasks?")) {
+            tasksDispatch({ type: TasksActionType.DELETE_PLAN_TASKS, payload: planId });
+            dispatch({ type: StudyPlanActionType.DELETE_PLAN, payload: planId });
+        }
+    };
+    
+    if (loading && view === 'create') {
+        return (
+            <div className="max-w-2xl mx-auto text-center">
+                <Card>
+                    <Loader text="جاري إنشاء خطتك الدراسية..." />
+                    <SparklesIcon className="w-12 h-12 mx-auto text-primary-500 my-4 animate-pulse" />
+                    <p className="text-slate-600 dark:text-slate-300">
+                        يقوم الذكاء الاصطناعي الآن بالبحث عن أفضل المصادر التعليمية ومقاطع الفيديو لمساعدتك.
+                        <br />
+                        قد تستغرق هذه العملية دقيقة أو دقيقتين.
+                    </p>
+                </Card>
+            </div>
+        );
+    }
+    
+    if (view === 'create') {
+        return (
+            <div className="max-w-2xl mx-auto">
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold">Create a New Study Plan</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1">Let AI build a schedule tailored to your needs.</p>
+                </div>
+                <CreatePlanForm onPlanCreated={handlePlanCreated} />
+                <Button variant="secondary" onClick={() => setView('dashboard')} className="mt-4">Back to Dashboard</Button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="max-w-6xl mx-auto space-y-6">
+            <div className="text-center">
+                <h1 className="text-3xl font-bold">Your Study Plans</h1>
+                <p className="text-slate-500 dark:text-slate-400 mt-1">Manage your study schedules and set an active plan.</p>
+            </div>
+            
+            <div className="text-center">
+                <Button onClick={() => setView('create')} size="lg">
+                    <SparklesIcon className="w-5 h-5 mr-2" />
+                    Create New Plan
+                </Button>
+            </div>
+
+            {plans.length > 0 ? (
+                <div className="space-y-4">
+                    {plans.map(plan => (
+                        // FIX: Added a wrapping div with the key prop to resolve the error.
+                        <div key={plan.id}>
+                            <Card>
+                                <details className="group">
+                                    <summary className="list-none flex justify-between items-center cursor-pointer">
+                                        <div className="flex items-center gap-3">
+                                           {activePlanId === plan.id && <CheckBadgeIcon className="w-6 h-6 text-green-500" title="Active Plan" />}
+                                           <div>
+                                                <h2 className="text-xl font-bold">{plan.planTitle}</h2>
+                                                <p className="text-sm text-slate-500 dark:text-slate-400">Created: {new Date(plan.createdAt).toLocaleDateString()}</p>
+                                           </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Button onClick={(e) => { e.preventDefault(); handleDeletePlan(plan.id); } } variant="danger" size="sm" className="!p-2"><TrashIcon className="w-4 h-4" /></Button>
+                                            <Button onClick={(e) => { e.preventDefault(); dispatch({ type: StudyPlanActionType.SET_ACTIVE_PLAN, payload: plan.id }); } } disabled={activePlanId === plan.id} size="sm">Set as Active</Button>
+                                        </div>
+                                    </summary>
+                                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                                        <PlanDetails plan={plan} />
+                                    </div>
+                                </details>
+                            </Card>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <Card className="text-center py-12">
+                     <ClipboardListIcon className="w-16 h-16 mx-auto text-slate-400" />
+                     <h2 className="text-2xl font-bold mt-4">No Plans Yet</h2>
+                     <p className="text-slate-500 dark:text-slate-400 mt-2">Create your first AI-powered study plan to get started.</p>
+                </Card>
+            )}
+        </div>
+    );
+}
 
 export default StudyPlanScreen;

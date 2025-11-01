@@ -11,7 +11,7 @@ type ToastContextType = {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 // FIX: Changed from a const arrow function (React.FC) to a function declaration to resolve issues with the 'children' prop type in deeply nested contexts.
-export function ToastProvider({ children }: { children: ReactNode }) {
+export function ToastProvider({ children }: { children?: ReactNode }) {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const removeToast = useCallback((id: string) => {

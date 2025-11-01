@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React from 'react';
 import Card from '../components/Card';
 import Button from '../components/Button';
@@ -16,6 +10,7 @@ import { useMusic } from '../hooks/useMusic';
 import { musicTracks } from '../data/music';
 import { useSmartSettings } from '../hooks/useSmartSettings';
 import { SmartSettingsActionType } from '../types';
+import { usePhoneNumber } from '../hooks/usePhoneNumber';
 
 const ACCENT_COLORS = [
     { name: 'indigo', color: '#6366F1' },
@@ -69,9 +64,8 @@ const AI_VOICES: { id: AIVoice, name: string }[] = [
 ];
 
 
-function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
+function SettingsSection({ title, children }: { title: string; children?: React.ReactNode }) {
     return (
-        // Fix: Added children to Card component to resolve missing prop error.
         <Card>
             <details open className="group">
                 <summary className="text-xl font-bold cursor-pointer list-none flex justify-between items-center">
@@ -88,7 +82,7 @@ function SettingsSection({ title, children }: { title: string; children: React.R
     );
 }
 
-function SettingsRow({ label, children, description }: { label: string; children: React.ReactNode; description?: string }) {
+function SettingsRow({ label, children, description }: { label: string; children?: React.ReactNode; description?: string }) {
     return (
         <div>
             <div className="flex items-center justify-between">
@@ -120,10 +114,17 @@ function SettingsScreen() {
   const { avatarId, setAvatarId } = useAvatar();
   const { currentTrackId, isPlaying, volume, setTrack, togglePlay, setVolume } = useMusic();
   const settings = useSmartSettings();
+  const { phoneNumber, setPhoneNumber } = usePhoneNumber();
+  const [phoneInput, setPhoneInput] = React.useState(phoneNumber);
+
+  const handlePhoneSave = () => {
+      setPhoneNumber(phoneInput);
+      alert('Phone number saved!');
+  };
 
   const handleClearData = () => {
     if (window.confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
-      const settingsToKeep = ['themeSettings', 'avatarId', 'musicSettings', 'pomodoroState', 'smartSettings'];
+      const settingsToKeep = ['themeSettings', 'avatarId', 'musicSettings', 'pomodoroState', 'smartSettings', 'userPhoneNumber'];
       const keptSettings: { [key: string]: string | null } = {};
       settingsToKeep.forEach(key => { keptSettings[key] = localStorage.getItem(key); });
       localStorage.clear();
@@ -158,12 +159,10 @@ function SettingsScreen() {
       <h1 className="text-3xl font-bold text-center mb-8">Smart Settings</h1>
       <div className="space-y-6">
         
-        {/* Fix: Added children to SettingsSection and SettingsRow components to resolve missing prop errors. */}
         <SettingsSection title="UI & Theme">
           <SettingsRow label="Theme">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 text-sm"><ToggleSwitch checked={isAutoTheme} onChange={toggleAutoTheme} /> <label>Auto</label></div>
-                {/* Fix: Added children to Button component to resolve missing prop error. */}
                 <Button onClick={toggleTheme} variant="secondary" size="sm" disabled={isAutoTheme}>Switch to {theme === 'light' ? 'Dark' : 'Light'}</Button>
               </div>
           </SettingsRow>
@@ -180,7 +179,6 @@ function SettingsScreen() {
            <SettingsRow label="Button Shape">
               <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-700 rounded-md">
                 {BUTTON_SHAPES.map(s => <React.Fragment key={s.id}>
-                  {/* Fix: Added children to Button component to resolve missing prop error. */}
                   <Button size="sm" variant={buttonShape === s.id ? 'primary' : 'secondary'} onClick={() => setButtonShape(s.id)}>{s.name}</Button>
                 </React.Fragment>)}
               </div>
@@ -236,6 +234,18 @@ function SettingsScreen() {
             </SettingsRow>
         </SettingsSection>
 
+        <SettingsSection title="Notifications">
+            <SettingsRow label="WhatsApp Number" description="Used for sending task reminders. Include country code.">
+                <div className="flex gap-2">
+                    <input type="tel" value={phoneInput} onChange={e => setPhoneInput(e.target.value)} placeholder="+11234567890" className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 w-40" />
+                    <Button onClick={handlePhoneSave} size="sm">Save</Button>
+                </div>
+            </SettingsRow>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 p-2 bg-slate-100 dark:bg-slate-700/50 rounded-md">
+                Note: This feature opens WhatsApp on your device with a pre-filled message for you to send to yourself as a reminder. No messages are sent automatically.
+            </p>
+        </SettingsSection>
+
         <SettingsSection title="Sound & Notifications">
             <SettingsRow label="Now Playing"><span>{musicTracks.find(t => t.id === currentTrackId)?.name || 'None'}</span></SettingsRow>
             <SettingsRow label="Master Volume">
@@ -244,10 +254,8 @@ function SettingsScreen() {
              <div>
                 <p className="font-medium text-slate-800 dark:text-slate-100 mb-2">Focus Music</p>
                 <div className="flex flex-wrap gap-2">
-                    {/* Fix: Added children to Button component to resolve missing prop error. */}
                     <Button variant={!currentTrackId ? 'primary' : 'secondary'} size="sm" onClick={() => setTrack(null)}>None</Button>
                     {musicTracks.map(track => <React.Fragment key={track.id}>
-                      {/* Fix: Added children to Button component to resolve missing prop error. */}
                       <Button size="sm" variant={currentTrackId === track.id ? 'primary' : 'secondary'} onClick={() => setTrack(track.id)}>{track.name}</Button>
                     </React.Fragment>)}
                 </div>
@@ -256,12 +264,10 @@ function SettingsScreen() {
 
         <SettingsSection title="Data Management">
             <SettingsRow label="Export Data" description="Save all your app data to a JSON file.">
-              {/* Fix: Added children to Button component to resolve missing prop error. */}
               <Button onClick={handleExportData} variant="secondary" size="sm">Export</Button>
             </SettingsRow>
             <div className="mt-4 p-4 border border-red-300 dark:border-red-700 rounded-lg bg-red-50 dark:bg-red-900/20">
               <SettingsRow label="Clear All Data">
-                {/* Fix: Added children to Button component to resolve missing prop error. */}
                 <Button onClick={handleClearData} variant="danger" size="sm">Clear Data</Button>
               </SettingsRow>
               <p className="text-sm text-red-600 dark:text-red-400 mt-1">This permanently deletes all exams, results, study aids, tasks, and progress. Your settings will be kept.</p>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Loader from './Loader';
 import Button from './Button';
@@ -16,10 +16,25 @@ function FileViewerModal({ isOpen, onClose, file }: FileViewerModalProps) {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const modalRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (isOpen && file) {
+      // Center the modal on open
+      if (modalRef.current) {
+        const { clientWidth, clientHeight } = document.documentElement;
+        const modalWidth = Math.min(clientWidth * 0.8, 768); // 80% of vw, max 768px
+        const modalHeight = clientHeight * 0.8;
+        setPosition({
+            x: (clientWidth - modalWidth) / 2,
+            y: (clientHeight - modalHeight) / 2,
+        });
+      }
+
       setLoading(true);
       setError(null);
       setContent('');
@@ -29,6 +44,39 @@ function FileViewerModal({ isOpen, onClose, file }: FileViewerModalProps) {
         .finally(() => setLoading(false));
     }
   }, [isOpen, file]);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLElement>) => {
+    if (e.target !== e.currentTarget) return; // Prevent drag from buttons inside header
+    setIsDragging(true);
+    dragStartPos.current = {
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    };
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      setPosition({
+        x: e.clientX - dragStartPos.current.x,
+        y: e.clientY - dragStartPos.current.y,
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+  
+  useEffect(() => {
+    if (isDragging) {
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
 
   const handleCreateExam = () => {
     navigate('/create-exam', { state: { content, fileName: file?.name } });
@@ -43,11 +91,18 @@ function FileViewerModal({ isOpen, onClose, file }: FileViewerModalProps) {
   if (!isOpen || !file) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-2xl h-[90vh] m-4 flex flex-col">
-        <header className="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-lg font-bold truncate">{file.name}</h2>
-          <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+    <div className="fixed inset-0 z-50 pointer-events-none">
+      <div 
+        ref={modalRef}
+        className="absolute bg-white dark:bg-slate-800 rounded-lg shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col pointer-events-auto"
+        style={{ top: `${position.y}px`, left: `${position.x}px`}}
+      >
+        <header
+          className="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700 cursor-move"
+          onMouseDown={handleMouseDown}
+        >
+          <h2 className="text-lg font-bold truncate select-none">{file.name}</h2>
+          <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
             <XCircleIcon className="w-6 h-6" />
           </button>
         </header>

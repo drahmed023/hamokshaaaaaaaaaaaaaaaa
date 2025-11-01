@@ -124,7 +124,7 @@ const usePersistedReducer = (reducer: typeof gamificationReducer, key: string, i
 
 
 // FIX: Changed from a const arrow function to a function declaration to resolve issues with the 'children' prop type in deeply nested contexts.
-export function GamificationProvider({ children }: { children: ReactNode }) {
+export function GamificationProvider({ children }: { children?: ReactNode }) {
   const [state, dispatch] = usePersistedReducer(gamificationReducer, 'studySparkGamificationState', initialState);
 
   return (

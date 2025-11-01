@@ -8,7 +8,8 @@ export interface GoogleDriveFile {
   webViewLink: string;
 }
 
-const API_KEY = 'AIzaSyAXsiY5TbUpJvEFMqrN3gBUe18wpFK1TsI'; // As provided in the existing file
+// FIX: Use environment variable for API key instead of hardcoding.
+const API_KEY = process.env.API_KEY;
 
 export const listItems = async (folderId: string): Promise<GoogleDriveFile[]> => {
     const query = encodeURIComponent(`'${folderId}' in parents and trashed = false`);

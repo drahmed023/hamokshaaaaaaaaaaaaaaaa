@@ -1,4 +1,8 @@
 
+
+
+
+
 import React, { useState, ReactNode } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { ExamProvider } from './context/ExamContext';
@@ -37,7 +41,6 @@ import { SmartSettingsProvider } from './context/SmartSettingsContext';
 import { AIInteractionProvider } from './context/AIInteractionContext';
 import { PomodoroProvider } from './context/PomodoroContext';
 import GoogleDriveScreen from './screens/GoogleDriveScreen';
-import NotionScreen from './screens/NotionScreen';
 
 // This component contains the entire UI logic.
 // It sits inside all providers, so it has access to all contexts.
@@ -77,7 +80,6 @@ function AppUI() {
                         <Route path="/analytics" element={<AnalyticsScreen />} />
                         <Route path="/explainer" element={<ExplainerScreen />} />
                         <Route path="/drive" element={<GoogleDriveScreen />} />
-                        <Route path="/notion" element={<NotionScreen />} />
                     </Routes>
                 </main>
                 <AICompanion />

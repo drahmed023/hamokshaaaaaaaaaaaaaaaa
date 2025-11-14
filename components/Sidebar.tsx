@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { APP_NAME } from '../constants';
@@ -16,7 +15,6 @@ import { CheckCircleIcon } from './icons/CheckCircleIcon';
 import { TrendingUpIcon } from './icons/TrendingUpIcon';
 import { FolderIcon } from './icons/FolderIcon';
 import { AppLogoIcon } from './icons/AppLogoIcon';
-import { LinkIcon } from './icons/LinkIcon';
 
 
 type SidebarProps = {
@@ -30,7 +28,6 @@ const navItems = [
   { to: '/analytics', text: 'Analytics', icon: TrendingUpIcon },
   { to: '/achievements', text: 'Achievements', icon: TrophyIcon },
   { to: '/drive', text: 'Drive Files', icon: FolderIcon },
-  { to: '/notion', text: 'Notion', icon: LinkIcon },
   { to: '/study-aids', text: 'Study Aids', icon: BookOpenIcon },
   { to: '/study-plan', text: 'Study Plan', icon: ClipboardListIcon },
   { to: '/saved-items', text: 'Saved Items', icon: CheckCircleIcon },

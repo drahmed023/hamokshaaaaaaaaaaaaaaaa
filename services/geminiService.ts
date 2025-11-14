@@ -2,8 +2,16 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { Exam, MindMapNodeData, Question, StudyPlan, StudyWeek, StudyDay, StudyTask, AIPersona, StudyResource } from '../types';
 
-// FIX: Initialize the GoogleGenAI client. Ensure API_KEY is set in the environment.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getAIClient = () => {
+  const apiKey = import.meta.env.VITE_GOOGLE_API_KEY || process.env.API_KEY;
+  if (!apiKey) {
+    console.warn('Google Gemini API key not configured. AI features may not work.');
+    return null;
+  }
+  return new GoogleGenAI({ apiKey });
+};
+
+const ai = getAIClient();
 
 const getSystemInstructionForPersona = (persona: AIPersona): string => {
     switch (persona) {
@@ -30,6 +38,8 @@ const parseJsonOrThrow = (jsonString: string, errorMessage: string) => {
 };
 
 export const generateExamFromText = async (text: string, numQuestions: number, adaptive: boolean): Promise<Omit<Exam, 'id' | 'sourceFileName'>> => {
+    if (!ai) throw new Error('Gemini API not configured');
+
     const prompt = `Based on the following text, create a multiple-choice exam with ${numQuestions} questions. Each question must have exactly 4 options, and one must be the correct answer. ${adaptive ? 'The questions should be suitable for a beginner or someone new to this topic.' : ''} The output must be a JSON object with a "title" (string) and a "questions" (array of objects) property. Each question object must have "questionText" (string), "options" (array of 4 strings), and "correctAnswer" (string, which is one of the options).
 
 Text:
@@ -221,7 +231,9 @@ Each task object must have "task" (string), "duration" (number in minutes), "pri
 };
 
 export const getStepByStepExplanation = async (topic: string): Promise<string> => {
-    const prompt = `Explain the following topic in a clear, well-structured manner, as if you were teaching a beginner.
+    if (!ai) throw new Error('Gemini API not configured');
+    try {
+        const prompt = `Explain the following topic in a clear, well-structured manner, as if you were teaching a beginner.
 Use markdown for formatting. You can use:
 - Headings (e.g., # Title, ## Subtitle)
 - Bold (**bold**) and italic (*italic*) text.
@@ -234,8 +246,12 @@ Topic:
 ---
 ${topic}
 ---`;
-    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
-    return response.text;
+        const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+        return response.text;
+    } catch (error) {
+        console.error('Error generating explanation:', error);
+        throw new Error('Failed to generate explanation');
+    }
 };
 
 export const getDailyStudySuggestion = async (context: string): Promise<string> => {
@@ -291,20 +307,42 @@ ${data}
 
 // FIX: Add missing function to resolve import error in PomodoroScreen.
 export const getMotivationalMessage = async (): Promise<string> => {
-    const prompt = `Provide a very short, upbeat, and motivational quote for a student suitable for displaying on a study dashboard. Make it encouraging and concise (around 10-15 words).`;
-    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
-    return response.text.trim();
+    if (!ai) {
+        const messages = [
+            "Keep pushing, you're doing great!",
+            "Every study session brings you closer to success.",
+            "Focus now, celebrate later! You've got this!",
+            "Your effort today shapes your tomorrow.",
+            "Stay consistent, success will follow."
+        ];
+        return messages[Math.floor(Math.random() * messages.length)];
+    }
+    try {
+        const prompt = `Provide a very short, upbeat, and motivational quote for a student suitable for displaying on a study dashboard. Make it encouraging and concise (around 10-15 words).`;
+        const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+        return response.text.trim();
+    } catch (error) {
+        console.error('Error fetching motivational message:', error);
+        return "Keep pushing, you're doing great!";
+    }
 };
 
-// FIX: Add missing function to resolve import error in SessionSummaryModal.
 export const getSessionSummary = async (totalMinutes: number, sessionsToday: number): Promise<string> => {
-    const prompt = `A student just finished a Pomodoro study session.
+    if (!ai) {
+        return `Great work! You've completed ${sessionsToday} session${sessionsToday !== 1 ? 's' : ''} with a total focus time of ${totalMinutes} minutes today. Keep it up!`;
+    }
+    try {
+        const prompt = `A student just finished a Pomodoro study session.
 - Total focus time today: ${totalMinutes} minutes
 - Number of sessions completed today: ${sessionsToday}
 
 Provide a short, positive, and analytical summary of their effort. Mention the duration and consistency. Keep it to one or two sentences.`;
-    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
-    return response.text.trim();
+        const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+        return response.text.trim();
+    } catch (error) {
+        console.error('Error generating session summary:', error);
+        return `Great work! You've completed ${sessionsToday} session${sessionsToday !== 1 ? 's' : ''} with a total focus time of ${totalMinutes} minutes today.`;
+    }
 };
 
 export const getAIResponse = async (

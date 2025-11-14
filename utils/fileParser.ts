@@ -1,8 +1,9 @@
+
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 
 // Set worker source for pdf.js to ensure it works in this environment.
 // Loading from the same CDN as the library to avoid cross-origin issues.
-GlobalWorkerOptions.workerSrc = `https://aistudiocdn.com/pdfjs-dist@5.4.296/build/pdf.worker.min.mjs`;
+GlobalWorkerOptions.workerSrc = `https://aistudiocdn.com/pdfjs-dist@5.4.394/build/pdf.worker.min.mjs`;
 
 export const parseFileToText = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -47,5 +48,22 @@ export const parseFileToText = async (file: File): Promise<string> => {
         } else {
             reject(new Error(`Unsupported file type: ${file.type}. Please use a .txt or .pdf file.`));
         }
+    });
+};
+
+export const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            if (typeof reader.result === 'string') {
+                // result is a data URL (e.g., "data:image/jpeg;base64,....")
+                // we only want the base64 part
+                resolve(reader.result.split(',')[1]);
+            } else {
+                reject(new Error("Failed to read blob as base64 string."));
+            }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
     });
 };

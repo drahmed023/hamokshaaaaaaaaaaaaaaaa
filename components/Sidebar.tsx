@@ -17,6 +17,7 @@ import { TrendingUpIcon } from './icons/TrendingUpIcon';
 import { FolderIcon } from './icons/FolderIcon';
 import { AppLogoIcon } from './icons/AppLogoIcon';
 import { LinkIcon } from './icons/LinkIcon';
+import { ImagePlusIcon } from './icons/ImagePlusIcon';
 
 
 type SidebarProps = {
@@ -35,6 +36,7 @@ const navItems = [
   { to: '/study-plan', text: 'Study Plan', icon: ClipboardListIcon },
   { to: '/saved-items', text: 'Saved Items', icon: CheckCircleIcon },
   { to: '/explainer', text: 'AI Explainer', icon: LightbulbIcon },
+  { to: '/diagram-explainer', text: 'Diagram Explainer', icon: ImagePlusIcon },
   { to: '/tasks', text: 'Tasks', icon: ListChecksIcon },
   { to: '/calendar', text: 'Calendar', icon: CalendarIcon },
   { to: '/settings', text: 'Settings', icon: SettingsIcon },

@@ -38,6 +38,9 @@ import { AIInteractionProvider } from './context/AIInteractionContext';
 import { PomodoroProvider } from './context/PomodoroContext';
 import GoogleDriveScreen from './screens/GoogleDriveScreen';
 import NotionScreen from './screens/NotionScreen';
+import DiagramExplainerScreen from './screens/DiagramExplainerScreen';
+import ActionableNotification from './components/ActionableNotification';
+import AISchedulingModal from './components/AISchedulingModal';
 
 // This component contains the entire UI logic.
 // It sits inside all providers, so it has access to all contexts.
@@ -76,11 +79,14 @@ function AppUI() {
                         <Route path="/achievements" element={<AchievementsScreen />} />
                         <Route path="/analytics" element={<AnalyticsScreen />} />
                         <Route path="/explainer" element={<ExplainerScreen />} />
+                        <Route path="/diagram-explainer" element={<DiagramExplainerScreen />} />
                         <Route path="/drive" element={<GoogleDriveScreen />} />
                         <Route path="/notion" element={<NotionScreen />} />
                     </Routes>
                 </main>
                 <AICompanion />
+                <ActionableNotification />
+                <AISchedulingModal />
                 <ToastContainer />
                 <MusicPlayer />
             </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { getStepByStepExplanation } from '../services/geminiService';
 import { SparklesIcon } from '../components/icons/SparklesIcon';
@@ -6,6 +7,8 @@ import { BotIcon } from '../components/icons/BotIcon';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import { useAvatar } from '../hooks/useAvatar';
 import { Avatar } from '../components/Avatar';
+import { useToasts } from '../context/ToastContext';
+import { ClipboardIcon } from '../components/icons/ClipboardIcon';
 
 interface Message {
   role: 'user' | 'model';
@@ -39,10 +42,20 @@ function ExplainerScreen() {
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { avatarId } = useAvatar();
+    const { addToast } = useToasts();
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isLoading]);
+
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text).then(() => {
+            addToast('Copied to clipboard!', 'success', 'Success');
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+            addToast('Failed to copy text.', 'error', 'Error');
+        });
+    };
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -68,7 +81,7 @@ function ExplainerScreen() {
     };
 
     return (
-        <div className="max-w-3xl mx-auto h-[calc(100vh-8rem)] flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden">
+        <div className="-mx-4 -my-8 h-[calc(100vh-4rem)] flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden">
             <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2 flex-shrink-0">
                  <SparklesIcon className="w-6 h-6 text-primary-500" />
                 <h1 className="text-xl font-bold">AI Explainer</h1>
@@ -83,13 +96,26 @@ function ExplainerScreen() {
                                 <BotIcon className="w-6 h-6 text-slate-500" />
                            </div>
                        )}
-                       <div className={`max-w-[85%] p-3 rounded-2xl ${
-                           msg.role === 'user'
-                           ? 'bg-primary-600 text-white rounded-br-none'
-                           : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-bl-none'
-                       }`}>
-                           {msg.role === 'model' ? <MarkdownRenderer content={msg.content} /> : msg.content}
-                       </div>
+                       
+                       {msg.role === 'model' ? (
+                            <div className="relative group max-w-[85%]">
+                                <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-bl-none">
+                                    <MarkdownRenderer content={msg.content} />
+                                </div>
+                                <button
+                                    onClick={() => handleCopy(msg.content)}
+                                    className="absolute top-1 right-1 p-1.5 bg-white dark:bg-slate-600 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                    aria-label="Copy text"
+                                >
+                                    <ClipboardIcon className="w-4 h-4 text-slate-600 dark:text-slate-200" />
+                                </button>
+                            </div>
+                        ) : (
+                             <div className="max-w-[85%] p-3 rounded-2xl bg-primary-600 text-white rounded-br-none">
+                                {msg.content}
+                            </div>
+                        )}
+
                        {msg.role === 'user' && (
                            <div className="w-10 h-10 flex-shrink-0">
                                <Avatar avatarId={avatarId} />

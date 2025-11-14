@@ -1,3 +1,4 @@
+
 // @ts-nocheck
 import React, { useState, useRef, useEffect } from 'react';
 import { useAIInteraction } from '../hooks/useAIInteraction';
@@ -9,6 +10,15 @@ import { BotIcon } from './icons/BotIcon';
 import { XCircleIcon } from './icons/XCircleIcon';
 import { SendIcon } from './icons/SendIcon';
 import Loader from './Loader';
+
+// Mapping of page names the AI can use to actual app routes
+const pagePaths: Record<string, string> = {
+    "home": "/", "create exam": "/create-exam", "history": "/history", "analytics": "/analytics",
+    "achievements": "/achievements", "study aids": "/study-aids", "study plan": "/study-plan",
+    "saved items": "/saved-items", "explainer": "/explainer", "tasks": "/tasks", "calendar": "/calendar",
+    "settings": "/settings", "drive": "/drive", "notion": "/notion", "diagram explainer": "/diagram-explainer"
+};
+
 
 function AICompanion() {
   const { messages, isThinking, isOpen, dispatch } = useAIInteraction();
@@ -22,20 +32,55 @@ function AICompanion() {
 
   useEffect(scrollToBottom, [messages]);
 
+  const handleFunctionCalls = (functionCalls: any[]) => {
+      for (const fc of functionCalls) {
+          if (fc.name === 'navigateTo') {
+              const page = fc.args.page.toLowerCase();
+              const destination = pagePaths[page];
+              if (destination) {
+                  dispatch({
+                      type: AIInteractionActionType.SHOW_NAVIGATION_PROMPT,
+                      payload: {
+                          destination,
+                          message: `The AI would like to navigate to the ${page} page. Proceed?`
+                      }
+                  });
+              }
+          } else if (fc.name === 'scheduleTask') {
+              dispatch({
+                  type: AIInteractionActionType.SHOW_SCHEDULING_MODAL,
+                  payload: {
+                      taskDescription: fc.args.description,
+                      dueDate: fc.args.dueDate,
+                  }
+              });
+          }
+      }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || isThinking) return;
 
     const userMessage: AIMessage = { role: 'user', parts: [{ text: newMessage }] };
     dispatch({ type: AIInteractionActionType.ADD_MESSAGE, payload: userMessage });
+    const currentMessage = newMessage;
     setNewMessage('');
     dispatch({ type: AIInteractionActionType.SET_IS_THINKING, payload: true });
 
     try {
-      // FIX: getAIResponse returns an object {text: '...'}, so access the .text property.
-      const response = await getAIResponse([...messages, userMessage], newMessage, aiPersona);
-      const modelMessage: AIMessage = { role: 'model', parts: [{ text: response.text }] };
-      dispatch({ type: AIInteractionActionType.ADD_MESSAGE, payload: modelMessage });
+      const response = await getAIResponse(messages, currentMessage, aiPersona);
+
+      if (response.functionCalls && response.functionCalls.length > 0) {
+          handleFunctionCalls(response.functionCalls);
+      }
+      
+      // The model might return text along with a function call, or just text.
+      if (response.text) {
+          const modelMessage: AIMessage = { role: 'model', parts: [{ text: response.text }] };
+          dispatch({ type: AIInteractionActionType.ADD_MESSAGE, payload: modelMessage });
+      }
+
     } catch (error) {
       console.error("AI response error:", error);
       const errorMessage: AIMessage = {

@@ -27,19 +27,30 @@ const examReducer = (state: AppState, action: Action): AppState => {
         ),
       };
     // FIX: Using ExamActionType for correct type narrowing.
-    case ExamActionType.ADD_RESULT:
-      return { ...state, results: [...state.results.filter(r => r.examId !== action.payload.examId), action.payload] };
+    case ExamActionType.ADD_RESULT: {
+      // Robustly ensure results is an array before spreading
+      const currentResults = Array.isArray(state.results) ? state.results : [];
+      // Filter out any previous result for this exam ID to allow retakes (overwriting)
+      const filteredResults = currentResults.filter(r => r.examId !== action.payload.examId);
+      return { 
+        ...state, 
+        results: [...filteredResults, action.payload] 
+      };
+    }
     // FIX: Using ExamActionType for correct type narrowing.
     case ExamActionType.SET_LOADING:
       return { ...state, loading: action.payload };
     // FIX: Using ExamActionType for correct type narrowing.
     case ExamActionType.SET_ERROR:
         return { ...state, error: action.payload, loading: false };
-    case ExamActionType.DELETE_RESULT:
+    case ExamActionType.DELETE_RESULT: {
+       // Ensure results is an array before filtering
+      const resultsToDeleteFrom = Array.isArray(state.results) ? state.results : [];
       return {
         ...state,
-        results: state.results.filter(r => r.examId !== action.payload),
+        results: resultsToDeleteFrom.filter(r => r.examId !== action.payload),
       };
+    }
     default:
       return state;
   }
@@ -50,7 +61,18 @@ const usePersistedReducer = (reducer: typeof examReducer, key: string, initial: 
     const [state, dispatch] = useReducer(reducer, initial, (initialState) => {
         try {
             const stored = localStorage.getItem(key);
-            return stored ? JSON.parse(stored) : initialState;
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                // Merge with initial state to ensure all required keys (like results) exist
+                return { 
+                    ...initialState, 
+                    ...parsed,
+                    // Explicitly ensure arrays exist if they were missing in stored data
+                    exams: Array.isArray(parsed.exams) ? parsed.exams : initialState.exams,
+                    results: Array.isArray(parsed.results) ? parsed.results : initialState.results
+                };
+            }
+            return initialState;
         } catch (error) {
             console.error("Error parsing state from localStorage", error);
             return initialState;

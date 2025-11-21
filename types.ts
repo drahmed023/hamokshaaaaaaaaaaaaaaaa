@@ -373,3 +373,22 @@ export interface ToastMessage {
   type: 'success' | 'error' | 'info';
   title: string;
 }
+
+// Bookmarks
+export interface Bookmark {
+  examId: string;
+  questionId: string;
+}
+
+export interface BookmarksState {
+  bookmarks: Bookmark[];
+}
+
+export enum BookmarksActionType {
+  ADD_BOOKMARK = 'ADD_BOOKMARK',
+  REMOVE_BOOKMARK = 'REMOVE_BOOKMARK',
+}
+
+export type BookmarksAction =
+  | { type: BookmarksActionType.ADD_BOOKMARK, payload: Bookmark }
+  | { type: BookmarksActionType.REMOVE_BOOKMARK, payload: { questionId: string } };

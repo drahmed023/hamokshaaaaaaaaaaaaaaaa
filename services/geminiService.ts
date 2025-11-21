@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 import { GoogleGenAI, Type, Modality, FunctionDeclaration } from "@google/genai";
 import { Exam, MindMapNodeData, Question, StudyPlan, StudyWeek, StudyDay, StudyTask, AIPersona, StudyResource } from '../types';
@@ -31,7 +30,7 @@ const parseJsonOrThrow = (jsonString: string, errorMessage: string) => {
 };
 
 export const generateExamFromText = async (text: string, numQuestions: number, adaptive: boolean): Promise<Omit<Exam, 'id' | 'sourceFileName'>> => {
-    const prompt = `Based on the following text, create a multiple-choice exam with ${numQuestions} questions. Each question must have exactly 4 options, and one must be the correct answer. ${adaptive ? 'The questions should be suitable for a beginner or someone new to this topic.' : ''} The output must be a JSON object with a "title" (string) and a "questions" (array of objects) property. Each question object must have "questionText" (string), "options" (array of 4 strings), and "correctAnswer" (string, which is one of the options).
+    const prompt = `Based on the following text, create a multiple-choice exam with ${numQuestions} questions. Each question must have exactly 4 options, and one must be the correct answer. If the topic is appropriate (e.g., medicine, law, engineering, business), include some case-based or scenario questions that require critical thinking to solve. ${adaptive ? 'The questions should be suitable for a beginner or someone new to this topic.' : ''} The output must be a JSON object with a "title" (string) and a "questions" (array of objects) property. Each question object must have "questionText" (string), "options" (array of 4 strings), and "correctAnswer" (string, which is one of the options).
 
 Text:
 ---

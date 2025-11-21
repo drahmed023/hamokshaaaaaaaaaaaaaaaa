@@ -41,6 +41,8 @@ import NotionScreen from './screens/NotionScreen';
 import DiagramExplainerScreen from './screens/DiagramExplainerScreen';
 import ActionableNotification from './components/ActionableNotification';
 import AISchedulingModal from './components/AISchedulingModal';
+import { BookmarkProvider } from './context/BookmarkContext';
+import BookmarkedQuestionsScreen from './screens/BookmarkedQuestionsScreen';
 
 // This component contains the entire UI logic.
 // It sits inside all providers, so it has access to all contexts.
@@ -82,6 +84,7 @@ function AppUI() {
                         <Route path="/diagram-explainer" element={<DiagramExplainerScreen />} />
                         <Route path="/drive" element={<GoogleDriveScreen />} />
                         <Route path="/notion" element={<NotionScreen />} />
+                        <Route path="/bookmarks" element={<BookmarkedQuestionsScreen />} />
                     </Routes>
                 </main>
                 <AICompanion />
@@ -109,15 +112,17 @@ function AppProviders({ children }: { children?: React.ReactNode }) {
               <TasksProvider>
                 <ExamProvider>
                   <StudyAidsProvider>
-                    <StudyPlanProvider>
-                      <SmartSettingsProvider>
-                        <AIInteractionProvider>
-                          <PomodoroProvider>
-                            {children}
-                          </PomodoroProvider>
-                        </AIInteractionProvider>
-                      </SmartSettingsProvider>
-                    </StudyPlanProvider>
+                    <BookmarkProvider>
+                      <StudyPlanProvider>
+                        <SmartSettingsProvider>
+                          <AIInteractionProvider>
+                            <PomodoroProvider>
+                              {children}
+                            </PomodoroProvider>
+                          </AIInteractionProvider>
+                        </SmartSettingsProvider>
+                      </StudyPlanProvider>
+                    </BookmarkProvider>
                   </StudyAidsProvider>
                 </ExamProvider>
               </TasksProvider>

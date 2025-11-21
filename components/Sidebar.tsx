@@ -18,6 +18,7 @@ import { FolderIcon } from './icons/FolderIcon';
 import { AppLogoIcon } from './icons/AppLogoIcon';
 import { LinkIcon } from './icons/LinkIcon';
 import { ImagePlusIcon } from './icons/ImagePlusIcon';
+import { BookmarkIcon } from './icons/BookmarkIcon';
 
 
 type SidebarProps = {
@@ -35,6 +36,7 @@ const navItems = [
   { to: '/study-aids', text: 'Study Aids', icon: BookOpenIcon },
   { to: '/study-plan', text: 'Study Plan', icon: ClipboardListIcon },
   { to: '/saved-items', text: 'Saved Items', icon: CheckCircleIcon },
+  { to: '/bookmarks', text: 'Bookmarked Questions', icon: BookmarkIcon },
   { to: '/explainer', text: 'AI Explainer', icon: LightbulbIcon },
   { to: '/diagram-explainer', text: 'Diagram Explainer', icon: ImagePlusIcon },
   { to: '/tasks', text: 'Tasks', icon: ListChecksIcon },

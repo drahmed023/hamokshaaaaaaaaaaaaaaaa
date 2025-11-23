@@ -45,7 +45,7 @@ function SessionSummaryModal({ isOpen, onClose }: SessionSummaryModalProps) {
 
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
-             <div className="relative bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 p-8 rounded-xl shadow-2xl w-full max-w-sm m-4 text-center">
+             <div className="relative bg-white/70 dark:bg-slate-800/75 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/60 p-8 rounded-xl shadow-2xl w-full max-w-sm m-4 text-center">
                 <Confetti />
                 <div className="w-16 h-16 bg-green-100/50 dark:bg-green-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckIcon className="w-8 h-8 text-green-600" />

@@ -315,11 +315,11 @@ function TakeExamScreen() {
     };
 
     const Sidebar = () => (
-        <aside className={`fixed inset-y-0 left-0 z-40 w-80 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl text-slate-800 dark:text-white flex flex-col transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:h-full flex-shrink-0 shadow-xl`}>
-            <div className="p-4 border-b border-white/20 dark:border-slate-700/50 flex-shrink-0">
+        <aside className={`fixed inset-y-0 left-0 z-40 w-80 bg-white/75 dark:bg-slate-800/80 backdrop-blur-xl text-slate-800 dark:text-white flex flex-col transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:h-full flex-shrink-0 shadow-xl border-r border-slate-200/80 dark:border-slate-700/60`}>
+            <div className="p-4 border-b border-slate-200/80 dark:border-slate-700/60 flex-shrink-0">
                 <div className="flex justify-between items-center">
                     <h2 className="font-bold text-lg truncate pr-2 text-slate-900 dark:text-white">{exam.title}</h2>
-                    <button onClick={handleQuit} className="p-1 text-slate-500 dark:text-slate-300 hover:text-red-500 hover:bg-white/20 dark:hover:bg-white/10 rounded" title="Quit Exam"><XCircleIcon className="w-6 h-6"/></button>
+                    <button onClick={handleQuit} className="p-1 text-slate-500 dark:text-slate-300 hover:text-red-500 hover:bg-black/5 dark:hover:bg-white/10 rounded" title="Quit Exam"><XCircleIcon className="w-6 h-6"/></button>
                 </div>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Tutor Mode</p>
                 <div className="flex items-center gap-4 mt-2">
@@ -329,7 +329,7 @@ function TakeExamScreen() {
                     <span className="text-sm font-semibold whitespace-nowrap text-slate-700 dark:text-slate-200">{sessionAnswers.length}/{exam.questions.length}</span>
                 </div>
                 <div className="relative mt-4">
-                    <input type="text" placeholder="Search Questions" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-white/20 dark:bg-slate-700/50 rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-800 dark:text-white placeholder-slate-500 dark:placeholder-slate-400" />
+                    <input type="text" placeholder="Search Questions" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-black/5 dark:bg-slate-900/40 rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-800 dark:text-white placeholder-slate-500 dark:placeholder-slate-400" />
                     <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 dark:text-slate-400"/>
                 </div>
             </div>
@@ -342,7 +342,7 @@ function TakeExamScreen() {
                         const isSelected = q.originalIndex === currentQuestionIndex;
                         return (
                             <li key={q.id}>
-                                <button onClick={() => setCurrentQuestionIndex(q.originalIndex)} className={`w-full text-left p-2 rounded-md flex items-start gap-3 transition-colors ${isSelected ? 'bg-primary-600 text-white' : 'text-slate-700 dark:text-slate-300 hover:bg-white/20 dark:hover:bg-white/10'}`}>
+                                <button onClick={() => setCurrentQuestionIndex(q.originalIndex)} className={`w-full text-left p-2 rounded-md flex items-start gap-3 transition-colors ${isSelected ? 'bg-primary-600 text-white' : 'text-slate-700 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10'}`}>
                                     <div className="flex-shrink-0 flex items-center gap-1 min-w-[24px]">
                                         <span className={`font-semibold text-sm`}>{q.originalIndex + 1}</span>
                                         {isBookmarkedFlag && <BookmarkIcon solid className="w-3 h-3 text-yellow-400" />}
@@ -356,7 +356,7 @@ function TakeExamScreen() {
                 </ul>
             </nav>
             
-            <div className="p-4 border-t border-white/20 dark:border-slate-700/50 flex-shrink-0 bg-white/40 dark:bg-transparent">
+            <div className="p-4 border-t border-slate-200/80 dark:border-slate-700/60 flex-shrink-0 bg-white/75 dark:bg-transparent">
                 <Button variant="primary" className="w-full justify-center !bg-green-600 hover:!bg-green-700" onClick={() => handleFinishExam('manual')}>
                     Finish & Submit
                 </Button>
@@ -368,11 +368,11 @@ function TakeExamScreen() {
 
     return (
         <div className="-mx-4 -my-8 h-[calc(100vh-4rem)] flex flex-col">
-            <header className="flex-shrink-0 bg-white/40 dark:bg-slate-800/40 backdrop-blur-lg border-b border-white/30 dark:border-slate-700/50 z-30 relative">
+            <header className="flex-shrink-0 bg-white/75 dark:bg-slate-800/80 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-700/60 z-30 relative">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2 overflow-hidden">
-                        <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 text-slate-500 rounded-full hover:bg-white/20 dark:hover:bg-white/10"><MenuIcon className="w-6 h-6"/></button>
-                        <button onClick={handleShare} className="p-2 text-slate-500 rounded-full hover:bg-white/20 dark:hover:bg-white/10" title="Share Exam"><ShareIcon className="w-5 h-5"/></button>
+                        <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 text-slate-500 rounded-full hover:bg-black/5 dark:hover:bg-white/10"><MenuIcon className="w-6 h-6"/></button>
+                        <button onClick={handleShare} className="p-2 text-slate-500 rounded-full hover:bg-black/5 dark:hover:bg-white/10" title="Share Exam"><ShareIcon className="w-5 h-5"/></button>
                         <span className="hidden md:block text-slate-300 dark:text-slate-600 mx-2">|</span>
                         <h1 className="font-bold text-lg truncate text-slate-800 dark:text-slate-100">Question {currentQuestionIndex + 1} of {exam.questions.length}</h1>
                     </div>
@@ -386,10 +386,10 @@ function TakeExamScreen() {
                         </Button>
 
                         <div className="flex items-center gap-1 bg-slate-100/50 dark:bg-slate-700/50 rounded-md p-0.5">
-                            <button onClick={() => setFontScaleIndex(p => Math.max(p-1, 0))} className="px-1.5 py-0.5 rounded hover:bg-white/20 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200" aria-label="Decrease font size">A-</button>
-                            <button onClick={() => setFontScaleIndex(p => Math.min(p+1, FONT_SIZES.length-1))} className="px-1.5 py-0.5 rounded hover:bg-white/20 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200" aria-label="Increase font size">A+</button>
+                            <button onClick={() => setFontScaleIndex(p => Math.max(p-1, 0))} className="px-1.5 py-0.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200" aria-label="Decrease font size">A-</button>
+                            <button onClick={() => setFontScaleIndex(p => Math.min(p+1, FONT_SIZES.length-1))} className="px-1.5 py-0.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200" aria-label="Increase font size">A+</button>
                         </div>
-                        <button onClick={handleToggleFullScreen} className="p-2 rounded-full hover:bg-white/20 dark:hover:bg-white/10" title={isFullScreen ? "Exit Fullscreen" : "Enter Fullscreen"}><ExpandIcon className="w-5 h-5"/></button>
+                        <button onClick={handleToggleFullScreen} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10" title={isFullScreen ? "Exit Fullscreen" : "Enter Fullscreen"}><ExpandIcon className="w-5 h-5"/></button>
                     </div>
                 </div>
             </header>
@@ -404,16 +404,16 @@ function TakeExamScreen() {
                 <main className="flex-grow flex flex-col overflow-hidden">
                     <div className="flex-grow p-4 md:p-8 overflow-y-auto">
                         <div className="max-w-3xl mx-auto">
-                            <div className="bg-white/20 dark:bg-slate-800/40 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 dark:border-slate-700/50 p-6">
+                            <div className="bg-white/60 dark:bg-slate-800/70 backdrop-blur-lg rounded-2xl shadow-lg border border-slate-200/80 dark:border-slate-700/60 p-6">
                                 <div className="flex justify-between items-start mb-4">
                                     <p className="text-sm font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Question {currentQuestionIndex + 1}</p>
                                     <div className="flex items-center gap-2 text-slate-400">
                                         <div ref={highlighterRef} className="relative">
-                                            <button onClick={() => setIsHighlighterOpen(p => !p)} className="p-1 rounded hover:bg-white/20 dark:hover:bg-white/10" title="Highlight text">
+                                            <button onClick={() => setIsHighlighterOpen(p => !p)} className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10" title="Highlight text">
                                                 <HighlightIcon className="w-5 h-5"/>
                                             </button>
                                             {isHighlighterOpen && (
-                                                <div className="absolute top-full right-0 mt-2 p-2 bg-white/60 dark:bg-slate-900/60 backdrop-blur-lg border border-white/20 dark:border-slate-700/50 rounded-lg shadow-xl z-50 flex items-center gap-2">
+                                                <div className="absolute top-full right-0 mt-2 p-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border border-slate-200/80 dark:border-slate-700/60 rounded-lg shadow-xl z-50 flex items-center gap-2">
                                                     <button onClick={() => applyHighlight('yellow')} className="w-6 h-6 rounded-full bg-yellow-400/50 border border-slate-300 dark:border-slate-600" aria-label="Highlight yellow"></button>
                                                     <button onClick={() => applyHighlight('green')} className="w-6 h-6 rounded-full bg-green-400/50 border border-slate-300 dark:border-slate-600" aria-label="Highlight green"></button>
                                                     <button onClick={() => applyHighlight('pink')} className="w-6 h-6 rounded-full bg-pink-400/50 border border-slate-300 dark:border-slate-600" aria-label="Highlight pink"></button>
@@ -423,16 +423,16 @@ function TakeExamScreen() {
                                                 </div>
                                             )}
                                         </div>
-                                        <button onClick={() => setShowNotes(prev => !prev)} className={`p-1 rounded transition-colors ${showNotes ? 'bg-primary-100/50 dark:bg-primary-900/50 text-primary-600' : 'hover:bg-white/20 dark:hover:bg-white/10'}`} title="Question Notes"><PencilAltIcon className="w-5 h-5" /></button>
-                                        <button onClick={handleToggleBookmark} className="hover:text-yellow-500 transition-colors p-1 rounded hover:bg-white/20 dark:hover:bg-white/10" title="Bookmark Question"><BookmarkIcon solid={isBookmarked} className="w-5 h-5"/></button>
-                                        <button onClick={() => handleFeedback('good')} className="hover:text-green-500 transition-colors p-1 rounded hover:bg-white/20 dark:hover:bg-white/10" title="Good question"><ThumbUpIcon className="w-5 h-5" /></button>
-                                        <button onClick={() => handleFeedback('bad')} className="hover:text-red-500 transition-colors p-1 rounded hover:bg-white/20 dark:hover:bg-white/10" title="Bad question"><ThumbDownIcon className="w-5 h-5" /></button>
+                                        <button onClick={() => setShowNotes(prev => !prev)} className={`p-1 rounded transition-colors ${showNotes ? 'bg-primary-100/50 dark:bg-primary-900/50 text-primary-600' : 'hover:bg-black/5 dark:hover:bg-white/10'}`} title="Question Notes"><PencilAltIcon className="w-5 h-5" /></button>
+                                        <button onClick={handleToggleBookmark} className="hover:text-yellow-500 transition-colors p-1 rounded hover:bg-black/5 dark:hover:bg-white/10" title="Bookmark Question"><BookmarkIcon solid={isBookmarked} className="w-5 h-5"/></button>
+                                        <button onClick={() => handleFeedback('good')} className="hover:text-green-500 transition-colors p-1 rounded hover:bg-black/5 dark:hover:bg-white/10" title="Good question"><ThumbUpIcon className="w-5 h-5" /></button>
+                                        <button onClick={() => handleFeedback('bad')} className="hover:text-red-500 transition-colors p-1 rounded hover:bg-black/5 dark:hover:bg-white/10" title="Bad question"><ThumbDownIcon className="w-5 h-5" /></button>
                                         <div ref={optionsMenuRef} className="relative">
-                                            <button onClick={() => setIsMoreOptionsOpen(prev => !prev)} title="More options" className="p-1 rounded hover:bg-white/20 dark:hover:bg-white/10"><DotsVerticalIcon className="w-5 h-5" /></button>
+                                            <button onClick={() => setIsMoreOptionsOpen(prev => !prev)} title="More options" className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10"><DotsVerticalIcon className="w-5 h-5" /></button>
                                             {isMoreOptionsOpen && (
-                                                <div className="absolute top-full right-0 mt-2 w-48 bg-white/60 dark:bg-slate-900/60 backdrop-blur-lg border border-white/20 dark:border-slate-700/50 rounded-lg shadow-xl py-1 z-50 overflow-hidden">
-                                                    <a href="#" className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-white/20 dark:hover:bg-white/10">Report an issue</a>
-                                                    <a href="#" className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-white/20 dark:hover:bg-white/10">Get Help</a>
+                                                <div className="absolute top-full right-0 mt-2 w-48 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border border-slate-200/80 dark:border-slate-700/60 rounded-lg shadow-xl py-1 z-50 overflow-hidden">
+                                                    <a href="#" className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10">Report an issue</a>
+                                                    <a href="#" className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10">Get Help</a>
                                                 </div>
                                             )}
                                         </div>
@@ -456,13 +456,13 @@ function TakeExamScreen() {
                                         
                                         let stateClasses = "";
                                         if (state === 'default') {
-                                            stateClasses = `bg-white/30 dark:bg-slate-800/30 border-white/40 dark:border-slate-600/50 hover:border-primary-500/50 hover:bg-white/50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-200 ${isSelected ? 'border-primary-600 ring-2 ring-primary-500/20 bg-primary-50/50 dark:bg-primary-900/30' : ''}`;
+                                            stateClasses = `bg-white/40 dark:bg-slate-900/30 border-slate-300/50 dark:border-slate-600/50 hover:border-primary-500/50 hover:bg-white/60 dark:hover:bg-slate-700/50 text-slate-800 dark:text-slate-100 ${isSelected ? 'border-primary-600 ring-2 ring-primary-500/20 bg-primary-50/50 dark:bg-primary-900/30' : ''}`;
                                         } else if (state === 'correct') {
                                             stateClasses = "bg-green-500/20 border-green-500/50 text-green-800 dark:text-green-200 cursor-default";
                                         } else if (state === 'incorrect') {
                                             stateClasses = "bg-red-500/20 border-red-500/50 text-red-800 dark:text-red-200 cursor-default";
                                         } else if (state === 'disabled') {
-                                            stateClasses = "bg-slate-500/10 dark:bg-slate-800/20 border-slate-500/20 text-slate-500 dark:text-slate-500 opacity-70 cursor-default";
+                                            stateClasses = "bg-slate-500/10 dark:bg-slate-800/20 border-slate-500/20 text-slate-500 dark:text-slate-400 opacity-70 cursor-default";
                                         }
 
                                         return (
@@ -491,7 +491,7 @@ function TakeExamScreen() {
                                         <textarea
                                             id="notes"
                                             rows={4}
-                                            className="w-full p-3 border border-white/20 dark:border-slate-700/50 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white/20 dark:bg-slate-900/40 backdrop-blur-lg"
+                                            className="w-full p-3 border border-slate-200/80 dark:border-slate-700/60 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white/30 dark:bg-slate-900/40 backdrop-blur-lg"
                                             placeholder="Jot down your thoughts on this question..."
                                             value={currentNote}
                                             onChange={(e) => handleNoteChange(e.target.value)}
@@ -524,7 +524,7 @@ function TakeExamScreen() {
                         </div>
                     </div>
                     {/* Sticky Footer for Actions */}
-                    <div className="flex-shrink-0 p-4 bg-white/20 dark:bg-slate-800/40 backdrop-blur-lg border-t border-white/30 dark:border-slate-700/50">
+                    <div className="flex-shrink-0 p-4 bg-white/75 dark:bg-slate-800/80 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-700/60">
                          <div className="max-w-3xl mx-auto flex justify-between items-center">
                             <Button variant="secondary" onClick={() => currentQuestionIndex > 0 && setCurrentQuestionIndex(p => p - 1)} disabled={currentQuestionIndex === 0}>
                                 <ChevronLeftIcon className="w-5 h-5 mr-1"/> Previous

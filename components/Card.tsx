@@ -7,7 +7,7 @@ type CardProps = {
 
 function Card({ children, className = '' }: CardProps) {
   return (
-    <div className={`bg-white/60 dark:bg-slate-800/75 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-slate-700/50 overflow-hidden ${className}`}>
+    <div className={`bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200/80 dark:border-slate-700/60 overflow-hidden ${className}`}>
       <div className="p-6">
         {children}
       </div>

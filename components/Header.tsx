@@ -43,7 +43,7 @@ function Header({ onMenuClick }: HeaderProps) {
   });
 
   return (
-    <header className="hide-in-focus bg-white/70 dark:bg-slate-900/75 backdrop-blur-xl sticky top-0 z-30 border-b border-white/30 dark:border-slate-700/50">
+    <header className="hide-in-focus bg-white/80 dark:bg-slate-900/85 backdrop-blur-xl sticky top-0 z-30 border-b border-slate-200/80 dark:border-slate-700/60">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-2 flex-1">

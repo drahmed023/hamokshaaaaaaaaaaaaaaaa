@@ -47,7 +47,7 @@ function AISchedulingModal() {
 
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]">
-            <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 p-6 rounded-lg shadow-xl w-full max-w-md m-4">
+            <div className="bg-white/70 dark:bg-slate-800/75 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/60 p-6 rounded-lg shadow-xl w-full max-w-md m-4">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-bold flex items-center gap-2">
                         <BotIcon className="w-5 h-5 text-primary-500" />

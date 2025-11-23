@@ -187,7 +187,7 @@ function HomeScreen() {
       {/* Main Content */}
       <div className="lg:col-span-2 space-y-6">
         {/* Welcome Banner */}
-        <div className="relative p-8 rounded-2xl text-white bg-primary-700/40 dark:bg-primary-800/40 backdrop-blur-lg border border-white/20 dark:border-primary-700/50 overflow-hidden">
+        <div className="relative p-8 rounded-2xl text-white bg-primary-700/60 dark:bg-primary-800/70 backdrop-blur-lg border border-white/20 dark:border-primary-700/50 overflow-hidden">
             <div className="relative z-10">
                 <h1 className="text-3xl font-bold">Welcome back!</h1>
                 <p className="mt-2 text-primary-200 max-w-sm">Ready to learn today?</p>
@@ -246,7 +246,7 @@ function HomeScreen() {
       {/* Right Sidebar */}
       <div className="space-y-6">
         <Card className="!p-0 text-white">
-            <div className="p-6 bg-slate-800/40 dark:bg-slate-900/40">
+            <div className="p-6 bg-slate-800/60 dark:bg-slate-900/70">
                 <h2 className="font-bold text-lg">Unlock Premium Features</h2>
                 <ul className="list-disc list-inside text-slate-300 space-y-1 mt-2 text-sm">
                     <li>Get access to exclusive benefits.</li>

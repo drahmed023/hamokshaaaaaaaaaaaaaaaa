@@ -107,9 +107,9 @@ function AICompanion() {
       </button>
 
       {isOpen && (
-        <div className="hide-in-focus fixed bottom-24 right-6 z-50 w-full max-w-sm h-[60vh] bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-lg shadow-2xl flex flex-col transition-all duration-300 origin-bottom-right">
+        <div className="hide-in-focus fixed bottom-24 right-6 z-50 w-full max-w-sm h-[60vh] bg-white/70 dark:bg-slate-800/75 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/60 rounded-lg shadow-2xl flex flex-col transition-all duration-300 origin-bottom-right">
           {/* Header */}
-          <div className="flex items-center justify-between p-3 border-b border-white/20 dark:border-slate-700/50 flex-shrink-0">
+          <div className="flex items-center justify-between p-3 border-b border-slate-200/80 dark:border-slate-700/60 flex-shrink-0">
             <h3 className="font-bold text-lg flex items-center gap-2">
                 <BotIcon className="w-5 h-5 text-primary-500" />
                 AI Study Companion
@@ -138,7 +138,7 @@ function AICompanion() {
           </div>
 
           {/* Input */}
-          <div className="p-3 border-t border-white/20 dark:border-slate-700/50 flex-shrink-0">
+          <div className="p-3 border-t border-slate-200/80 dark:border-slate-700/60 flex-shrink-0">
             <form onSubmit={handleSendMessage} className="flex items-center gap-2">
               <input
                 type="text"

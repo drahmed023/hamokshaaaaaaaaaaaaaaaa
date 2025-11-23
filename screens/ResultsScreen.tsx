@@ -223,16 +223,16 @@ function ResultsScreen() {
   };
 
   const Sidebar = () => (
-     <aside className={`fixed inset-y-0 left-0 z-40 w-80 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl text-slate-800 dark:text-white flex flex-col transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:h-full flex-shrink-0 shadow-xl`}>
-        <div className="p-4 border-b border-white/20 dark:border-slate-700/50 flex-shrink-0">
+     <aside className={`fixed inset-y-0 left-0 z-40 w-80 bg-white/75 dark:bg-slate-800/80 backdrop-blur-xl text-slate-800 dark:text-white flex flex-col transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:h-full flex-shrink-0 shadow-xl border-r border-slate-200/80 dark:border-slate-700/60`}>
+        <div className="p-4 border-b border-slate-200/80 dark:border-slate-700/60 flex-shrink-0">
           <div className="flex justify-between items-center">
             <h2 className="font-bold text-lg truncate pr-2 text-slate-900 dark:text-white">{exam.title}</h2>
-             <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-1 text-slate-500 hover:text-red-500 hover:bg-white/20 dark:hover:bg-white/10 rounded">
+             <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-1 text-slate-500 hover:text-red-500 hover:bg-black/5 dark:hover:bg-white/10 rounded">
                 <XCircleIcon className="w-6 h-6"/>
             </button>
           </div>
           <div className="relative mt-4">
-              <input type="text" placeholder="Search Questions" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-white/20 dark:bg-slate-700/50 rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-800 dark:text-white placeholder-slate-500 dark:placeholder-slate-400" />
+              <input type="text" placeholder="Search Questions" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-black/5 dark:bg-slate-900/40 rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-800 dark:text-white placeholder-slate-500 dark:placeholder-slate-400" />
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 dark:text-slate-400"/>
           </div>
         </div>
@@ -248,7 +248,7 @@ function ResultsScreen() {
 
                     return (
                         <li key={q.id}>
-                            <button onClick={() => setCurrentQuestionIndex(q.originalIndex)} className={`w-full text-left p-2 rounded-md flex items-start gap-3 transition-colors ${isSelected ? 'bg-primary-600 text-white' : 'text-slate-700 dark:text-slate-300 hover:bg-white/20 dark:hover:bg-white/10'}`}>
+                            <button onClick={() => setCurrentQuestionIndex(q.originalIndex)} className={`w-full text-left p-2 rounded-md flex items-start gap-3 transition-colors ${isSelected ? 'bg-primary-600 text-white' : 'text-slate-700 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10'}`}>
                                 <div className="flex-shrink-0 flex items-center gap-1 min-w-[24px]">
                                     <span className={`font-semibold text-sm`}>{q.originalIndex + 1}</span>
                                     {isBookmarked && <BookmarkIcon solid className="w-3 h-3 text-yellow-400" />}
@@ -261,7 +261,7 @@ function ResultsScreen() {
                 })}
             </ul>
         </nav>
-        <div className="p-4 border-t border-white/20 dark:border-slate-700/50 flex-shrink-0 bg-white/40 dark:bg-transparent">
+        <div className="p-4 border-t border-slate-200/80 dark:border-slate-700/60 flex-shrink-0 bg-white/75 dark:bg-slate-800/80">
           <Button variant="secondary" className="w-full justify-center" onClick={() => navigate('/history')}>Back to History</Button>
         </div>
      </aside>
@@ -269,10 +269,10 @@ function ResultsScreen() {
 
   return (
     <div className="-mx-4 -my-8 h-[calc(100vh-4rem)] flex flex-col">
-       <header className="flex-shrink-0 bg-white/40 dark:bg-slate-800/40 backdrop-blur-lg border-b border-white/30 dark:border-slate-700/50 relative z-30">
+       <header className="flex-shrink-0 bg-white/75 dark:bg-slate-800/80 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-700/60 relative z-30">
            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-2 overflow-hidden">
-                    <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 text-slate-500 rounded-full hover:bg-white/20 dark:hover:bg-white/10">
+                    <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 text-slate-500 rounded-full hover:bg-black/5 dark:hover:bg-white/10">
                         <MenuIcon className="w-6 h-6"/>
                     </button>
                     <h1 className="font-bold text-lg truncate text-slate-800 dark:text-slate-100">Exam Results</h1>
@@ -299,9 +299,9 @@ function ResultsScreen() {
                <div className="max-w-4xl mx-auto pb-20">
                    
                    {/* Dashboard Style Summary Card */}
-                   <div className="bg-white/20 dark:bg-slate-800/40 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 dark:border-slate-700/50 p-6 mb-6">
+                   <div className="bg-white/60 dark:bg-slate-800/70 backdrop-blur-lg rounded-2xl shadow-lg border border-slate-200/80 dark:border-slate-700/60 p-6 mb-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                            <div className="flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/20 dark:border-slate-700/50 pb-4 md:pb-0 md:pr-6">
+                            <div className="flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-200/80 dark:border-slate-700/50 pb-4 md:pb-0 md:pr-6">
                                 <ScoreRing score={scorePercentage} size={100} strokeWidth={8} />
                                 <p className="mt-2 font-bold text-lg text-slate-800 dark:text-slate-100">{scorePercentage >= 50 ? 'Passed' : 'Review Needed'}</p>
                             </div>
@@ -326,7 +326,7 @@ function ResultsScreen() {
                         </div>
                    </div>
 
-                   <div className="bg-white/20 dark:bg-slate-800/40 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 dark:border-slate-700/50 p-6">
+                   <div className="bg-white/60 dark:bg-slate-800/70 backdrop-blur-lg rounded-2xl shadow-lg border border-slate-200/80 dark:border-slate-700/60 p-6">
                        <div className="flex justify-between items-start mb-4">
                            <div>
                                <span className="inline-block px-2 py-1 text-xs font-bold uppercase rounded bg-slate-500/10 dark:bg-slate-700/50 text-slate-500 dark:text-slate-300 mb-2">
@@ -334,18 +334,18 @@ function ResultsScreen() {
                                </span>
                            </div>
                            <div ref={optionsMenuRef} className="relative flex items-center gap-2 text-slate-400">
-                                <button onClick={() => setShowNotes(prev => !prev)} className={`p-1 rounded transition-colors ${showNotes ? 'bg-primary-100/50 dark:bg-primary-900/50 text-primary-600' : 'hover:bg-white/20 dark:hover:bg-white/10'}`} title="Question Notes"><PencilAltIcon className="w-5 h-5" /></button>
-                               <button onClick={handleToggleBookmark} className="hover:text-yellow-500 transition-colors p-1 rounded hover:bg-white/20 dark:hover:bg-white/10" title="Bookmark Question">
+                                <button onClick={() => setShowNotes(prev => !prev)} className={`p-1 rounded transition-colors ${showNotes ? 'bg-primary-100/50 dark:bg-primary-900/50 text-primary-600' : 'hover:bg-black/5 dark:hover:bg-white/10'}`} title="Question Notes"><PencilAltIcon className="w-5 h-5" /></button>
+                               <button onClick={handleToggleBookmark} className="hover:text-yellow-500 transition-colors p-1 rounded hover:bg-black/5 dark:hover:bg-white/10" title="Bookmark Question">
                                 <BookmarkIcon solid={bookmarks.some(b => b.questionId === currentQuestion.id)} className="w-5 h-5"/>
                                </button>
-                               <button className="hover:text-green-500 transition-colors p-1 rounded hover:bg-white/20 dark:hover:bg-white/10" title="Good question"><ThumbUpIcon className="w-5 h-5" /></button>
-                               <button className="hover:text-red-500 transition-colors p-1 rounded hover:bg-white/20 dark:hover:bg-white/10" title="Bad question"><ThumbDownIcon className="w-5 h-5" /></button>
-                               <button onClick={() => setIsMoreOptionsOpen(prev => !prev)} title="More options" className="p-1 rounded hover:bg-white/20 dark:hover:bg-white/10"><DotsVerticalIcon className="w-5 h-5" /></button>
+                               <button className="hover:text-green-500 transition-colors p-1 rounded hover:bg-black/5 dark:hover:bg-white/10" title="Good question"><ThumbUpIcon className="w-5 h-5" /></button>
+                               <button className="hover:text-red-500 transition-colors p-1 rounded hover:bg-black/5 dark:hover:bg-white/10" title="Bad question"><ThumbDownIcon className="w-5 h-5" /></button>
+                               <button onClick={() => setIsMoreOptionsOpen(prev => !prev)} title="More options" className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10"><DotsVerticalIcon className="w-5 h-5" /></button>
                                
                                {isMoreOptionsOpen && (
-                                   <div className="absolute top-full right-0 mt-2 w-48 bg-white/60 dark:bg-slate-900/60 backdrop-blur-lg border border-white/20 dark:border-slate-700/50 rounded-lg shadow-xl py-1 z-50 overflow-hidden">
-                                       <a href="#" className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-white/20 dark:hover:bg-white/10">Report an issue</a>
-                                       <a href="#" className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-white/20 dark:hover:bg-white/10">Get Help</a>
+                                   <div className="absolute top-full right-0 mt-2 w-48 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border border-slate-200/80 dark:border-slate-700/60 rounded-lg shadow-xl py-1 z-50 overflow-hidden">
+                                       <a href="#" className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10">Report an issue</a>
+                                       <a href="#" className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10">Get Help</a>
                                    </div>
                                )}
                            </div>
@@ -392,7 +392,7 @@ function ResultsScreen() {
                                 <textarea
                                     id="notes"
                                     rows={4}
-                                    className="w-full p-3 border border-white/20 dark:border-slate-700/50 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white/20 dark:bg-slate-900/40 backdrop-blur-lg"
+                                    className="w-full p-3 border border-slate-200/80 dark:border-slate-700/60 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white/30 dark:bg-slate-900/40 backdrop-blur-lg"
                                     placeholder="Add notes for this question..."
                                     value={currentNote}
                                     onChange={(e) => handleNoteChange(e.target.value)}
@@ -402,7 +402,7 @@ function ResultsScreen() {
 
                        {!isCurrentCorrect && <Explanation question={currentQuestion} userAnswer={userAnswer} />}
 
-                       <div className="mt-8 flex justify-between pt-6 border-t border-white/20 dark:border-slate-700/50">
+                       <div className="mt-8 flex justify-between pt-6 border-t border-slate-200/80 dark:border-slate-700/60">
                            <Button variant="secondary" onClick={handlePrev} disabled={currentQuestionIndex === 0}>
                                <ChevronLeftIcon className="w-5 h-5 mr-1"/> Previous
                            </Button>

@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useExam } from '../hooks/useExam';
 import { categorizeSubjects, getMotivationalInsight } from '../services/geminiService';
@@ -107,15 +101,28 @@ function AIMotivationalInsight({ exams, results }: { exams: Exam[], results: any
                 return;
             }
             setIsLoading(true);
-            const data = results.map(r => {
-                const exam = exams.find(e => e.id === r.examId);
-                return { subject: exam?.subject || 'General', score: r.score, date: r.submittedAt };
-            });
-            const dataString = JSON.stringify(data.slice(-10)); // last 10 results
             
             try {
+                const today = new Date().toISOString().split('T')[0];
+                const cachedData = localStorage.getItem('aiMotivationalInsight');
+                if (cachedData) {
+                    const { date, insight: cachedInsight } = JSON.parse(cachedData);
+                    if (date === today) {
+                        setInsight(cachedInsight);
+                        setIsLoading(false);
+                        return;
+                    }
+                }
+
+                const data = results.map(r => {
+                    const exam = exams.find(e => e.id === r.examId);
+                    return { subject: exam?.subject || 'General', score: r.score, date: r.submittedAt };
+                });
+                const dataString = JSON.stringify(data.slice(-10)); // last 10 results
+                
                 const result = await getMotivationalInsight(dataString);
                 setInsight(result);
+                localStorage.setItem('aiMotivationalInsight', JSON.stringify({ date: today, insight: result }));
             } catch (e) {
                 setInsight("Great job on your recent work. Stay focused and keep pushing forward!");
             } finally {

@@ -1,9 +1,4 @@
 
-
-
-
-
-
 import React, { useState, useEffect } from 'react';
 import { useAIInteraction } from '../hooks/useAIInteraction';
 import { useTasks } from '../hooks/useTasks';
@@ -52,7 +47,7 @@ function AISchedulingModal() {
 
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]">
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl w-full max-w-md m-4">
+            <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 p-6 rounded-lg shadow-xl w-full max-w-md m-4">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-bold flex items-center gap-2">
                         <BotIcon className="w-5 h-5 text-primary-500" />
@@ -70,7 +65,7 @@ function AISchedulingModal() {
                         rows={3}
                         value={taskText}
                         onChange={(e) => setTaskText(e.target.value)}
-                        className="w-full p-2 border border-slate-300 rounded-lg dark:bg-slate-700 dark:border-slate-600"
+                        className="w-full p-2 border border-slate-300/50 rounded-lg bg-white/30 dark:bg-slate-700/50 dark:border-slate-600/50"
                     />
                 </div>
                 <div className="mt-4">
@@ -81,7 +76,7 @@ function AISchedulingModal() {
                             type="date"
                             value={dueDate}
                             onChange={(e) => setDueDate(e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded-lg dark:bg-slate-700 dark:border-slate-600 pr-10"
+                            className="w-full p-2 border border-slate-300/50 rounded-lg bg-white/30 dark:bg-slate-700/50 dark:border-slate-600/50 pr-10"
                         />
                         <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     </div>

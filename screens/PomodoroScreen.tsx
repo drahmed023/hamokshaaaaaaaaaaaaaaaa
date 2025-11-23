@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import Card from '../components/Card';
 import Button from '../components/Button';
@@ -41,18 +35,20 @@ function PomodoroScreen() {
 
     // Fetch motivational message when timer starts
     useEffect(() => {
-        let interval: number;
         if (state.isActive && state.mode === 'pomodoro') {
             const fetchMsg = async () => {
-                const msg = await getMotivationalMessage();
-                setMotivationalMsg(msg);
+                try {
+                    const msg = await getMotivationalMessage();
+                    setMotivationalMsg(msg);
+                } catch (e) {
+                    console.error("Failed to get motivational message", e);
+                    setMotivationalMsg("Stay focused, you're doing great!");
+                }
             };
-            fetchMsg();
-            interval = window.setInterval(fetchMsg, 60000); // Fetch a new one every minute
+            fetchMsg(); // Fetch only once when the session starts
         } else {
             setMotivationalMsg('');
         }
-        return () => clearInterval(interval);
     }, [state.isActive, state.mode]);
     
     // Inactivity detection

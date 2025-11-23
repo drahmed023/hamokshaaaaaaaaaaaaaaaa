@@ -1,4 +1,3 @@
-
 import React, { useState, ReactNode } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { ExamProvider } from './context/ExamContext';
@@ -43,6 +42,8 @@ import ActionableNotification from './components/ActionableNotification';
 import AISchedulingModal from './components/AISchedulingModal';
 import { BookmarkProvider } from './context/BookmarkContext';
 import BookmarkedQuestionsScreen from './screens/BookmarkedQuestionsScreen';
+import { NotesProvider } from './context/NotesContext';
+import { HighlightProvider } from './context/HighlightContext';
 
 // This component contains the entire UI logic.
 // It sits inside all providers, so it has access to all contexts.
@@ -113,15 +114,19 @@ function AppProviders({ children }: { children?: React.ReactNode }) {
                 <ExamProvider>
                   <StudyAidsProvider>
                     <BookmarkProvider>
-                      <StudyPlanProvider>
-                        <SmartSettingsProvider>
-                          <AIInteractionProvider>
-                            <PomodoroProvider>
-                              {children}
-                            </PomodoroProvider>
-                          </AIInteractionProvider>
-                        </SmartSettingsProvider>
-                      </StudyPlanProvider>
+                      <NotesProvider>
+                        <HighlightProvider>
+                          <StudyPlanProvider>
+                            <SmartSettingsProvider>
+                              <AIInteractionProvider>
+                                <PomodoroProvider>
+                                  {children}
+                                </PomodoroProvider>
+                              </AIInteractionProvider>
+                            </SmartSettingsProvider>
+                          </StudyPlanProvider>
+                        </HighlightProvider>
+                      </NotesProvider>
                     </BookmarkProvider>
                   </StudyAidsProvider>
                 </ExamProvider>

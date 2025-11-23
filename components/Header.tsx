@@ -40,13 +40,13 @@ function Header({ onMenuClick }: HeaderProps) {
   });
 
   return (
-    <header className="hide-in-focus bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm sticky top-0 z-30 border-b border-slate-200 dark:border-slate-700">
+    <header className="hide-in-focus bg-white/40 dark:bg-slate-900/40 backdrop-blur-lg sticky top-0 z-30 border-b border-white/30 dark:border-slate-700/50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-2 flex-1">
             <button
               onClick={onMenuClick}
-              className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 icon-container"
+              className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-primary-500 icon-container"
               aria-label="Open navigation menu"
             >
               <MenuIcon className="w-6 h-6 icon-interactive" />
@@ -86,7 +86,7 @@ function Header({ onMenuClick }: HeaderProps) {
 
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 icon-container"
+              className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-primary-500 icon-container"
               aria-label="Toggle theme"
             >
               {theme === 'light' ? <MoonIcon className="w-6 h-6 icon-interactive" /> : <SunIcon className="w-6 h-6 icon-interactive" />}

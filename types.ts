@@ -79,6 +79,7 @@ export interface Summary {
 }
 
 export interface MindMapNodeData {
+  id: string;
   topic: string;
   children?: MindMapNodeData[];
 }
@@ -392,3 +393,42 @@ export enum BookmarksActionType {
 export type BookmarksAction =
   | { type: BookmarksActionType.ADD_BOOKMARK, payload: Bookmark }
   | { type: BookmarksActionType.REMOVE_BOOKMARK, payload: { questionId: string } };
+
+// Notes
+export interface Note {
+  examId: string;
+  questionId: string;
+  text: string;
+}
+
+export interface NotesState {
+  notes: Note[];
+}
+
+export enum NotesActionType {
+  SET_NOTE = 'SET_NOTE',
+  DELETE_NOTE = 'DELETE_NOTE',
+}
+
+export type NotesAction =
+  | { type: NotesActionType.SET_NOTE, payload: Note }
+  | { type: NotesActionType.DELETE_NOTE, payload: { questionId: string } };
+  
+// Highlights
+export interface Highlight {
+  questionId: string;
+  highlightedHtml: string;
+}
+
+export interface HighlightsState {
+  questionHighlights: Highlight[];
+}
+
+export enum HighlightsActionType {
+  SET_HIGHLIGHTS_FOR_QUESTION = 'SET_HIGHLIGHTS_FOR_QUESTION',
+  CLEAR_HIGHLIGHTS_FOR_QUESTION = 'CLEAR_HIGHLIGHTS_FOR_QUESTION',
+}
+
+export type HighlightsAction =
+  | { type: HighlightsActionType.SET_HIGHLIGHTS_FOR_QUESTION, payload: Highlight }
+  | { type: HighlightsActionType.CLEAR_HIGHLIGHTS_FOR_QUESTION, payload: { questionId: string } };

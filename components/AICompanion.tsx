@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 import React, { useState, useRef, useEffect } from 'react';
 import { useAIInteraction } from '../hooks/useAIInteraction';
@@ -108,9 +107,9 @@ function AICompanion() {
       </button>
 
       {isOpen && (
-        <div className="hide-in-focus fixed bottom-24 right-6 z-50 w-full max-w-sm h-[60vh] bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transition-all duration-300 origin-bottom-right">
+        <div className="hide-in-focus fixed bottom-24 right-6 z-50 w-full max-w-sm h-[60vh] bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-lg shadow-2xl flex flex-col transition-all duration-300 origin-bottom-right">
           {/* Header */}
-          <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
+          <div className="flex items-center justify-between p-3 border-b border-white/20 dark:border-slate-700/50 flex-shrink-0">
             <h3 className="font-bold text-lg flex items-center gap-2">
                 <BotIcon className="w-5 h-5 text-primary-500" />
                 AI Study Companion
@@ -127,7 +126,7 @@ function AICompanion() {
                   className={`max-w-[85%] p-3 rounded-2xl ${
                     msg.role === 'user'
                       ? 'bg-primary-600 text-white rounded-br-none'
-                      : 'bg-slate-100 dark:bg-slate-700 rounded-bl-none'
+                      : 'bg-slate-100/50 dark:bg-slate-700/50 rounded-bl-none'
                   }`}
                 >
                   {msg.parts[0].text}
@@ -139,14 +138,14 @@ function AICompanion() {
           </div>
 
           {/* Input */}
-          <div className="p-3 border-t border-slate-200 dark:border-slate-700 flex-shrink-0">
+          <div className="p-3 border-t border-white/20 dark:border-slate-700/50 flex-shrink-0">
             <form onSubmit={handleSendMessage} className="flex items-center gap-2">
               <input
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Ask me anything..."
-                className="w-full p-2 border border-slate-300 rounded-lg dark:bg-slate-700 dark:border-slate-600"
+                className="w-full p-2 border border-slate-300/50 rounded-lg bg-white/30 dark:bg-slate-700/50 dark:border-slate-600/50"
                 disabled={isThinking}
               />
               <Button type="submit" disabled={isThinking || !newMessage.trim()} className="!p-2.5">

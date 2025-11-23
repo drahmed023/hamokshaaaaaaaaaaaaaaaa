@@ -155,10 +155,10 @@ function HomeScreen() {
     }
     
     const getColorClass = (count: number) => {
-        if (count === 0) return 'bg-slate-200 dark:bg-slate-700/50';
-        if (count <= 2) return 'bg-primary-200 dark:bg-primary-900';
-        if (count <= 5) return 'bg-primary-400 dark:bg-primary-700';
-        return 'bg-primary-600 dark:bg-primary-500';
+        if (count === 0) return 'bg-slate-200/50 dark:bg-slate-700/50';
+        if (count <= 2) return 'bg-primary-200/50 dark:bg-primary-900/50';
+        if (count <= 5) return 'bg-primary-400/50 dark:bg-primary-700/50';
+        return 'bg-primary-600/50 dark:bg-primary-500/50';
     };
 
     return (
@@ -187,7 +187,7 @@ function HomeScreen() {
       {/* Main Content */}
       <div className="lg:col-span-2 space-y-6">
         {/* Welcome Banner */}
-        <div className="relative p-8 rounded-2xl text-white bg-primary-700 dark:bg-primary-800 overflow-hidden">
+        <div className="relative p-8 rounded-2xl text-white bg-primary-700/40 dark:bg-primary-800/40 backdrop-blur-lg border border-white/20 dark:border-primary-700/50 overflow-hidden">
             <div className="relative z-10">
                 <h1 className="text-3xl font-bold">Welcome back!</h1>
                 <p className="mt-2 text-primary-200 max-w-sm">Ready to learn today?</p>
@@ -213,14 +213,14 @@ function HomeScreen() {
         <AIStudyCoach />
 
         {/* Performance Overview */}
-        <Card className="!p-0">
-          <div className="p-6">
+        <Card>
+          <div className="p-0">
             <div className="flex items-start justify-between">
                 <div>
                     <h2 className="text-xl font-bold flex items-center gap-2"><ChartBarSquareIcon className="w-6 h-6 text-slate-500"/> Performance Overview</h2>
                     <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Track how many questions you've solved.</p>
                 </div>
-                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 p-1 rounded-md">
+                <div className="flex items-center gap-1 bg-slate-100/50 dark:bg-slate-700/50 p-1 rounded-md">
                     <Button onClick={() => setPerformancePeriod('week')} size="sm" variant={performancePeriod === 'week' ? 'primary' : 'secondary'} className="!px-2 !py-1">Last Week</Button>
                     <Button onClick={() => setPerformancePeriod('month')} size="sm" variant={performancePeriod === 'month' ? 'primary' : 'secondary'} className="!px-2 !py-1">Last Month</Button>
                 </div>
@@ -237,7 +237,7 @@ function HomeScreen() {
                 </div>
             </div>
           </div>
-          <div className="px-6 pb-6">
+          <div className="pt-6">
             <StackedBarChart data={performanceData} />
           </div>
         </Card>
@@ -245,14 +245,16 @@ function HomeScreen() {
 
       {/* Right Sidebar */}
       <div className="space-y-6">
-        <Card className="bg-slate-800 dark:bg-slate-900 text-white">
-            <h2 className="font-bold text-lg">Unlock Premium Features</h2>
-            <ul className="list-disc list-inside text-slate-300 space-y-1 mt-2 text-sm">
-                <li>Get access to exclusive benefits.</li>
-                <li>Unlimited daily Quizzes.</li>
-                <li>Premium QS banks.</li>
-            </ul>
-            <Button className="w-full mt-4 !bg-primary-600 hover:!bg-primary-700">Upgrade</Button>
+        <Card className="!p-0 text-white">
+            <div className="p-6 bg-slate-800/40 dark:bg-slate-900/40">
+                <h2 className="font-bold text-lg">Unlock Premium Features</h2>
+                <ul className="list-disc list-inside text-slate-300 space-y-1 mt-2 text-sm">
+                    <li>Get access to exclusive benefits.</li>
+                    <li>Unlimited daily Quizzes.</li>
+                    <li>Premium QS banks.</li>
+                </ul>
+                <Button className="w-full mt-4 !bg-primary-600 hover:!bg-primary-700">Upgrade</Button>
+            </div>
         </Card>
 
         <Card>
@@ -268,7 +270,7 @@ function HomeScreen() {
         <Card>
             <div className="flex justify-between items-center">
                 <h2 className="text-lg font-bold flex items-center gap-2"><CalendarIcon className="w-5 h-5 text-slate-500"/> Upcoming Exams</h2>
-                <button className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600">
+                <button className="p-1.5 rounded-full bg-slate-100/50 dark:bg-slate-700/50 hover:bg-slate-200/50 dark:hover:bg-slate-600/50">
                     <PlusIcon className="w-4 h-4"/>
                 </button>
             </div>
@@ -287,7 +289,7 @@ function HomeScreen() {
                 <ul className="space-y-4">
                     {recentActivity.map(item => (
                         <li key={item.examId} className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-bold text-primary-600 dark:text-primary-400 text-lg">
+                            <div className="w-10 h-10 rounded-lg bg-slate-100/50 dark:bg-slate-700/50 flex items-center justify-center font-bold text-primary-600 dark:text-primary-400 text-lg">
                                 #
                             </div>
                             <div className="flex-grow">

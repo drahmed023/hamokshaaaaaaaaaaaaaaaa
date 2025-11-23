@@ -21,6 +21,17 @@ function AIStudyCoach() {
         const fetchSuggestion = async () => {
             setIsLoading(true);
             try {
+                const today = new Date().toISOString().split('T')[0];
+                const cachedData = localStorage.getItem('aiStudyCoachSuggestion');
+                if (cachedData) {
+                    const { date, suggestion: cachedSuggestion } = JSON.parse(cachedData);
+                    if (date === today) {
+                        setSuggestion(cachedSuggestion);
+                        setIsLoading(false);
+                        return;
+                    }
+                }
+
                 const pendingTasks = allTasks.filter(t => !t.completed);
                 const activePlan = plans.find(p => p.id === activePlanId);
 
@@ -51,6 +62,8 @@ function AIStudyCoach() {
 
                 const result = await getDailyStudySuggestion(context);
                 setSuggestion(result);
+                localStorage.setItem('aiStudyCoachSuggestion', JSON.stringify({ date: today, suggestion: result }));
+
             } catch (error) {
                 console.error("Failed to get study suggestion:", error);
                 setSuggestion("Could not load a suggestion. What's your top priority today?");

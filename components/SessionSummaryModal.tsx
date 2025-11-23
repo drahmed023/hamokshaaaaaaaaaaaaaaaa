@@ -1,9 +1,4 @@
 
-
-
-
-
-
 import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import { usePomodoro } from '../hooks/usePomodoro';
@@ -50,16 +45,16 @@ function SessionSummaryModal({ isOpen, onClose }: SessionSummaryModalProps) {
 
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
-             <div className="relative bg-white dark:bg-slate-800 p-8 rounded-xl shadow-2xl w-full max-w-sm m-4 text-center">
+             <div className="relative bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 p-8 rounded-xl shadow-2xl w-full max-w-sm m-4 text-center">
                 <Confetti />
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-green-100/50 dark:bg-green-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckIcon className="w-8 h-8 text-green-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-primary-600 dark:text-primary-400">Great Work!</h2>
                 <p className="text-slate-500 dark:text-slate-400 mt-2">You've completed a focus session.</p>
 
                 <div className="my-6 space-y-3 text-start">
-                    <div className="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+                    <div className="p-4 bg-slate-100/50 dark:bg-slate-700/50 rounded-lg">
                         <h3 className="font-semibold text-sm mb-2 text-slate-600 dark:text-slate-300">AI Summary</h3>
                         {isLoading ? <Loader text="Analyzing..." /> : <p className="text-slate-800 dark:text-slate-200">{summary}</p>}
                     </div>

@@ -144,6 +144,17 @@
       html.dark .prose mark, html.dark .prose .highlight {
         background-color: rgb(var(--color-primary-800) / 0.6);
       }
+      /* Text highlighting colors */
+      mark.highlight-yellow, .highlight-yellow { background-color: rgba(250, 204, 21, 0.5); }
+      mark.highlight-green, .highlight-green { background-color: rgba(74, 222, 128, 0.5); }
+      mark.highlight-pink, .highlight-pink { background-color: rgba(244, 114, 182, 0.5); }
+      mark.highlight-blue, .highlight-blue { background-color: rgba(96, 165, 250, 0.5); }
+      
+      html.dark mark.highlight-yellow, html.dark .highlight-yellow { background-color: rgba(250, 204, 21, 0.4); }
+      html.dark mark.highlight-green, html.dark .highlight-green { background-color: rgba(74, 222, 128, 0.4); }
+      html.dark mark.highlight-pink, html.dark .highlight-pink { background-color: rgba(244, 114, 182, 0.4); }
+      html.dark mark.highlight-blue, html.dark .highlight-blue { background-color: rgba(96, 165, 250, 0.4); }
+
       /* Level-based backgrounds */
       .level-bg { transition: background-color 1s ease-in-out; }
       .level-bg-1 { --bg-color: 248 250 252; } /* slate-50 */

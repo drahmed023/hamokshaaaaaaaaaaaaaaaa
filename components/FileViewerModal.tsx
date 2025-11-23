@@ -94,11 +94,11 @@ function FileViewerModal({ isOpen, onClose, file }: FileViewerModalProps) {
     <div className="fixed inset-0 z-50 pointer-events-none">
       <div 
         ref={modalRef}
-        className="absolute bg-white dark:bg-slate-800 rounded-lg shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col pointer-events-auto"
+        className="absolute bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-lg shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col pointer-events-auto"
         style={{ top: `${position.y}px`, left: `${position.x}px`}}
       >
         <header
-          className="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700 cursor-move"
+          className="flex justify-between items-center p-4 border-b border-white/20 dark:border-slate-700/50 cursor-move"
           onMouseDown={handleMouseDown}
         >
           <h2 className="text-lg font-bold truncate select-none">{file.name}</h2>
@@ -111,7 +111,7 @@ function FileViewerModal({ isOpen, onClose, file }: FileViewerModalProps) {
           {error && <p className="text-red-500">Error: {error}</p>}
           {content && <pre className="whitespace-pre-wrap font-sans">{content}</pre>}
         </main>
-        <footer className="flex justify-end items-center p-4 border-t border-slate-200 dark:border-slate-700 gap-2">
+        <footer className="flex justify-end items-center p-4 border-t border-white/20 dark:border-slate-700/50 gap-2">
           <Button onClick={() => window.open(file.webViewLink, '_blank')} variant="secondary">Open in Drive</Button>
           <Button onClick={handleCreateAids}>Create Study Aids</Button>
           <Button onClick={handleCreateExam}>Create Exam</Button>

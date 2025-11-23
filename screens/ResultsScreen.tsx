@@ -9,6 +9,7 @@ import { useNotes } from '../hooks/useNotes';
 import { getExplanationForAnswer } from '../services/geminiService';
 import Loader from '../components/Loader';
 import ScoreRing from '../components/ScoreRing';
+import jsPDF from 'jspdf';
 
 // Icons
 import { ChevronLeftIcon } from '../components/icons/ChevronLeftIcon';
@@ -26,6 +27,7 @@ import { SearchIcon } from '../components/icons/SearchIcon';
 import { XCircleIcon } from '../components/icons/XCircleIcon';
 import { TrendingUpIcon } from '../components/icons/TrendingUpIcon';
 import { PencilAltIcon } from '../components/icons/PencilAltIcon';
+import { DownloadIcon } from '../components/icons/DownloadIcon';
 
 function Explanation({ question, userAnswer }: { question: Question; userAnswer: string | undefined }) {
     const [explanation, setExplanation] = useState('');
@@ -144,6 +146,53 @@ function ResultsScreen() {
   const incorrectAnswersCount = result.answers.length - correctAnswersCount;
   const skippedCount = totalQuestions - result.answers.length;
 
+  const handleDownloadPdf = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text(`Exam Report: ${exam.title}`, 10, 20);
+    
+    doc.setFontSize(12);
+    doc.text(`Score: ${scorePercentage}%`, 10, 30);
+    doc.text(`Correct: ${correctAnswersCount}, Incorrect: ${incorrectAnswersCount}, Skipped: ${skippedCount}`, 10, 38);
+
+    let y = 50;
+    exam.questions.forEach((q, index) => {
+        if (y > 270) {
+            doc.addPage();
+            y = 20;
+        }
+        const userAnswer = result.answers.find(a => a.questionId === q.id)?.answer || "Skipped";
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        const questionLines = doc.splitTextToSize(`${index + 1}. ${q.questionText}`, 180);
+        doc.text(questionLines, 10, y);
+        y += (questionLines.length * 5) + 5;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        q.options.forEach(opt => {
+            let prefix = '  ';
+            if (opt === q.correctAnswer) {
+                doc.setTextColor(0, 128, 0); // Green
+                prefix = '✓ ';
+            }
+            if (opt === userAnswer && userAnswer !== q.correctAnswer) {
+                doc.setTextColor(255, 0, 0); // Red
+                prefix = '✗ ';
+            }
+
+            const optionLines = doc.splitTextToSize(`${prefix}${opt}`, 170);
+            doc.text(optionLines, 15, y);
+            y += (optionLines.length * 4) + 2;
+            doc.setTextColor(0, 0, 0); // Reset color
+        });
+        y += 8;
+    });
+
+    doc.save(`exam-report-${exam.id}.pdf`);
+  };
+
   const currentQuestion = exam.questions[currentQuestionIndex];
   const userAnswer = result.answers.find(a => a.questionId === currentQuestion.id)?.answer;
   const isCurrentCorrect = userAnswer === currentQuestion.correctAnswer;
@@ -229,6 +278,10 @@ function ResultsScreen() {
                     <h1 className="font-bold text-lg truncate text-slate-800 dark:text-slate-100">Exam Results</h1>
                 </div>
                 <div className="flex items-center gap-2">
+                    <Button onClick={handleDownloadPdf} variant="secondary" size="sm">
+                        <DownloadIcon className="w-4 h-4 mr-1" />
+                        Download
+                    </Button>
                     <Button onClick={() => navigate('/')} variant="secondary" size="sm">Dashboard</Button>
                 </div>
            </div>

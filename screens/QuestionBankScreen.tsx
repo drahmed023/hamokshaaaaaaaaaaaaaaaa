@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useExam } from '../hooks/useExam';
@@ -8,6 +7,8 @@ import Button from '../components/Button';
 import { SearchIcon } from '../components/icons/SearchIcon';
 import { DatabaseIcon } from '../components/icons/DatabaseIcon';
 import { ChevronLeftIcon } from '../components/icons/ChevronLeftIcon';
+import jsPDF from 'jspdf';
+import { DownloadIcon } from '../components/icons/DownloadIcon';
 
 function QuestionBankScreen() {
     const { fileName } = useParams<{ fileName: string }>();
@@ -39,6 +40,43 @@ function QuestionBankScreen() {
             q.questionText.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [uniqueQuestions, searchTerm]);
+    
+    const handleDownloadPdf = () => {
+        const doc = new jsPDF();
+        const decodedFileName = decodeURIComponent(fileName || "Question Bank");
+        
+        doc.setFontSize(18);
+        doc.text(`Question Bank: ${decodedFileName}`, 10, 20);
+
+        let y = 30;
+        uniqueQuestions.forEach((q, index) => {
+            if (y > 270) {
+                doc.addPage();
+                y = 20;
+            }
+
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            const questionLines = doc.splitTextToSize(`${index + 1}. ${q.questionText}`, 180);
+            doc.text(questionLines, 10, y);
+            y += (questionLines.length * 5) + 5;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            q.options.forEach(opt => {
+                if (opt === q.correctAnswer) {
+                    doc.setTextColor(0, 128, 0); // Green
+                }
+                const optionLines = doc.splitTextToSize(`  - ${opt}`, 170);
+                doc.text(optionLines, 15, y);
+                y += (optionLines.length * 4) + 2;
+                doc.setTextColor(0, 0, 0); // Reset color
+            });
+            y += 8;
+        });
+
+        doc.save(`question-bank-${decodedFileName}.pdf`);
+    };
 
     if (!fileName) {
         return <div>Error: No file specified for the question bank.</div>;
@@ -52,10 +90,16 @@ function QuestionBankScreen() {
                         <DatabaseIcon className="w-6 h-6 text-primary-500" />
                         <h1 className="text-xl font-bold truncate">Question Bank: {decodeURIComponent(fileName)}</h1>
                     </div>
-                    <Button onClick={() => navigate('/history')} variant="secondary" size="sm">
-                        <ChevronLeftIcon className="w-4 h-4 mr-1" />
-                        Back to History
-                    </Button>
+                    <div className="flex items-center gap-2">
+                         <Button onClick={handleDownloadPdf} variant="secondary" size="sm">
+                            <DownloadIcon className="w-4 h-4 mr-1" />
+                            Download
+                        </Button>
+                        <Button onClick={() => navigate('/history')} variant="secondary" size="sm">
+                            <ChevronLeftIcon className="w-4 h-4 mr-1" />
+                            Back to History
+                        </Button>
+                    </div>
                 </div>
             </header>
 

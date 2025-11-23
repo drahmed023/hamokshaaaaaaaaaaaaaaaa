@@ -16,7 +16,7 @@ function CreateExamScreen() {
   const [text, setText] = useState('');
   const [numQuestions, setNumQuestions] = useState(5);
   const [fileName, setFileName] = useState('');
-  const { loading, error, dispatch } = useExam();
+  const { exams, loading, error, dispatch } = useExam();
   const { adaptiveLearning } = useSmartSettings();
   const navigate = useNavigate();
   const location = useLocation();
@@ -63,7 +63,11 @@ function CreateExamScreen() {
     // FIX: Using ExamActionType for correct type.
     dispatch({ type: ExamActionType.SET_ERROR, payload: null });
     try {
-      const examData = await generateExamFromText(text, numQuestions, adaptiveLearning);
+      // Find existing questions from the same file to avoid duplicates
+      const existingExamsFromFile = exams.filter(exam => exam.sourceFileName && exam.sourceFileName === fileName);
+      const existingQuestions = existingExamsFromFile.flatMap(exam => exam.questions.map(q => q.questionText));
+
+      const examData = await generateExamFromText(text, numQuestions, adaptiveLearning, existingQuestions);
       const newExam: Exam = {
         ...examData,
         id: Date.now().toString(),

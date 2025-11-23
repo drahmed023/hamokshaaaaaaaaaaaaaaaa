@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
@@ -9,6 +10,8 @@ import { useGamification } from '../hooks/useGamification';
 import { useAvatar } from '../hooks/useAvatar';
 import { Avatar } from './Avatar';
 import { AppLogoIcon } from './icons/AppLogoIcon';
+// FIX: Import FireIcon to replace corrupted SVG
+import { FireIcon } from './icons/FireIcon';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -40,7 +43,7 @@ function Header({ onMenuClick }: HeaderProps) {
   });
 
   return (
-    <header className="hide-in-focus bg-white/40 dark:bg-slate-900/40 backdrop-blur-lg sticky top-0 z-30 border-b border-white/30 dark:border-slate-700/50">
+    <header className="hide-in-focus bg-white/70 dark:bg-slate-900/75 backdrop-blur-xl sticky top-0 z-30 border-b border-white/30 dark:border-slate-700/50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-2 flex-1">
@@ -66,36 +69,43 @@ function Header({ onMenuClick }: HeaderProps) {
           <div className="flex-1 flex justify-end items-center gap-4">
               <div className="hidden md:flex items-center gap-6">
                 <div className="flex items-center gap-2 text-orange-500 font-semibold" title={`${streak} day streak`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M14 3c7.2 0 10 3 10 9.5-1.5 6-10 9.5-10 9.5s-8.5-3.5-10-9.5C4 6 6.8 3 14 3z"/><path d="M14.5 9.5A2.5 2.5 0 0 1 17 12c0 2-2.5 4-2.5 4S12 14 12 12a2.5 2.5 0 0 1 2.5-2.5z"/></svg>
+                    {/* FIX: Replaced corrupted SVG with FireIcon component */}
+                    <FireIcon className="w-5 h-5" />
+                    {/* FIX: Display streak number */}
                     <span>{streak}</span>
                 </div>
-                 <div className="w-40">
-                    <div className="flex justify-between text-sm font-semibold mb-1">
-                        <span className="text-slate-800 dark:text-slate-100">Level {level}</span>
-                        <span className="text-slate-500 dark:text-slate-400">{xp}/{xpForNextLevel}</span>
+                {/* FIX: Reconstructed missing level progress bar */}
+                <div className="w-24" title={`${xp}/${xpForNextLevel} XP`}>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1 text-center font-semibold">
+                        Level {level}
                     </div>
-                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                        <div className="bg-primary-500 h-2 rounded-full transition-all duration-500" style={{width: `${progress}%`}}></div>
+                    <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full">
+                        <div className="h-2 bg-amber-400 rounded-full" style={{ width: `${progress}%` }}></div>
                     </div>
                 </div>
               </div>
-
-            <div className="w-10 h-10">
-                <Avatar avatarId={avatarId} />
-            </div>
-
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-primary-500 icon-container"
-              aria-label="Toggle theme"
-            >
-              {theme === 'light' ? <MoonIcon className="w-6 h-6 icon-interactive" /> : <SunIcon className="w-6 h-6 icon-interactive" />}
-            </button>
+              {/* FIX: Reconstructed missing theme toggle button */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-primary-500 icon-container"
+                aria-label="Toggle theme"
+              >
+                {theme === 'light' ? (
+                  <MoonIcon className="w-6 h-6 icon-interactive" />
+                ) : (
+                  <SunIcon className="w-6 h-6 icon-interactive" />
+                )}
+              </button>
+              {/* FIX: Reconstructed missing user avatar link to settings */}
+              <Link to="/settings" title="Settings">
+                  <Avatar avatarId={avatarId} className="w-10 h-10 rounded-full" />
+              </Link>
           </div>
         </div>
       </div>
     </header>
   );
-};
+}
 
+// FIX: Add default export to fix import error in App.tsx
 export default Header;

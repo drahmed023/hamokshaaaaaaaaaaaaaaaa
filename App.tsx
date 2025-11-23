@@ -1,3 +1,5 @@
+
+
 import React, { useState, ReactNode } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { ExamProvider } from './context/ExamContext';
@@ -44,6 +46,7 @@ import { BookmarkProvider } from './context/BookmarkContext';
 import BookmarkedQuestionsScreen from './screens/BookmarkedQuestionsScreen';
 import { NotesProvider } from './context/NotesContext';
 import { HighlightProvider } from './context/HighlightContext';
+import QuestionBankScreen from './screens/QuestionBankScreen';
 
 // This component contains the entire UI logic.
 // It sits inside all providers, so it has access to all contexts.
@@ -59,8 +62,8 @@ function AppUI() {
     const focusClass = focusMode ? 'focus-mode' : '';
 
     return (
-        <div className={`main-bg-transition min-h-screen ${backgroundClass} ${focusClass}`}>
-            <div className="bg-white/10 dark:bg-black/10 min-h-screen">
+        <div className={`min-h-screen ${backgroundClass} ${focusClass}`}>
+            <div className="min-h-screen main-bg-transition">
                 <Header onMenuClick={() => setIsSidebarOpen(true)} />
                 <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
                 <main className="container mx-auto px-4 py-8">
@@ -86,6 +89,7 @@ function AppUI() {
                         <Route path="/drive" element={<GoogleDriveScreen />} />
                         <Route path="/notion" element={<NotionScreen />} />
                         <Route path="/bookmarks" element={<BookmarkedQuestionsScreen />} />
+                        <Route path="/question-bank/:fileName" element={<QuestionBankScreen />} />
                     </Routes>
                 </main>
                 <AICompanion />

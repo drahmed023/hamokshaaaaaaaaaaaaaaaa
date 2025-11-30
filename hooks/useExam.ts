@@ -1,12 +1,7 @@
-
-import { useContext } from 'react';
-import { ExamStateContext, ExamDispatchContext } from '../context/ExamContext';
+import { useAppData } from '../context/AppDataContext';
 
 export const useExam = () => {
-  const state = useContext(ExamStateContext);
-  const dispatch = useContext(ExamDispatchContext);
-  if (state === undefined || dispatch === undefined) {
-    throw new Error('useExam must be used within an ExamProvider');
-  }
-  return { ...state, dispatch };
+  const { state, dispatch } = useAppData();
+  // Return the specific slice of state and the global dispatch
+  return { ...state.examState, dispatch };
 };

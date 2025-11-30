@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext';
+// FIX: Updated the import path for the useTheme hook.
+import { useTheme } from '../hooks/useTheme';
 import { SunIcon } from './icons/SunIcon';
 import { MoonIcon } from './icons/MoonIcon';
 import { MenuIcon } from './icons/MenuIcon';

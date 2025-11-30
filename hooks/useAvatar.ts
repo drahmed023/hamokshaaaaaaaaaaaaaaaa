@@ -1,10 +1,7 @@
-import { useContext } from 'react';
-import { AvatarContext } from '../context/AvatarContext';
+import { useTheme } from './useTheme';
 
+// This hook is now a simple wrapper around useTheme for convenience
 export const useAvatar = () => {
-  const context = useContext(AvatarContext);
-  if (!context) {
-    throw new Error('useAvatar must be used within an AvatarProvider');
-  }
-  return context;
+  const { avatarId, setAvatarId } = useTheme();
+  return { avatarId, setAvatarId };
 };

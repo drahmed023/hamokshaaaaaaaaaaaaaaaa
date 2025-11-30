@@ -1,6 +1,7 @@
 import React from 'react';
 import type { MouseEventHandler } from 'react';
-import { useTheme } from '../context/ThemeContext';
+// FIX: Updated the import path for the useTheme hook.
+import { useTheme } from '../hooks/useTheme';
 
 type ButtonProps = {
   children?: React.ReactNode;

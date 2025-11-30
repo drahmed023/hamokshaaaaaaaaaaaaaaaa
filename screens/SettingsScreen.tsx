@@ -1,16 +1,14 @@
 import React from 'react';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../hooks/useTheme';
 import { useGamification } from '../hooks/useGamification';
 import { GamificationActionType, AvatarId, BackgroundName, Font, ButtonShape, Mood, AIPersona, AIVoice } from '../types';
-import { useAvatar } from '../hooks/useAvatar';
 import { Avatar } from '../components/Avatar';
 import { useMusic } from '../hooks/useMusic';
 import { musicTracks } from '../data/music';
 import { useSmartSettings } from '../hooks/useSmartSettings';
 import { SmartSettingsActionType } from '../types';
-import { usePhoneNumber } from '../hooks/usePhoneNumber';
 
 const ACCENT_COLORS = [
     { name: 'indigo', color: '#6366F1' },
@@ -109,12 +107,10 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (chec
 
 
 function SettingsScreen() {
-  const { theme, toggleTheme, accentColor, setAccentColor, isAutoTheme, toggleAutoTheme, background, setBackground, font, setFont, buttonShape, setButtonShape, focusMode, setFocusMode, mood, setMood } = useTheme();
+  const { theme, toggleTheme, accentColor, setAccentColor, isAutoTheme, toggleAutoTheme, background, setBackground, font, setFont, buttonShape, setButtonShape, focusMode, setFocusMode, mood, setMood, avatarId, setAvatarId, phoneNumber, setPhoneNumber } = useTheme();
   const { dispatch: gamificationDispatch } = useGamification();
-  const { avatarId, setAvatarId } = useAvatar();
   const { currentTrackId, isPlaying, volume, setTrack, togglePlay, setVolume } = useMusic();
   const settings = useSmartSettings();
-  const { phoneNumber, setPhoneNumber } = usePhoneNumber();
   const [phoneInput, setPhoneInput] = React.useState(phoneNumber);
 
   const handlePhoneSave = () => {
@@ -123,27 +119,35 @@ function SettingsScreen() {
   };
 
   const handleClearData = () => {
-    if (window.confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
-      const settingsToKeep = ['themeSettings', 'avatarId', 'musicSettings', 'pomodoroState', 'smartSettings', 'userPhoneNumber'];
-      const keptSettings: { [key: string]: string | null } = {};
-      settingsToKeep.forEach(key => { keptSettings[key] = localStorage.getItem(key); });
-      localStorage.clear();
-      Object.entries(keptSettings).forEach(([key, value]) => { if (value) localStorage.setItem(key, value); });
-      gamificationDispatch({ type: GamificationActionType.RESET_GAMIFICATION });
-      alert('All study data has been cleared.');
-      window.location.reload();
+    if (window.confirm('Are you sure you want to clear all data? This action cannot be undone. All data besides settings will be lost.')) {
+        // This is a simplified approach. A more robust solution would be to dispatch a "CLEAR_ALL_DATA" action.
+        const settingsKeys = ['studySparkBackend']; // Keep the main backend key
+        const keptSettings: { [key: string]: string | null } = {};
+        
+        const backendData = JSON.parse(localStorage.getItem('studySparkBackend') || '{}');
+        const settingsToKeep = {
+            themeState: backendData.themeState,
+            smartSettingsState: backendData.smartSettingsState,
+            musicState: backendData.musicState,
+            pomodoroState: backendData.pomodoroState,
+        };
+
+        localStorage.clear();
+        localStorage.setItem('studySparkBackend', JSON.stringify(settingsToKeep));
+      
+        alert('All study data has been cleared. Reloading the app.');
+        window.location.reload();
     }
   };
 
   const handleExportData = () => {
     try {
-        const dataToExport: { [key: string]: any } = {};
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key) { dataToExport[key] = JSON.parse(localStorage.getItem(key) || '{}'); }
+        const dataToExport = localStorage.getItem('studySparkBackend');
+        if (!dataToExport) {
+            alert("No data to export.");
+            return;
         }
-        const dataStr = JSON.stringify(dataToExport, null, 2);
-        const blob = new Blob([dataStr], { type: 'application/json' });
+        const blob = new Blob([dataToExport], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url; a.download = `study-spark-ai-backup-${new Date().toISOString().split('T')[0]}.json`;
@@ -172,7 +176,7 @@ function SettingsScreen() {
               </div>
           </SettingsRow>
           <SettingsRow label="Font">
-              <select value={font} onChange={(e) => setFont(e.target.value as Font)} className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600">
+              <select value={font} onChange={(e) => setFont(e.target.value as Font)} className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 bg-white">
                   {FONTS.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
           </SettingsRow>
@@ -187,7 +191,7 @@ function SettingsScreen() {
               <ToggleSwitch checked={focusMode} onChange={setFocusMode} />
           </SettingsRow>
           <SettingsRow label="Mood Tracker" description="Adjusts the app's mood to match yours.">
-              <select value={mood} onChange={(e) => setMood(e.target.value as Mood)} className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600">
+              <select value={mood} onChange={(e) => setMood(e.target.value as Mood)} className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 bg-white">
                   {MOODS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
           </SettingsRow>
@@ -207,7 +211,7 @@ function SettingsScreen() {
         
         <SettingsSection title="AI Settings">
             <SettingsRow label="AI Persona" description="Choose the assistant's style.">
-              <select value={settings.aiPersona} onChange={e => settings.dispatch({type: SmartSettingsActionType.SET_AI_PERSONA, payload: e.target.value as AIPersona})} className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600">
+              <select value={settings.aiPersona} onChange={e => settings.dispatch({type: SmartSettingsActionType.SET_AI_PERSONA, payload: e.target.value as AIPersona})} className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 bg-white">
                   {AI_PERSONAS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </SettingsRow>
@@ -222,7 +226,7 @@ function SettingsScreen() {
                     <select 
                     value={settings.aiVoice} 
                     onChange={e => settings.dispatch({type: SmartSettingsActionType.SET_AI_VOICE, payload: e.target.value as AIVoice})} 
-                    className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600"
+                    className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 bg-white"
                     disabled={!settings.aiVoiceTutor}
                     >
                         {AI_VOICES.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}

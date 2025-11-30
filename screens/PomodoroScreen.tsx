@@ -5,7 +5,8 @@ import CircularTimer from '../components/CircularTimer';
 import SessionSummaryModal from '../components/SessionSummaryModal';
 import { usePomodoro } from '../hooks/usePomodoro';
 import { PomodoroActionType, GamificationActionType, SessionType } from '../types';
-import { useTheme } from '../context/ThemeContext';
+// FIX: Updated the import path for the useTheme hook.
+import { useTheme } from '../hooks/useTheme';
 import { useMusic } from '../hooks/useMusic';
 // FIX: Correctly import getMotivationalMessage from geminiService.
 import { getMotivationalMessage } from '../services/geminiService';

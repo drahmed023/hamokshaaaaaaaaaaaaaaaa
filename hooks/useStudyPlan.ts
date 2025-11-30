@@ -1,12 +1,6 @@
-
-import { useContext } from 'react';
-import { StudyPlanStateContext, StudyPlanDispatchContext } from '../context/StudyPlanContext';
+import { useAppData } from '../context/AppDataContext';
 
 export const useStudyPlan = () => {
-  const state = useContext(StudyPlanStateContext);
-  const dispatch = useContext(StudyPlanDispatchContext);
-  if (state === undefined || dispatch === undefined) {
-    throw new Error('useStudyPlan must be used within a StudyPlanProvider');
-  }
-  return { ...state, dispatch };
+  const { state, dispatch } = useAppData();
+  return { ...state.studyPlanState, dispatch };
 };

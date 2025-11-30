@@ -432,3 +432,76 @@ export enum HighlightsActionType {
 export type HighlightsAction =
   | { type: HighlightsActionType.SET_HIGHLIGHTS_FOR_QUESTION, payload: Highlight }
   | { type: HighlightsActionType.CLEAR_HIGHLIGHTS_FOR_QUESTION, payload: { questionId: string } };
+
+// NEW: Unified state for settings, theme, avatar, etc.
+export interface ThemeState {
+  theme: ThemeName;
+  accentColor: AccentColorName;
+  isAutoTheme: boolean;
+  background: BackgroundName;
+  font: Font;
+  buttonShape: ButtonShape;
+  focusMode: boolean;
+  mood: Mood;
+  avatarId: AvatarId;
+  phoneNumber: string;
+}
+
+export enum ThemeActionType {
+    TOGGLE_THEME = 'TOGGLE_THEME',
+    SET_ACCENT_COLOR = 'SET_ACCENT_COLOR',
+    TOGGLE_AUTO_THEME = 'TOGGLE_AUTO_THEME',
+    SET_THEME_AND_ACCENT = 'SET_THEME_AND_ACCENT',
+    SET_BACKGROUND = 'SET_BACKGROUND',
+    SET_FONT = 'SET_FONT',
+    SET_BUTTON_SHAPE = 'SET_BUTTON_SHAPE',
+    SET_FOCUS_MODE = 'SET_FOCUS_MODE',
+    SET_MOOD = 'SET_MOOD',
+    SET_AVATAR_ID = 'SET_AVATAR_ID',
+    SET_PHONE_NUMBER = 'SET_PHONE_NUMBER',
+}
+
+export type ThemeAction =
+    | { type: ThemeActionType.TOGGLE_THEME }
+    | { type: ThemeActionType.SET_ACCENT_COLOR, payload: AccentColorName }
+    | { type: ThemeActionType.TOGGLE_AUTO_THEME }
+    | { type: ThemeActionType.SET_THEME_AND_ACCENT, payload: { theme: ThemeName, accent: AccentColorName } }
+    | { type: ThemeActionType.SET_BACKGROUND, payload: BackgroundName }
+    | { type: ThemeActionType.SET_FONT, payload: Font }
+    | { type: ThemeActionType.SET_BUTTON_SHAPE, payload: ButtonShape }
+    | { type: ThemeActionType.SET_FOCUS_MODE, payload: boolean }
+    | { type: ThemeActionType.SET_MOOD, payload: Mood }
+    | { type: ThemeActionType.SET_AVATAR_ID, payload: AvatarId }
+    | { type: ThemeActionType.SET_PHONE_NUMBER, payload: string };
+
+// Master state for the entire application
+export interface AppDataState {
+    examState: AppState;
+    studyAidsState: StudyAidsState;
+    studyPlanState: StudyPlanState;
+    tasksState: TasksState;
+    gamificationState: GamificationState;
+    themeState: ThemeState;
+    aiInteractionState: AIInteractionState;
+    musicState: MusicState;
+    smartSettingsState: SmartSettingsState;
+    pomodoroState: PomodoroState;
+    bookmarksState: BookmarksState;
+    notesState: NotesState;
+    highlightsState: HighlightsState;
+}
+
+export type AppDataAction =
+    | Action
+    | StudyAidsAction
+    | StudyPlanAction
+    | TasksAction
+    | GamificationAction
+    | ThemeAction
+    | AIInteractionAction
+    | MusicAction
+    | SmartSettingsAction
+    | PomodoroAction
+    | BookmarksAction
+    | NotesAction
+    | HighlightsAction;

@@ -1,11 +1,6 @@
-import { useContext } from 'react';
-import { NotesStateContext, NotesDispatchContext } from '../context/NotesContext';
+import { useAppData } from '../context/AppDataContext';
 
 export const useNotes = () => {
-  const state = useContext(NotesStateContext);
-  const dispatch = useContext(NotesDispatchContext);
-  if (state === undefined || dispatch === undefined) {
-    throw new Error('useNotes must be used within a NotesProvider');
-  }
-  return { ...state, dispatch };
+  const { state, dispatch } = useAppData();
+  return { ...state.notesState, dispatch };
 };

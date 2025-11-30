@@ -1,11 +1,6 @@
-import { useContext } from 'react';
-import { SmartSettingsStateContext, SmartSettingsDispatchContext } from '../context/SmartSettingsContext';
+import { useAppData } from '../context/AppDataContext';
 
 export const useSmartSettings = () => {
-  const state = useContext(SmartSettingsStateContext);
-  const dispatch = useContext(SmartSettingsDispatchContext);
-  if (state === undefined || dispatch === undefined) {
-    throw new Error('useSmartSettings must be used within a SmartSettingsProvider');
-  }
-  return { ...state, dispatch };
+  const { state, dispatch } = useAppData();
+  return { ...state.smartSettingsState, dispatch };
 };

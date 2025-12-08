@@ -16,9 +16,13 @@ function HistoryScreen() {
     const banks: { [fileName: string]: { sessions: any[], averageScore: number } } = {};
     const individuals: any[] = [];
 
-    const completedExams = results
+    // Safety check: ensure results exists and is an array
+    const safeResults = Array.isArray(results) ? results : [];
+    const safeExams = Array.isArray(exams) ? exams : [];
+
+    const completedExams = safeResults
       .map(result => {
-        const exam = exams.find(e => e.id === result.examId);
+        const exam = safeExams.find(e => e.id === result.examId);
         return { ...result, exam };
       })
       .filter(item => item.exam)
@@ -69,14 +73,12 @@ function HistoryScreen() {
             <h2 className="text-2xl font-bold mb-4">Question Banks</h2>
             <div className="space-y-4">
               {Object.entries(questionBanks).map(([fileName, bank]) => (
-                // FIX: The 'key' prop is for React's reconciliation and should be on the wrapping element, not passed to custom components.
                 <div key={fileName}>
                   <Card>
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div>
                         <h3 className="text-xl font-bold">{fileName}</h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                          {/* FIX: Cast 'bank' to 'any' to resolve TypeScript error where its type is inferred as 'unknown'. */}
                           {(bank as any).sessions.length} sessions taken &middot; {Math.round((bank as any).averageScore)}% avg. score
                         </p>
                       </div>
@@ -93,7 +95,6 @@ function HistoryScreen() {
                     {expandedBank === fileName && (
                       <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
                         <h4 className="font-semibold">Individual Sessions:</h4>
-                        {/* FIX: Cast 'bank' to 'any' to access the 'sessions' property. */}
                         {(bank as any).sessions.map(({ exam, score, submittedAt }: any) => (
                           <div key={submittedAt} className="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
                             <div>
@@ -117,7 +118,6 @@ function HistoryScreen() {
             <h2 className="text-2xl font-bold mb-4 mt-8">Individual Sessions</h2>
             <div className="space-y-4">
               {individualSessions.map(({ exam, score, submittedAt }) => (
-                // FIX: The 'key' prop is for React's reconciliation and should be on the wrapping element, not passed to custom components.
                 <div key={exam!.id}>
                   <Card>
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

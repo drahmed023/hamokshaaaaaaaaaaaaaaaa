@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useExam } from '../hooks/useExam';
@@ -52,7 +53,7 @@ function Explanation({ question, userAnswer }: { question: Question; userAnswer:
 
     if (explanation) {
         return (
-            <div className="mt-4 p-5 bg-amber-500/10 dark:bg-amber-900/20 border border-amber-500/20 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 rounded-xl shadow-sm animate-fade-in">
+            <div className="mt-4 p-5 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/50 text-amber-900 dark:text-amber-100 rounded-xl shadow-sm animate-fade-in">
                 <h4 className="font-bold mb-2 flex items-center gap-2"><FlaskIcon className="w-4 h-4"/> Explanation</h4>
                 <p className="text-sm leading-relaxed">{explanation}</p>
             </div>
@@ -61,7 +62,7 @@ function Explanation({ question, userAnswer }: { question: Question; userAnswer:
 
     return (
         <div className="mt-6 flex justify-center">
-          <Button onClick={fetchExplanation} size="sm" variant="secondary" className="shadow-sm">
+          <Button onClick={fetchExplanation} size="sm" variant="secondary" className="shadow-sm border-slate-300 dark:border-slate-600">
               <FlaskIcon className="w-4 h-4 mr-2 text-amber-500"/>
               Ask AI for Explanation
           </Button>
@@ -223,16 +224,16 @@ function ResultsScreen() {
   };
 
   const Sidebar = () => (
-     <aside className={`fixed inset-y-0 left-0 z-40 w-80 bg-white/75 dark:bg-slate-800/80 backdrop-blur-xl text-slate-800 dark:text-white flex flex-col transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:h-full flex-shrink-0 shadow-xl border-r border-slate-200/80 dark:border-slate-700/60`}>
-        <div className="p-4 border-b border-slate-200/80 dark:border-slate-700/60 flex-shrink-0">
+     <aside className={`fixed inset-y-0 left-0 z-40 w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 flex flex-col transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:h-full flex-shrink-0 shadow-lg`}>
+        <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
           <div className="flex justify-between items-center">
             <h2 className="font-bold text-lg truncate pr-2 text-slate-900 dark:text-white">{exam.title}</h2>
-             <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-1 text-slate-500 hover:text-red-500 hover:bg-black/5 dark:hover:bg-white/10 rounded">
+             <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-1 text-slate-500 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
                 <XCircleIcon className="w-6 h-6"/>
             </button>
           </div>
           <div className="relative mt-4">
-              <input type="text" placeholder="Search Questions" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-black/5 dark:bg-slate-900/40 rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-800 dark:text-white placeholder-slate-500 dark:placeholder-slate-400" />
+              <input type="text" placeholder="Search Questions" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-slate-100 dark:bg-slate-800 rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 border border-slate-200 dark:border-slate-700" />
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 dark:text-slate-400"/>
           </div>
         </div>
@@ -248,7 +249,7 @@ function ResultsScreen() {
 
                     return (
                         <li key={q.id}>
-                            <button onClick={() => setCurrentQuestionIndex(q.originalIndex)} className={`w-full text-left p-2 rounded-md flex items-start gap-3 transition-colors ${isSelected ? 'bg-primary-600 text-white' : 'text-slate-700 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10'}`}>
+                            <button onClick={() => setCurrentQuestionIndex(q.originalIndex)} className={`w-full text-left p-2 rounded-md flex items-start gap-3 transition-colors ${isSelected ? 'bg-primary-600 text-white' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
                                 <div className="flex-shrink-0 flex items-center gap-1 min-w-[24px]">
                                     <span className={`font-semibold text-sm`}>{q.originalIndex + 1}</span>
                                     {isBookmarked && <BookmarkIcon solid className="w-3 h-3 text-yellow-400" />}
@@ -261,28 +262,28 @@ function ResultsScreen() {
                 })}
             </ul>
         </nav>
-        <div className="p-4 border-t border-slate-200/80 dark:border-slate-700/60 flex-shrink-0 bg-white/75 dark:bg-slate-800/80">
-          <Button variant="secondary" className="w-full justify-center" onClick={() => navigate('/history')}>Back to History</Button>
+        <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-900">
+          <Button variant="secondary" className="w-full justify-center border-slate-300 dark:border-slate-600" onClick={() => navigate('/history')}>Back to History</Button>
         </div>
      </aside>
   );
 
   return (
-    <div className="-mx-4 -my-8 h-[calc(100vh-4rem)] flex flex-col">
-       <header className="flex-shrink-0 bg-white/75 dark:bg-slate-800/80 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-700/60 relative z-30">
+    <div className="-mx-4 -my-8 h-[calc(100vh-4rem)] flex flex-col bg-slate-50 dark:bg-black">
+       <header className="flex-shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 relative z-30 shadow-sm">
            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-2 overflow-hidden">
-                    <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 text-slate-500 rounded-full hover:bg-black/5 dark:hover:bg-white/10">
+                    <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
                         <MenuIcon className="w-6 h-6"/>
                     </button>
-                    <h1 className="font-bold text-lg truncate text-slate-800 dark:text-slate-100">Exam Results</h1>
+                    <h1 className="font-bold text-lg truncate text-slate-900 dark:text-slate-100">Exam Results</h1>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button onClick={handleDownloadPdf} variant="secondary" size="sm">
+                    <Button onClick={handleDownloadPdf} variant="secondary" size="sm" className="border-slate-300 dark:border-slate-600">
                         <DownloadIcon className="w-4 h-4 mr-1" />
                         Download
                     </Button>
-                    <Button onClick={() => navigate('/')} variant="secondary" size="sm">Dashboard</Button>
+                    <Button onClick={() => navigate('/')} variant="secondary" size="sm" className="border-slate-300 dark:border-slate-600">Dashboard</Button>
                 </div>
            </div>
        </header>
@@ -299,73 +300,73 @@ function ResultsScreen() {
                <div className="max-w-4xl mx-auto pb-20">
                    
                    {/* Dashboard Style Summary Card */}
-                   <div className="bg-white/60 dark:bg-slate-800/70 backdrop-blur-lg rounded-2xl shadow-lg border border-slate-200/80 dark:border-slate-700/60 p-6 mb-6">
+                   <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 mb-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                            <div className="flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-200/80 dark:border-slate-700/50 pb-4 md:pb-0 md:pr-6">
+                            <div className="flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 pb-4 md:pb-0 md:pr-6">
                                 <ScoreRing score={scorePercentage} size={100} strokeWidth={8} />
                                 <p className="mt-2 font-bold text-lg text-slate-800 dark:text-slate-100">{scorePercentage >= 50 ? 'Passed' : 'Review Needed'}</p>
                             </div>
                             <div className="col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                <div className="text-center p-3 bg-green-500/10 dark:bg-green-900/20 rounded-lg">
-                                    <p className="text-2xl font-bold text-green-600">{correctAnswersCount}</p>
+                                <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800">
+                                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">{correctAnswersCount}</p>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Correct</p>
                                 </div>
-                                <div className="text-center p-3 bg-red-500/10 dark:bg-red-900/20 rounded-lg">
-                                    <p className="text-2xl font-bold text-red-600">{incorrectAnswersCount}</p>
+                                <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-800">
+                                    <p className="text-2xl font-bold text-red-600 dark:text-red-400">{incorrectAnswersCount}</p>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Incorrect</p>
                                 </div>
-                                <div className="text-center p-3 bg-slate-500/10 dark:bg-slate-700/50 rounded-lg">
+                                <div className="text-center p-3 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                                     <p className="text-2xl font-bold text-slate-700 dark:text-slate-200">{skippedCount}</p>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Skipped</p>
                                 </div>
-                                <div className="text-center p-3 bg-blue-500/10 dark:bg-blue-900/20 rounded-lg">
-                                    <p className="text-2xl font-bold text-blue-600">{Math.round((correctAnswersCount / (correctAnswersCount + incorrectAnswersCount || 1)) * 100)}%</p>
+                                <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{Math.round((correctAnswersCount / (correctAnswersCount + incorrectAnswersCount || 1)) * 100)}%</p>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Accuracy</p>
                                 </div>
                             </div>
                         </div>
                    </div>
 
-                   <div className="bg-white/60 dark:bg-slate-800/70 backdrop-blur-lg rounded-2xl shadow-lg border border-slate-200/80 dark:border-slate-700/60 p-6">
-                       <div className="flex justify-between items-start mb-4">
+                   <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
+                       <div className="flex justify-between items-start mb-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                            <div>
-                               <span className="inline-block px-2 py-1 text-xs font-bold uppercase rounded bg-slate-500/10 dark:bg-slate-700/50 text-slate-500 dark:text-slate-300 mb-2">
+                               <span className="inline-block px-2 py-1 text-xs font-bold uppercase rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 mb-2">
                                    Question {currentQuestionIndex + 1} of {totalQuestions}
                                </span>
                            </div>
                            <div ref={optionsMenuRef} className="relative flex items-center gap-2 text-slate-400">
-                                <button onClick={() => setShowNotes(prev => !prev)} className={`p-1 rounded transition-colors ${showNotes ? 'bg-primary-100/50 dark:bg-primary-900/50 text-primary-600' : 'hover:bg-black/5 dark:hover:bg-white/10'}`} title="Question Notes"><PencilAltIcon className="w-5 h-5" /></button>
-                               <button onClick={handleToggleBookmark} className="hover:text-yellow-500 transition-colors p-1 rounded hover:bg-black/5 dark:hover:bg-white/10" title="Bookmark Question">
+                                <button onClick={() => setShowNotes(prev => !prev)} className={`p-1 rounded transition-colors ${showNotes ? 'bg-primary-100 text-primary-600' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`} title="Question Notes"><PencilAltIcon className="w-5 h-5" /></button>
+                               <button onClick={handleToggleBookmark} className="hover:text-yellow-500 transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800" title="Bookmark Question">
                                 <BookmarkIcon solid={bookmarks.some(b => b.questionId === currentQuestion.id)} className="w-5 h-5"/>
                                </button>
-                               <button className="hover:text-green-500 transition-colors p-1 rounded hover:bg-black/5 dark:hover:bg-white/10" title="Good question"><ThumbUpIcon className="w-5 h-5" /></button>
-                               <button className="hover:text-red-500 transition-colors p-1 rounded hover:bg-black/5 dark:hover:bg-white/10" title="Bad question"><ThumbDownIcon className="w-5 h-5" /></button>
-                               <button onClick={() => setIsMoreOptionsOpen(prev => !prev)} title="More options" className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10"><DotsVerticalIcon className="w-5 h-5" /></button>
+                               <button className="hover:text-green-500 transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800" title="Good question"><ThumbUpIcon className="w-5 h-5" /></button>
+                               <button className="hover:text-red-500 transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800" title="Bad question"><ThumbDownIcon className="w-5 h-5" /></button>
+                               <button onClick={() => setIsMoreOptionsOpen(prev => !prev)} title="More options" className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><DotsVerticalIcon className="w-5 h-5" /></button>
                                
                                {isMoreOptionsOpen && (
-                                   <div className="absolute top-full right-0 mt-2 w-48 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border border-slate-200/80 dark:border-slate-700/60 rounded-lg shadow-xl py-1 z-50 overflow-hidden">
-                                       <a href="#" className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10">Report an issue</a>
-                                       <a href="#" className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10">Get Help</a>
+                                   <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 z-50 overflow-hidden">
+                                       <a href="#" className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">Report an issue</a>
+                                       <a href="#" className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">Get Help</a>
                                    </div>
                                )}
                            </div>
                        </div>
                        
-                       <p className="mb-6 text-slate-800 dark:text-slate-100 font-medium text-lg leading-relaxed">{currentQuestion.questionText}</p>
+                       <p className="mb-6 text-slate-900 dark:text-slate-100 font-medium text-lg leading-relaxed">{currentQuestion.questionText}</p>
 
-                       <div className="space-y-3">
+                       <div className="space-y-4">
                            {currentQuestion.options.map((option, index) => {
                                const isCorrectAnswer = option === currentQuestion.correctAnswer;
                                const isUserAnswer = option === userAnswer;
                                
-                               let optionClass = "bg-slate-500/10 dark:bg-slate-800/20 border-slate-500/20 text-slate-500 dark:text-slate-400 opacity-60";
+                               let optionClass = "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 opacity-60";
                                let icon = null;
 
                                if (isCorrectAnswer) {
-                                   optionClass = "bg-green-500/20 border-green-500/50 text-green-900 dark:text-green-100 shadow-sm opacity-100 ring-1 ring-green-500/20";
+                                   optionClass = "bg-green-50 dark:bg-green-900/20 border-green-500 text-green-900 dark:text-green-100 shadow-sm opacity-100 ring-1 ring-green-500/20";
                                    icon = <CheckIcon className="w-5 h-5 text-green-600 flex-shrink-0" />;
                                } else if (isUserAnswer) {
-                                   optionClass = "bg-red-500/20 border-red-500/50 text-red-900 dark:text-red-100 shadow-sm opacity-100 ring-1 ring-red-500/20";
+                                   optionClass = "bg-red-50 dark:bg-red-900/20 border-red-500 text-red-900 dark:text-red-100 shadow-sm opacity-100 ring-1 ring-red-500/20";
                                    icon = <XIcon className="w-5 h-5 text-red-600 flex-shrink-0" />;
                                }
                                
@@ -373,10 +374,10 @@ function ResultsScreen() {
                                return (
                                    <div key={index} className={`p-4 rounded-xl border-2 flex items-center justify-between ${optionClass}`}>
                                        <div className="flex items-center">
-                                           <span className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 font-bold text-sm border ${isCorrectAnswer ? 'bg-green-200 border-green-300 text-green-800' : isUserAnswer ? 'bg-red-200 border-red-300 text-red-800' : 'bg-slate-100/50 dark:bg-slate-700/50 border-slate-300/50 dark:border-slate-600/50 text-slate-500 dark:text-slate-400'}`}>
+                                           <span className={`w-8 h-8 flex items-center justify-center rounded-full mr-4 font-bold text-sm border ${isCorrectAnswer ? 'bg-green-100 border-green-500 text-green-800' : isUserAnswer ? 'bg-red-100 border-red-500 text-red-800' : 'bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400'}`}>
                                                {letters[index]}
                                            </span>
-                                           <span className="font-medium">{option}</span>
+                                           <span className="font-medium text-lg">{option}</span>
                                        </div>
                                        <div className="flex items-center gap-3">
                                             {icon}
@@ -387,12 +388,12 @@ function ResultsScreen() {
                        </div>
 
                         {showNotes && (
-                            <div className="mt-6 animate-fade-in">
-                                <label htmlFor="notes" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Your Notes</label>
+                            <div className="mt-8 animate-fade-in">
+                                <label htmlFor="notes" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Your Notes</label>
                                 <textarea
                                     id="notes"
                                     rows={4}
-                                    className="w-full p-3 border border-slate-200/80 dark:border-slate-700/60 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white/30 dark:bg-slate-900/40 backdrop-blur-lg"
+                                    className="w-full p-4 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-primary-500 focus:border-primary-500 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100"
                                     placeholder="Add notes for this question..."
                                     value={currentNote}
                                     onChange={(e) => handleNoteChange(e.target.value)}
@@ -402,8 +403,8 @@ function ResultsScreen() {
 
                        {!isCurrentCorrect && <Explanation question={currentQuestion} userAnswer={userAnswer} />}
 
-                       <div className="mt-8 flex justify-between pt-6 border-t border-slate-200/80 dark:border-slate-700/60">
-                           <Button variant="secondary" onClick={handlePrev} disabled={currentQuestionIndex === 0}>
+                       <div className="mt-8 flex justify-between pt-6 border-t border-slate-200 dark:border-slate-700">
+                           <Button variant="secondary" onClick={handlePrev} disabled={currentQuestionIndex === 0} className="border-slate-300 dark:border-slate-600">
                                <ChevronLeftIcon className="w-5 h-5 mr-1"/> Previous
                            </Button>
                            <Button onClick={handleNext} disabled={currentQuestionIndex === exam.questions.length - 1}>

@@ -46,8 +46,8 @@ const navItems = [
 
 function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navLinkClasses = "flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium transition-colors icon-container";
-  const activeLinkClasses = "bg-primary-100/80 dark:bg-slate-700 text-primary-600 dark:text-primary-400";
-  const inactiveLinkClasses = "text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10";
+  const activeLinkClasses = "bg-primary-100 dark:bg-slate-800 text-primary-700 dark:text-primary-400 shadow-sm";
+  const inactiveLinkClasses = "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800";
   
   const getNavLinkClass = ({ isActive }: { isActive: boolean }) => 
     `${navLinkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`;
@@ -60,19 +60,19 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
         aria-hidden="true"
       />
       <aside
-        className={`hide-in-focus fixed top-0 left-0 h-full w-72 bg-white/80 dark:bg-slate-900/85 backdrop-blur-xl shadow-2xl z-50 border-r border-slate-200/80 dark:border-slate-700/60 transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`hide-in-focus fixed top-0 left-0 h-full w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl z-50 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="sidebar-title"
       >
-        <div className="flex items-center justify-between p-4 border-b border-slate-200/80 dark:border-slate-700/60">
-          <Link id="sidebar-title" to="/" className="flex items-center gap-2 text-xl font-bold text-primary-600 dark:text-primary-400" onClick={onClose}>
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+          <Link id="sidebar-title" to="/" className="flex items-center gap-2 text-xl font-bold text-primary-700 dark:text-primary-400" onClick={onClose}>
             <AppLogoIcon className="w-6 h-6 icon-interactive" />
             <span>{APP_NAME}</span>
           </Link>
           <button
             onClick={onClose}
-            className="p-1 rounded-full text-slate-500 hover:bg-slate-100/50 dark:hover:bg-slate-700/50"
+            className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
             aria-label="Close navigation menu"
           >
             <XCircleIcon className="w-6 h-6" />

@@ -1,8 +1,8 @@
-// This context is now deprecated and its state management has been
-// moved to the centralized AppDataContext.
-// The toast dispatcher logic remains as a bridge.
+// This context is primarily used as an event bus for toasts triggered by logic 
+// that doesn't have direct access to the UI (like inside the global reducer).
 
-let toastDispatcher: (title: string, message: string) => void = () => {};
+export let toastDispatcher: (title: string, message: string) => void = () => {};
+
 export const setGamificationToastDispatcher = (dispatcher: (title: string, message: string) => void) => {
     toastDispatcher = dispatcher;
 };

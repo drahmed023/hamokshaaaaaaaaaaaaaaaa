@@ -13,10 +13,12 @@ import {
     PomodoroState, PomodoroAction, PomodoroActionType, TimerMode,
     BookmarksState, BookmarksAction, BookmarksActionType,
     NotesState, NotesAction, NotesActionType,
-    HighlightsState, HighlightsAction, HighlightsActionType
+    HighlightsState, HighlightsAction, HighlightsActionType,
+    UpcomingExamsState, UpcomingExamsAction, UpcomingExamsActionType
 } from '../types';
 import { getAchievement } from '../data/achievements';
-import { setGamificationToastDispatcher } from './GamificationContext';
+// FIX: Import the singleton toastDispatcher from GamificationContext
+import { toastDispatcher } from './GamificationContext';
 
 // --- Individual Reducers ---
 
@@ -83,16 +85,7 @@ const tasksReducer = (state: TasksState, action: TasksAction): TasksState => {
 
 const initialGamificationState: GamificationState = { xp: 0, level: 1, lastStudiedDate: null, streak: 0, unlockedAchievements: [] };
 const getXpForLevel = (level: number) => 100 * Math.pow(2, level - 1);
-const gamificationReducer = (state: GamificationState, action: GamificationAction): GamificationState => {
-  switch (action.type) {
-    case GamificationActionType.ADD_XP: { /* ... logic from GamificationContext ... */ return state; }
-    case GamificationActionType.CHECK_STREAK: { /* ... logic from GamificationContext ... */ return state; }
-    case GamificationActionType.UNLOCK_ACHIEVEMENT: { /* ... logic from GamificationContext ... */ return state; }
-    case GamificationActionType.RESET_GAMIFICATION: return initialGamificationState;
-    default: return state;
-  }
-};
-// Re-implementing logic here since it's now centralized
+
 const fullGamificationReducer = (state: GamificationState, action: GamificationAction): GamificationState => {
   switch (action.type) {
     case GamificationActionType.ADD_XP: {
@@ -127,10 +120,8 @@ const fullGamificationReducer = (state: GamificationState, action: GamificationA
     default: return state;
   }
 };
-let toastDispatcher: (title: string, message: string) => void = () => {};
 
-
-const initialThemeState: ThemeState = { theme: 'light', accentColor: 'indigo', isAutoTheme: false, background: 'default', font: 'modern', buttonShape: 'rounded', focusMode: false, mood: 'neutral', avatarId: 'avatar1', phoneNumber: '' };
+const initialThemeState: ThemeState = { theme: 'light', accentColor: 'indigo', isAutoTheme: false, background: 'default', font: 'modern', buttonShape: 'rounded', focusMode: false, mood: 'neutral', avatarId: 'avatar1', phoneNumber: '', reduceMotion: false };
 const themeReducer = (state: ThemeState, action: ThemeAction): ThemeState => {
   switch (action.type) {
     case ThemeActionType.TOGGLE_THEME: return { ...state, theme: state.theme === 'light' ? 'dark' : 'light' };
@@ -144,6 +135,7 @@ const themeReducer = (state: ThemeState, action: ThemeAction): ThemeState => {
     case ThemeActionType.SET_MOOD: return { ...state, mood: action.payload };
     case ThemeActionType.SET_AVATAR_ID: return { ...state, avatarId: action.payload };
     case ThemeActionType.SET_PHONE_NUMBER: return { ...state, phoneNumber: action.payload };
+    case ThemeActionType.SET_REDUCE_MOTION: return { ...state, reduceMotion: action.payload };
     default: return state;
   }
 };
@@ -261,6 +253,18 @@ const highlightsReducer = (state: HighlightsState, action: HighlightsAction): Hi
     }
 };
 
+const initialUpcomingExamsState: UpcomingExamsState = { upcomingExams: [] };
+const upcomingExamsReducer = (state: UpcomingExamsState, action: UpcomingExamsAction): UpcomingExamsState => {
+    switch (action.type) {
+        case UpcomingExamsActionType.ADD_UPCOMING_EXAM:
+            return { ...state, upcomingExams: [...state.upcomingExams, action.payload] };
+        case UpcomingExamsActionType.DELETE_UPCOMING_EXAM:
+            return { ...state, upcomingExams: state.upcomingExams.filter(exam => exam.id !== action.payload) };
+        default:
+            return state;
+    }
+};
+
 
 // --- Root Reducer & Initial State ---
 
@@ -278,6 +282,7 @@ const initialState: AppDataState = {
     bookmarksState: initialBookmarksState,
     notesState: initialNotesState,
     highlightsState: initialHighlightsState,
+    upcomingExamsState: initialUpcomingExamsState,
 };
 
 const rootReducer = (state: AppDataState, action: AppDataAction): AppDataState => ({
@@ -294,6 +299,7 @@ const rootReducer = (state: AppDataState, action: AppDataAction): AppDataState =
     bookmarksState: bookmarksReducer(state.bookmarksState, action as any),
     notesState: notesReducer(state.notesState, action as any),
     highlightsState: highlightsReducer(state.highlightsState, action as any),
+    upcomingExamsState: upcomingExamsReducer(state.upcomingExamsState, action as any),
 });
 
 const AppDataStateContext = createContext<AppDataState>(initialState);
@@ -307,17 +313,30 @@ const usePersistedReducer = (reducer: typeof rootReducer, key: string, initial: 
             const stored = localStorage.getItem(key);
             if (stored) {
                 const parsed = JSON.parse(stored);
-                // Merge with initial state to ensure all required keys exist from fresh code
-                const mergedState = { ...initialState, ...parsed };
-                // Ensure sub-states also merge deeply to avoid missing keys
-                Object.keys(initialState).forEach(key => {
-                    mergedState[key] = { ...initialState[key as keyof AppDataState], ...parsed[key] };
-                });
-                return mergedState;
+                // SAFE MERGE:
+                // Only assume it's valid if it's an object. 
+                // We create a fresh initial state and carefully merge persisted keys.
+                // This prevents crashes if the localStorage has old data with missing keys or wrong shapes (e.g. from before the migration).
+                const mergedState = { ...initialState };
+                
+                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                    Object.keys(initialState).forEach(k => {
+                        const stateKey = k as keyof AppDataState;
+                        const storedSubState = parsed[stateKey];
+                        // If the sub-state exists in storage and is an object, merge it. 
+                        // Otherwise, keep the fresh initial sub-state.
+                        if (storedSubState && typeof storedSubState === 'object' && !Array.isArray(storedSubState)) {
+                            // @ts-ignore
+                            mergedState[stateKey] = { ...initialState[stateKey], ...storedSubState };
+                        }
+                    });
+                    return mergedState;
+                }
             }
             return initialState;
         } catch (error) {
             console.error("Error parsing state from localStorage", error);
+            // If error, return clean state to recover from corruption
             return initialState;
         }
     });
@@ -343,17 +362,9 @@ const usePersistedReducer = (reducer: typeof rootReducer, key: string, initial: 
 
 // --- Provider & Hook ---
 
-// FIX: Make children prop optional to resolve issue with nested providers in TypeScript.
 export function AppDataProvider({ children }: { children?: ReactNode }) {
   const [state, dispatch] = usePersistedReducer(rootReducer, 'studySparkBackend', initialState);
 
-  // Hook for gamification toasts
-  setGamificationToastDispatcher((title, message) => {
-      // This is a side-effect, handled outside the reducer
-      // We can use a ref or a more robust system, but for now, this will work.
-      // This relies on the ToastProvider being available.
-  });
-  
   // Theme side-effects
   useEffect(() => {
     const root = window.document.documentElement;

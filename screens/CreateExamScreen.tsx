@@ -14,7 +14,8 @@ import { useSmartSettings } from '../hooks/useSmartSettings';
 
 function CreateExamScreen() {
   const [text, setText] = useState('');
-  const [numQuestions, setNumQuestions] = useState(5);
+  const [numQuestions, setNumQuestions] = useState(10);
+  const [numCaseQuestions, setNumCaseQuestions] = useState(2);
   const [fileName, setFileName] = useState('');
   const { exams, loading, error, dispatch } = useExam();
   const { adaptiveLearning } = useSmartSettings();
@@ -29,6 +30,13 @@ function CreateExamScreen() {
       navigate('.', { replace: true, state: {} });
     }
   }, [location, navigate]);
+  
+  // Ensure case questions don't exceed total questions
+  useEffect(() => {
+    if (numCaseQuestions > numQuestions) {
+      setNumCaseQuestions(numQuestions);
+    }
+  }, [numQuestions, numCaseQuestions]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,7 +75,7 @@ function CreateExamScreen() {
       const existingExamsFromFile = exams.filter(exam => exam.sourceFileName && exam.sourceFileName === fileName);
       const existingQuestions = existingExamsFromFile.flatMap(exam => exam.questions.map(q => q.questionText));
 
-      const examData = await generateExamFromText(text, numQuestions, adaptiveLearning, existingQuestions);
+      const examData = await generateExamFromText(text, numQuestions, numCaseQuestions, adaptiveLearning, existingQuestions);
       const newExam: Exam = {
         ...examData,
         id: Date.now().toString(),
@@ -117,27 +125,48 @@ function CreateExamScreen() {
             <label htmlFor="file-upload" className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50">
               <FileTextIcon className="w-5 h-5 text-slate-500" />
               <span className="font-medium text-primary-600 dark:text-primary-400">
-                {fileName ? `Selected: ${fileName}` : 'Choose a file (.txt, .pdf)'}
+                {fileName ? `Selected: ${fileName}` : 'Choose a file (.pdf, .docx, .txt)'}
               </span>
-              <input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept=".txt,.pdf" disabled={loading} />
+              <input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept=".txt,.pdf,.docx,.doc,.ppt,.pptx" disabled={loading} />
             </label>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label htmlFor="num-questions" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Total Questions
+                </label>
+                <input
+                type="number"
+                id="num-questions"
+                min="1"
+                max="100"
+                value={numQuestions}
+                onChange={(e) => setNumQuestions(Math.max(1, parseInt(e.target.value, 10)))}
+                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-slate-700 dark:border-slate-600"
+                disabled={loading}
+                />
+            </div>
+            <div>
+                <label htmlFor="num-case-questions" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Case/Scenario Questions
+                </label>
+                <input
+                type="number"
+                id="num-case-questions"
+                min="0"
+                max={numQuestions}
+                value={numCaseQuestions}
+                onChange={(e) => setNumCaseQuestions(Math.min(numQuestions, Math.max(0, parseInt(e.target.value, 10))))}
+                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-slate-700 dark:border-slate-600"
+                disabled={loading}
+                />
+            </div>
+          </div>
+          <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg text-sm text-center">
+            <p>You will get <span className="font-bold">{numCaseQuestions} case questions</span> and <span className="font-bold">{numQuestions - numCaseQuestions} general questions</span>.</p>
           </div>
 
-          <div>
-            <label htmlFor="num-questions" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Number of Questions
-            </label>
-            <input
-              type="number"
-              id="num-questions"
-              min="1"
-              max="50"
-              value={numQuestions}
-              onChange={(e) => setNumQuestions(parseInt(e.target.value, 10))}
-              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-slate-700 dark:border-slate-600"
-              disabled={loading}
-            />
-          </div>
 
           {error && <div className="text-red-500 text-sm p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">{error}</div>}
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Loader from './Loader';
@@ -94,24 +95,24 @@ function FileViewerModal({ isOpen, onClose, file }: FileViewerModalProps) {
     <div className="fixed inset-0 z-50 pointer-events-none">
       <div 
         ref={modalRef}
-        className="absolute bg-white/70 dark:bg-slate-800/75 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/60 rounded-lg shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col pointer-events-auto"
+        className="absolute bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col pointer-events-auto"
         style={{ top: `${position.y}px`, left: `${position.x}px`}}
       >
         <header
-          className="flex justify-between items-center p-4 border-b border-slate-200/80 dark:border-slate-700/60 cursor-move"
+          className="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700 cursor-move bg-white/50 dark:bg-black/20"
           onMouseDown={handleMouseDown}
         >
-          <h2 className="text-lg font-bold truncate select-none">{file.name}</h2>
-          <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+          <h2 className="text-lg font-bold truncate select-none text-slate-900 dark:text-white">{file.name}</h2>
+          <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer">
             <XCircleIcon className="w-6 h-6" />
           </button>
         </header>
-        <main className="flex-grow p-6 overflow-y-auto">
+        <main className="flex-grow p-6 overflow-y-auto bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
           {loading && <Loader text="Loading file content..." />}
           {error && <p className="text-red-500">Error: {error}</p>}
           {content && <pre className="whitespace-pre-wrap font-sans">{content}</pre>}
         </main>
-        <footer className="flex justify-end items-center p-4 border-t border-slate-200/80 dark:border-slate-700/60 gap-2">
+        <footer className="flex justify-end items-center p-4 border-t border-slate-200 dark:border-slate-700 gap-2 bg-white/50 dark:bg-black/20">
           <Button onClick={() => window.open(file.webViewLink, '_blank')} variant="secondary">Open in Drive</Button>
           <Button onClick={handleCreateAids}>Create Study Aids</Button>
           <Button onClick={handleCreateExam}>Create Exam</Button>

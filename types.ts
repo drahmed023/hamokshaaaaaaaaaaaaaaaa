@@ -123,7 +123,8 @@ export type StudyAidsAction =
 export interface StudyResource {
   type: 'video' | 'article' | 'pdf';
   title: string;
-  url: string;
+  url?: string;
+  searchQuery?: string;
   source: string; // e.g., 'YouTube', 'Amboss', 'Lecturio'
 }
 
@@ -445,6 +446,7 @@ export interface ThemeState {
   mood: Mood;
   avatarId: AvatarId;
   phoneNumber: string;
+  reduceMotion: boolean;
 }
 
 export enum ThemeActionType {
@@ -459,6 +461,7 @@ export enum ThemeActionType {
     SET_MOOD = 'SET_MOOD',
     SET_AVATAR_ID = 'SET_AVATAR_ID',
     SET_PHONE_NUMBER = 'SET_PHONE_NUMBER',
+    SET_REDUCE_MOTION = 'SET_REDUCE_MOTION',
 }
 
 export type ThemeAction =
@@ -472,7 +475,29 @@ export type ThemeAction =
     | { type: ThemeActionType.SET_FOCUS_MODE, payload: boolean }
     | { type: ThemeActionType.SET_MOOD, payload: Mood }
     | { type: ThemeActionType.SET_AVATAR_ID, payload: AvatarId }
-    | { type: ThemeActionType.SET_PHONE_NUMBER, payload: string };
+    | { type: ThemeActionType.SET_PHONE_NUMBER, payload: string }
+    | { type: ThemeActionType.SET_REDUCE_MOTION, payload: boolean };
+
+// Upcoming Exams
+export interface UpcomingExam {
+  id: string;
+  title: string;
+  date: string;
+}
+
+export interface UpcomingExamsState {
+  upcomingExams: UpcomingExam[];
+}
+
+export enum UpcomingExamsActionType {
+  ADD_UPCOMING_EXAM = 'ADD_UPCOMING_EXAM',
+  DELETE_UPCOMING_EXAM = 'DELETE_UPCOMING_EXAM',
+}
+
+export type UpcomingExamsAction =
+  | { type: UpcomingExamsActionType.ADD_UPCOMING_EXAM, payload: UpcomingExam }
+  | { type: UpcomingExamsActionType.DELETE_UPCOMING_EXAM, payload: string };
+
 
 // Master state for the entire application
 export interface AppDataState {
@@ -489,6 +514,7 @@ export interface AppDataState {
     bookmarksState: BookmarksState;
     notesState: NotesState;
     highlightsState: HighlightsState;
+    upcomingExamsState: UpcomingExamsState;
 }
 
 export type AppDataAction =
@@ -504,4 +530,5 @@ export type AppDataAction =
     | PomodoroAction
     | BookmarksAction
     | NotesAction
-    | HighlightsAction;
+    | HighlightsAction
+    | UpcomingExamsAction;

@@ -47,9 +47,9 @@ function AISchedulingModal() {
 
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]">
-            <div className="bg-white/70 dark:bg-slate-800/75 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/60 p-6 rounded-lg shadow-xl w-full max-w-md m-4">
+            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 p-6 rounded-lg shadow-xl w-full max-w-md m-4">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-bold flex items-center gap-2">
+                    <h2 className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-white">
                         <BotIcon className="w-5 h-5 text-primary-500" />
                         AI Suggests a Task
                     </h2>
@@ -65,7 +65,7 @@ function AISchedulingModal() {
                         rows={3}
                         value={taskText}
                         onChange={(e) => setTaskText(e.target.value)}
-                        className="w-full p-2 border border-slate-300/50 rounded-lg bg-white/30 dark:bg-slate-700/50 dark:border-slate-600/50"
+                        className="w-full p-2 border border-slate-300 rounded-lg bg-white dark:bg-slate-800 dark:border-slate-600 text-slate-900 dark:text-white"
                     />
                 </div>
                 <div className="mt-4">
@@ -76,7 +76,7 @@ function AISchedulingModal() {
                             type="date"
                             value={dueDate}
                             onChange={(e) => setDueDate(e.target.value)}
-                            className="w-full p-2 border border-slate-300/50 rounded-lg bg-white/30 dark:bg-slate-700/50 dark:border-slate-600/50 pr-10"
+                            className="w-full p-2 border border-slate-300 rounded-lg bg-white dark:bg-slate-800 dark:border-slate-600 pr-10 text-slate-900 dark:text-white"
                         />
                         <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     </div>

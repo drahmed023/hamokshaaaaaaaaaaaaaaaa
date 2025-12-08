@@ -29,8 +29,19 @@ const parseJsonOrThrow = (jsonString: string, errorMessage: string) => {
     }
 };
 
-export const generateExamFromText = async (text: string, numQuestions: number, adaptive: boolean, existingQuestions?: string[]): Promise<Omit<Exam, 'id' | 'sourceFileName'>> => {
-    let prompt = `Based on the following text, create a multiple-choice exam with ${numQuestions} questions. Each question must have exactly 4 options, and one must be the correct answer. If the topic is appropriate (e.g., medicine, law, engineering, business), include some case-based or scenario questions that require critical thinking to solve. ${adaptive ? 'The questions should be suitable for a beginner or someone new to this topic.' : ''} The output must be a JSON object with a "title" (string) and a "questions" (array of objects) property. Each question object must have "questionText" (string), "options" (array of 4 strings), and "correctAnswer" (string, which is one of the options).
+export const generateExamFromText = async (text: string, numQuestions: number, numCaseQuestions: number, adaptive: boolean, existingQuestions?: string[]): Promise<Omit<Exam, 'id' | 'sourceFileName'>> => {
+    const numGeneralQuestions = numQuestions - numCaseQuestions;
+    
+    let prompt = `Based on the following text, create a multiple-choice exam with a total of ${numQuestions} questions. 
+Each question must have exactly 4 options, and one must be the correct answer.
+
+The question mix should be as follows:
+- Exactly ${numCaseQuestions} case-based or scenario questions that require critical thinking to solve.
+- Exactly ${numGeneralQuestions} general knowledge questions of varying difficulty.
+
+${adaptive ? 'The questions should be suitable for a beginner or someone new to this topic.' : ''} 
+
+The output must be a JSON object with a "title" (string) and a "questions" (array of objects) property. Each question object must have "questionText" (string), "options" (array of 4 strings), and "correctAnswer" (string, which is one of the options).
 
 Text:
 ---
@@ -63,7 +74,7 @@ ${text}
     };
 
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-lite-latest', // Optimized for speed and quota
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -130,27 +141,19 @@ ${text}
             return parseJsonOrThrow(flashcardsResponse.text, "Failed to generate valid flashcards.");
 
         case 'mind-map':
-            prompt = `Create a mind map structure from the following text. The output must be a JSON object representing the root node. The root node should have a "topic" (string) and an optional "children" (array of node objects) property. Each child node has the same structure. Go about 3 levels deep.
+            prompt = `Create a mind map structure from the following text. The output must be a JSON object representing the root node. The root node should have a "topic" (string) and an optional "children" (array of node objects) property. Each child node has the same structure. Go about 3 levels deep. Assign a unique "id" (string) to every single node.
 
 Text:
 ---
 ${text}
 ---`;
-            const mindMapNodeSchema: any = {
-                type: Type.OBJECT,
-                properties: {
-                    topic: { type: Type.STRING },
-                },
-                required: ["topic"]
-            };
-            mindMapNodeSchema.properties.children = { type: Type.ARRAY, items: mindMapNodeSchema };
-
-            responseSchema = mindMapNodeSchema;
-            
+            // Schema definition with recursive structure for children is complex in pure JSON schema for Gemini directly sometimes, 
+            // but we can define the base object.
+            // Simplified schema to ensure we get the ID.
             const mindMapResponse = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
-                config: { responseMimeType: "application/json", responseSchema }
+                config: { responseMimeType: "application/json" } // Relaxed schema for recursive structure
             });
             return parseJsonOrThrow(mindMapResponse.text, "Failed to generate a valid mind map.");
             
@@ -196,10 +199,10 @@ export const generateStudyPlan = async (data: any): Promise<Omit<StudyPlan, 'id'
 - Study Material/Goal: ${contentPrompt}
 ${data.includeReviews ? '- Instruction: The plan must include dedicated review sessions for previously covered topics, especially leading up to the exam date.' : ''}
 
-- For each task, include an optional "resources" array. This is a critical step. Use your web search tool to find real, relevant, and high-quality educational resources that correspond to the task. The quality and validity of these links are more important than the speed of your response.
-- CRITICAL: Search for resources from these reputable sources ONLY: YouTube, Lecturio, Osmosis (for videos), Amboss, Medscape (for articles/explanations), and open-source educational PDFs or articles from well-known institutions.
-- Each resource object must have a "type" ('video', 'article', 'pdf'), a "title", a "url" (a direct, full, and working URL), and a "source" (e.g., 'YouTube', 'Amboss').
-- Do NOT invent URLs. If you cannot find a suitable, high-quality resource from the specified sources, leave the resources array empty for that task.
+- For each task, include an optional "resources" array. This is a critical step. Use your web search tool to find resources.
+- For video resources from YouTube, instead of providing a "url", provide a concise and effective "searchQuery" string that the student can use to find the best videos on YouTube for that topic. For all other resource types (article, pdf), continue to provide a direct "url".
+- Each resource object must have a "type" ('video', 'article', 'pdf'), a "title", and a "source" (e.g., 'YouTube', 'Amboss', 'Osmosis', 'Lecturio', 'Khan Academy', 'PubMed'). When generating resources, prioritize these sources but you can also use others if they are high-quality.
+- Do NOT invent URLs. If you cannot find a suitable, high-quality resource, leave the resources array empty for that task.
 
 The output MUST be a single, valid JSON object and nothing else. Do not wrap it in markdown backticks or explain the code.
 The JSON object must have "planTitle" (string) and "weeks" (array of week objects).
@@ -211,7 +214,7 @@ Each task object must have "task" (string), "duration" (number in minutes), "pri
 `;
 
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-pro',
+        model: 'gemini-2.5-flash', // Using flash for complex generation to save quota
         contents: prompt,
         config: {
             tools: [{googleSearch: {}}],
@@ -293,14 +296,12 @@ ${data}
     return response.text.trim();
 };
 
-// FIX: Add missing function to resolve import error in PomodoroScreen.
 export const getMotivationalMessage = async (): Promise<string> => {
     const prompt = `Provide a very short, upbeat, and motivational quote for a student suitable for displaying on a study dashboard. Make it encouraging and concise (around 10-15 words).`;
     const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
     return response.text.trim();
 };
 
-// FIX: Add missing function to resolve import error in SessionSummaryModal.
 export const getSessionSummary = async (totalMinutes: number, sessionsToday: number): Promise<string> => {
     const prompt = `A student just finished a Pomodoro study session.
 - Total focus time today: ${totalMinutes} minutes
@@ -371,7 +372,6 @@ export const getAIResponse = async (
         }
     });
     
-    // FIX: Correctly return function calls along with the text response.
     return { text: response.text, functionCalls: response.functionCalls };
 };
 
@@ -393,9 +393,12 @@ export const explainDiagram = async (prompt: string, imageBase64: string, imageM
 };
 
 export const generateSpeech = async (text: string, voice: string = 'Kore'): Promise<string> => {
+    // Truncate overly long text for speech generation to avoid timeout or quota issues
+    const safeText = text.length > 500 ? text.substring(0, 500) + "..." : text;
+
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: `Say this with a natural and clear tone: ${text}` }] }],
+      contents: [{ parts: [{ text: `Say this naturally: ${safeText}` }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {

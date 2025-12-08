@@ -3,12 +3,13 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { useTheme } from '../hooks/useTheme';
 import { useGamification } from '../hooks/useGamification';
-import { GamificationActionType, AvatarId, BackgroundName, Font, ButtonShape, Mood, AIPersona, AIVoice } from '../types';
+import { GamificationActionType, AvatarId, BackgroundName, Font, ButtonShape, Mood, AIPersona, AIVoice, PomodoroActionType } from '../types';
 import { Avatar } from '../components/Avatar';
 import { useMusic } from '../hooks/useMusic';
 import { musicTracks } from '../data/music';
 import { useSmartSettings } from '../hooks/useSmartSettings';
 import { SmartSettingsActionType } from '../types';
+import { usePomodoro } from '../hooks/usePomodoro';
 
 const ACCENT_COLORS = [
     { name: 'indigo', color: '#6366F1' },
@@ -107,10 +108,11 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (chec
 
 
 function SettingsScreen() {
-  const { theme, toggleTheme, accentColor, setAccentColor, isAutoTheme, toggleAutoTheme, background, setBackground, font, setFont, buttonShape, setButtonShape, focusMode, setFocusMode, mood, setMood, avatarId, setAvatarId, phoneNumber, setPhoneNumber } = useTheme();
+  const { theme, toggleTheme, accentColor, setAccentColor, isAutoTheme, toggleAutoTheme, background, setBackground, font, setFont, buttonShape, setButtonShape, focusMode, setFocusMode, mood, setMood, avatarId, setAvatarId, phoneNumber, setPhoneNumber, reduceMotion, setReduceMotion } = useTheme();
   const { dispatch: gamificationDispatch } = useGamification();
   const { currentTrackId, isPlaying, volume, setTrack, togglePlay, setVolume } = useMusic();
   const settings = useSmartSettings();
+  const { state: pomodoroState, dispatch: pomodoroDispatch } = usePomodoro();
   const [phoneInput, setPhoneInput] = React.useState(phoneNumber);
 
   const handlePhoneSave = () => {
@@ -156,6 +158,20 @@ function SettingsScreen() {
         console.error("Failed to export data", error);
         alert("An error occurred while exporting your data.");
     }
+  };
+
+  const handlePomodoroDurationChange = (type: 'pomodoro' | 'short' | 'long', value: string) => {
+    const numValue = parseInt(value, 10);
+    if (isNaN(numValue) || numValue < 1) return;
+
+    pomodoroDispatch({
+        type: PomodoroActionType.SET_DURATIONS,
+        payload: {
+            pomodoro: type === 'pomodoro' ? numValue : pomodoroState.pomodoroDuration,
+            short: type === 'short' ? numValue : pomodoroState.shortBreakDuration,
+            long: type === 'long' ? numValue : pomodoroState.longBreakDuration,
+        }
+    });
   };
 
   return (
@@ -235,6 +251,24 @@ function SettingsScreen() {
              </div>
              <SettingsRow label="Auto Planner" description="AI adjusts your study plan if your schedule changes.">
                 <ToggleSwitch checked={settings.autoPlanner} onChange={val => settings.dispatch({type: SmartSettingsActionType.SET_AUTO_PLANNER, payload: val})} />
+            </SettingsRow>
+        </SettingsSection>
+
+        <SettingsSection title="Study & Exam Defaults">
+            <SettingsRow label="Pomodoro Duration (minutes)">
+                <input type="number" value={pomodoroState.pomodoroDuration} onChange={e => handlePomodoroDurationChange('pomodoro', e.target.value)} className="w-20 p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600" />
+            </SettingsRow>
+            <SettingsRow label="Short Break Duration (minutes)">
+                <input type="number" value={pomodoroState.shortBreakDuration} onChange={e => handlePomodoroDurationChange('short', e.target.value)} className="w-20 p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600" />
+            </SettingsRow>
+            <SettingsRow label="Long Break Duration (minutes)">
+                <input type="number" value={pomodoroState.longBreakDuration} onChange={e => handlePomodoroDurationChange('long', e.target.value)} className="w-20 p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600" />
+            </SettingsRow>
+        </SettingsSection>
+        
+        <SettingsSection title="Accessibility">
+            <SettingsRow label="Reduce Motion" description="Disables animations and transitions for a simpler interface.">
+                <ToggleSwitch checked={reduceMotion} onChange={setReduceMotion} />
             </SettingsRow>
         </SettingsSection>
 

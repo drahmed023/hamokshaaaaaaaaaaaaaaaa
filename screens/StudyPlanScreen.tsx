@@ -14,6 +14,8 @@ import { parseFileToText } from '../utils/fileParser';
 import { YouTubeIcon } from '../components/icons/YouTubeIcon';
 import { PdfIcon } from '../components/icons/PdfIcon';
 import { LinkIcon } from '../components/icons/LinkIcon';
+import jsPDF from 'jspdf';
+import { DownloadIcon } from '../components/icons/DownloadIcon';
 
 
 const CreatePlanForm = ({ onPlanCreated }: { onPlanCreated: (plan: StudyPlan) => void }) => {
@@ -153,6 +155,22 @@ const CreatePlanForm = ({ onPlanCreated }: { onPlanCreated: (plan: StudyPlan) =>
     );
 };
 
+const ResourceLink = ({ resource }: { resource: StudyResource }) => {
+    let href = resource.url || '#';
+    if (resource.searchQuery) {
+        href = `https://www.youtube.com/results?search_query=${encodeURIComponent(resource.searchQuery)}`;
+    }
+
+    return (
+        <a href={href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-blue-500 hover:underline">
+            <ResourceIcon type={resource.type} />
+            <span className="truncate" title={resource.title}>{resource.title}</span>
+            <span className="text-xs text-slate-400 flex-shrink-0">({resource.source})</span>
+        </a>
+    );
+};
+
+
 const ResourceIcon = ({ type }: { type: StudyResource['type'] }) => {
   switch (type) {
     case 'video':
@@ -201,11 +219,7 @@ const PlanDetails = ({ plan }: { plan: StudyPlan }) => {
                                 <ul className="pl-5 pt-1 space-y-1 w-full border-l border-slate-200 dark:border-slate-600">
                                     {task.resources.map((resource, resourceIndex) => (
                                         <li key={resourceIndex}>
-                                            <a href={resource.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-blue-500 hover:underline">
-                                                <ResourceIcon type={resource.type} />
-                                                <span className="truncate" title={resource.title}>{resource.title}</span>
-                                                <span className="text-xs text-slate-400 flex-shrink-0">({resource.source})</span>
-                                            </a>
+                                            <ResourceLink resource={resource} />
                                         </li>
                                     ))}
                                 </ul>
@@ -229,7 +243,7 @@ const PlanDetails = ({ plan }: { plan: StudyPlan }) => {
             ))}
             {plan.groundingMetadata && plan.groundingMetadata.length > 0 && (
                 <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
-                    <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">مصادر استعان بها الذكاء الاصطناعي:</h4>
+                    <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">مصدر استعان به الذكاء الاصطناعي:</h4>
                     <ul className="list-disc list-inside text-xs space-y-1">
                         {plan.groundingMetadata.filter(chunk => chunk.web).map((chunk, index) => (
                             <li key={index}>
@@ -326,6 +340,96 @@ function StudyPlanScreen() {
             dispatch({ type: StudyPlanActionType.DELETE_PLAN, payload: planId });
         }
     };
+
+    const handleDownloadPdf = (plan: StudyPlan) => {
+        const doc = new jsPDF();
+        let y = 20;
+        const pageHeight = doc.internal.pageSize.height;
+        const margin = 10;
+        const pageWidth = doc.internal.pageSize.width;
+        const contentWidth = pageWidth - (margin * 2);
+
+        const checkPageBreak = (spaceNeeded: number) => {
+            if (y + spaceNeeded > pageHeight - margin) {
+                doc.addPage();
+                y = margin;
+            }
+        };
+
+        // Title
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        const titleLines = doc.splitTextToSize(plan.planTitle, contentWidth);
+        doc.text(titleLines, margin, y);
+        y += (titleLines.length * 7) + 5;
+        doc.setFont('helvetica', 'normal');
+
+        plan.weeks.forEach(week => {
+            checkPageBreak(15);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Week ${week.weekNumber}:`, margin, y);
+            y += 6;
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'italic');
+            const goalLines = doc.splitTextToSize(week.weeklyGoal, contentWidth);
+            doc.text(goalLines, margin, y);
+            y += (goalLines.length * 5) + 5;
+            doc.setFont('helvetica', 'normal');
+
+            week.days.forEach(day => {
+                checkPageBreak(12);
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text(day.dayOfWeek, margin, y);
+                y += 6;
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+
+                if (day.isRestDay) {
+                    doc.text('Rest Day', margin + 5, y);
+                    y += 7;
+                } else {
+                    day.tasks.forEach(task => {
+                        checkPageBreak(10);
+                        const taskText = `- ${task.task} (${task.duration} mins)`;
+                        const taskLines = doc.splitTextToSize(taskText, contentWidth - 5);
+                        doc.text(taskLines, margin + 5, y);
+                        y += (taskLines.length * 5);
+
+                        task.resources?.forEach(resource => {
+                            checkPageBreak(5);
+                            let url = resource.url;
+                            if (resource.searchQuery) {
+                                url = `https://www.youtube.com/results?search_query=${encodeURIComponent(resource.searchQuery)}`;
+                            }
+
+                            if (url) {
+                                doc.setTextColor(0, 0, 255);
+                                const resourceLines = doc.splitTextToSize(`  • ${resource.title} (${resource.source})`, contentWidth - 10);
+                                try {
+                                    doc.textWithLink(resourceLines[0], margin + 10, y, { url });
+                                    if (resourceLines.length > 1) {
+                                         doc.text(resourceLines.slice(1), margin + 10, y + 5);
+                                    }
+                                } catch (e) {
+                                    // Fallback for long links that jspdf might struggle with
+                                    doc.text(resourceLines, margin + 10, y);
+                                }
+                                doc.setTextColor(0, 0, 0);
+                                y += (resourceLines.length * 5);
+                            }
+                        });
+                        y += 3;
+                    });
+                }
+            });
+            y += 5; // Extra space between weeks
+        });
+        
+        doc.save(`${plan.planTitle.replace(/\s/g, '_')}.pdf`);
+    };
     
     if (loading && view === 'create') {
         return (
@@ -373,7 +477,6 @@ function StudyPlanScreen() {
             {plans.length > 0 ? (
                 <div className="space-y-4">
                     {plans.map(plan => (
-                        // FIX: Added a wrapping div with the key prop to resolve the error.
                         <div key={plan.id}>
                             <Card>
                                 <details className="group">
@@ -386,6 +489,7 @@ function StudyPlanScreen() {
                                            </div>
                                         </div>
                                         <div className="flex items-center gap-2">
+                                            <Button onClick={(e) => { e.preventDefault(); handleDownloadPdf(plan); }} variant="secondary" size="sm" className="!p-2"><DownloadIcon className="w-4 h-4" /></Button>
                                             <Button onClick={(e) => { e.preventDefault(); handleDeletePlan(plan.id); } } variant="danger" size="sm" className="!p-2"><TrashIcon className="w-4 h-4" /></Button>
                                             <Button onClick={(e) => { e.preventDefault(); dispatch({ type: StudyPlanActionType.SET_ACTIVE_PLAN, payload: plan.id }); } } disabled={activePlanId === plan.id} size="sm">Set as Active</Button>
                                         </div>

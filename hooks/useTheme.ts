@@ -24,8 +24,9 @@ export const useTheme = () => {
     root.classList.add(currentTheme);
     root.setAttribute('data-accent', themeState.accentColor);
     root.setAttribute('data-font', themeState.font);
+    root.setAttribute('data-reduce-motion', String(themeState.reduceMotion));
 
-  }, [themeState.theme, themeState.isAutoTheme, themeState.accentColor, themeState.font]);
+  }, [themeState.theme, themeState.isAutoTheme, themeState.accentColor, themeState.font, themeState.reduceMotion]);
 
 
   // Re-create the API of the old useTheme hook using dispatch
@@ -40,6 +41,7 @@ export const useTheme = () => {
   const setMood = (mood: Mood) => dispatch({ type: ThemeActionType.SET_MOOD, payload: mood });
   const setAvatarId = (id: AvatarId) => dispatch({ type: ThemeActionType.SET_AVATAR_ID, payload: id });
   const setPhoneNumber = (phone: string) => dispatch({ type: ThemeActionType.SET_PHONE_NUMBER, payload: phone });
+  const setReduceMotion = (enabled: boolean) => dispatch({ type: ThemeActionType.SET_REDUCE_MOTION, payload: enabled });
   
   return { 
       ...themeState, 
@@ -54,5 +56,6 @@ export const useTheme = () => {
       setMood,
       setAvatarId,
       setPhoneNumber,
+      setReduceMotion,
   };
 };

@@ -2,13 +2,9 @@ import React from 'react';
 
 export function AppLogoIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      {/* A book shape */}
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v15H6.5A2.5 2.5 0 0 1 4 14.5V4.5A2.5 2.5 0 0 1 6.5 2z" />
-      {/* A spark/star inside the book */}
-      <path d="M12 6l1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5 1.5-3z" />
-      <path d="M16 4l.5 1 1 .5-1 .5-.5 1-.5-1-1-.5 1-.5.5-1z" />
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 64 64" fill="none" {...props}>
+      <rect width="64" height="64" rx="16" fill="currentColor"/>
+      <path d="M32 48C26 48 22 44 22 39H27C27 41.5 29 43.5 32 43.5C35 43.5 37 42 37 39.5C37 37 35 36 32 35L28 34C23 32.5 20 29.5 20 25C20 20.5 24 17 32 17C38 17 41 20 42 24.5H37C36.5 22 34.5 21 32 21C29.5 21 28 22 28 24C28 26 30 27 32 27.5L36 28.5C41 30 44 33 44 38C44 43.5 39 48 32 48Z" fill="white"/>
     </svg>
   );
 }

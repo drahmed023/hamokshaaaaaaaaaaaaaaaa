@@ -18,6 +18,10 @@ const getSystemInstructionForPersona = (persona: AIPersona): string => {
 
 // Helper function to handle potential JSON parsing errors
 const parseJsonOrThrow = (jsonString: string, errorMessage: string) => {
+    if (!jsonString || jsonString.trim() === '') {
+        console.error(errorMessage, "Received empty string.");
+        throw new Error(errorMessage);
+    }
     try {
         // The Gemini API might return the JSON wrapped in markdown backticks.
         const cleanedJsonString = jsonString.replace(/^```json\s*|```$/g, '').trim();
@@ -29,24 +33,27 @@ const parseJsonOrThrow = (jsonString: string, errorMessage: string) => {
     }
 };
 
-export const generateExamFromText = async (text: string, numQuestions: number, numCaseQuestions: number, adaptive: boolean, existingQuestions?: string[]): Promise<Omit<Exam, 'id' | 'sourceFileName'>> => {
+export const generateExamFromContent = async (
+    input: { text?: string; fileData?: { base64: string; mimeType: string } },
+    numQuestions: number,
+    numCaseQuestions: number,
+    adaptive: boolean,
+    existingQuestions?: string[]
+): Promise<Omit<Exam, 'id' | 'sourceFileName'>> => {
     const numGeneralQuestions = numQuestions - numCaseQuestions;
     
-    let prompt = `Based on the following text, create a multiple-choice exam with a total of ${numQuestions} questions. 
+    let prompt = `Create a multiple-choice exam with a total of ${numQuestions} questions based on the provided content. 
 Each question must have exactly 4 options, and one must be the correct answer.
 
 The question mix should be as follows:
 - Exactly ${numCaseQuestions} case-based or scenario questions that require critical thinking to solve.
 - Exactly ${numGeneralQuestions} general knowledge questions of varying difficulty.
 
+Analyze the content thoroughly. If the content contains images, diagrams, or charts, generate questions that test the understanding of these visual elements where appropriate.
+
 ${adaptive ? 'The questions should be suitable for a beginner or someone new to this topic.' : ''} 
 
 The output must be a JSON object with a "title" (string) and a "questions" (array of objects) property. Each question object must have "questionText" (string), "options" (array of 4 strings), and "correctAnswer" (string, which is one of the options).
-
-Text:
----
-${text}
----
 `;
 
     if (existingQuestions && existingQuestions.length > 0) {
@@ -73,9 +80,30 @@ ${text}
         required: ["title", "questions"]
     };
 
+    let contents = [];
+    
+    if (input.fileData) {
+        // Multimodal request (File + Text Prompt)
+        contents = [{
+            role: 'user',
+            parts: [
+                { inlineData: { mimeType: input.fileData.mimeType, data: input.fileData.base64 } },
+                { text: prompt }
+            ]
+        }];
+    } else if (input.text) {
+        // Text-only request
+        contents = [{
+            role: 'user',
+            parts: [{ text: `${prompt}\n\nContent:\n---\n${input.text}\n---` }]
+        }];
+    } else {
+        throw new Error("No content provided for exam generation.");
+    }
+
     const response = await ai.models.generateContent({
-        model: 'gemini-flash-lite-latest', // Optimized for speed and quota
-        contents: prompt,
+        model: 'gemini-2.5-flash', // Upgraded model to handle larger output and multimodal inputs.
+        contents: contents,
         config: {
             responseMimeType: "application/json",
             responseSchema: responseSchema,

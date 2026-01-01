@@ -1,5 +1,6 @@
 
 
+
 import React, { useState } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppDataProvider, useAppData } from './context/AppDataContext';
@@ -38,6 +39,8 @@ import { ToastProvider } from './context/ToastContext';
 import { setGamificationToastDispatcher } from './context/GamificationContext';
 import { useToasts } from './context/ToastContext';
 import PomodoroScreen from './screens/PomodoroScreen';
+import LoginScreen from './screens/LoginScreen';
+import Loader from './components/Loader';
 
 // This component contains the entire UI logic.
 // It sits inside all providers, so it has access to all contexts.
@@ -75,4 +78,58 @@ function AppUI() {
                         <Route path="/mind-map/:mindMapId" element={<MindMapScreen />} />
                         <Route path="/calendar" element={<CalendarScreen />} />
                         <Route path="/tasks" element={<TasksScreen />} />
-                        <Route path="/
+                        <Route path="/settings" element={<SettingsScreen />} />
+                        <Route path="/study-plan" element={<StudyPlanScreen />} />
+                        <Route path="/achievements" element={<AchievementsScreen />} />
+                        <Route path="/analytics" element={<AnalyticsScreen />} />
+                        <Route path="/explainer" element={<ExplainerScreen />} />
+                        <Route path="/diagram-explainer" element={<DiagramExplainerScreen />} />
+                        <Route path="/drive" element={<GoogleDriveScreen />} />
+                        <Route path="/notion" element={<NotionScreen />} />
+                        <Route path="/bookmarks" element={<BookmarkedQuestionsScreen />} />
+                        <Route path="/question-bank/:fileName" element={<QuestionBankScreen />} />
+                        <Route path="/pomodoro" element={<PomodoroScreen />} />
+                    </Routes>
+                </main>
+                <AICompanion />
+                <ActionableNotification />
+                <AISchedulingModal />
+                <ToastContainer />
+                <MusicPlayer />
+            </div>
+        </div>
+    );
+}
+
+function AppCore() {
+    const { state } = useAppData();
+    const { isLoggedIn, isInitialized } = state.authState;
+
+    if (!isInitialized) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader text="Initializing App..." />
+            </div>
+        );
+    }
+    
+    if (!isLoggedIn) {
+        return <LoginScreen />;
+    }
+
+    return <AppUI />;
+}
+
+function App() {
+  return (
+    <Router>
+      <ToastProvider>
+        <AppDataProvider>
+          <AppCore />
+        </AppDataProvider>
+      </ToastProvider>
+    </Router>
+  );
+}
+
+export default App;

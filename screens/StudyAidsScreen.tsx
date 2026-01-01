@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useStudyAids } from '../hooks/useStudyAids';
@@ -16,6 +15,7 @@ import { useGamification } from '../hooks/useGamification';
 import { ClockIcon } from '../components/icons/ClockIcon';
 import { BookOpenIcon } from '../components/icons/BookOpenIcon';
 import { CheckCircleIcon } from '../components/icons/CheckCircleIcon';
+import { useDropzone } from 'react-dropzone';
 
 type AidType = 'summary' | 'flashcards' | 'mind-map';
 type Tab = 'generator' | 'library' | 'focus';
@@ -46,8 +46,7 @@ function StudyAidsScreen() {
         }
     }, [location, navigate]);
     
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+    const handleFile = async (file: File) => {
         if (file) {
             setFileName(file.name);
             setIsLoading(true);
@@ -63,6 +62,26 @@ function StudyAidsScreen() {
             }
         }
     };
+    
+    const onDrop = (acceptedFiles: File[]) => {
+        if (acceptedFiles.length > 0) {
+            handleFile(acceptedFiles[0]);
+        }
+    };
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        multiple: false,
+        accept: {
+            'text/plain': ['.txt'],
+            'application/pdf': ['.pdf'],
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+            'application/msword': ['.doc'],
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
+            'application/vnd.ms-powerpoint': ['.ppt'],
+        },
+        disabled: isLoading
+    });
 
     const handleGenerate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -197,20 +216,22 @@ function StudyAidsScreen() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-3">
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Input Source</label>
-                                    <label htmlFor="file-upload" className="flex items-center justify-center gap-3 w-full p-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                                        <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-full group-hover:scale-110 transition-transform">
-                                            <FileTextIcon className="w-6 h-6 text-primary-500" />
+                                    <div {...getRootProps()} className={`p-4 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${isDragActive ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-slate-300 dark:border-slate-600 hover:border-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                                        <input {...getInputProps()} />
+                                        <div className="flex items-center justify-center gap-3">
+                                            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-full">
+                                                <FileTextIcon className="w-6 h-6 text-primary-500" />
+                                            </div>
+                                            <div className="text-left">
+                                                <span className="block font-medium text-slate-700 dark:text-slate-200 text-sm">
+                                                    {isDragActive ? 'Drop file here...' : (fileName ? `Selected: ${fileName}` : 'Drag & drop or click to upload')}
+                                                </span>
+                                                <span className="block text-xs text-slate-500 dark:text-slate-400">
+                                                    .pdf, .docx, .pptx, .txt
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="text-left">
-                                            <span className="block font-medium text-slate-700 dark:text-slate-200 text-sm">
-                                                {fileName ? fileName : 'Upload File'}
-                                            </span>
-                                            <span className="block text-xs text-slate-500 dark:text-slate-400">
-                                                .pdf, .docx, .txt (max 10MB)
-                                            </span>
-                                        </div>
-                                        <input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept=".txt,.pdf,.docx,.doc,.ppt,.pptx" disabled={isLoading} />
-                                    </label>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-3">

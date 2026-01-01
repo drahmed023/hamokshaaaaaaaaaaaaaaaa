@@ -16,6 +16,7 @@ import { PdfIcon } from '../components/icons/PdfIcon';
 import { LinkIcon } from '../components/icons/LinkIcon';
 import jsPDF from 'jspdf';
 import { DownloadIcon } from '../components/icons/DownloadIcon';
+import { useDropzone } from 'react-dropzone';
 
 
 const CreatePlanForm = ({ onPlanCreated }: { onPlanCreated: (plan: StudyPlan) => void }) => {
@@ -35,8 +36,7 @@ const CreatePlanForm = ({ onPlanCreated }: { onPlanCreated: (plan: StudyPlan) =>
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+    const handleFile = async (file: File) => {
         if (file) {
             setIsParsingFile(true);
             dispatch({ type: StudyPlanActionType.SET_ERROR, payload: null });
@@ -50,6 +50,23 @@ const CreatePlanForm = ({ onPlanCreated }: { onPlanCreated: (plan: StudyPlan) =>
             }
         }
     };
+
+    const onDrop = (acceptedFiles: File[]) => {
+        if (acceptedFiles.length > 0) {
+            handleFile(acceptedFiles[0]);
+        }
+    };
+    
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        multiple: false,
+        accept: {
+          'text/plain': ['.txt'],
+          'application/pdf': ['.pdf'],
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+        },
+        disabled: isParsingFile || loading,
+    });
 
     const handleDaysChange = (day: string) => {
         setFormData(prev => {
@@ -98,15 +115,14 @@ const CreatePlanForm = ({ onPlanCreated }: { onPlanCreated: (plan: StudyPlan) =>
                 {inputMode === 'list' && <div><label className="block text-sm font-medium">Topics/Lectures</label><textarea name="topics" rows={5} value={formData.topics} onChange={handleInputChange} className="mt-1 w-full p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600" placeholder="Enter one topic per line..." required /></div>}
                 {inputMode === 'upload' && (
                     <div>
-                        <label className="block text-sm font-medium">Syllabus or Notes File</label>
-                        <input
-                            type="file"
-                            onChange={handleFileChange}
-                            className="mt-1 w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 disabled:opacity-50"
-                            accept=".txt,.pdf"
-                            required
-                            disabled={isParsingFile || loading}
-                        />
+                        <label className="block text-sm font-medium mb-1">Syllabus or Notes File</label>
+                        <div {...getRootProps()} className={`p-6 border-2 border-dashed rounded-lg cursor-pointer text-center transition-colors ${isDragActive ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-slate-300 dark:border-slate-600 hover:border-primary-400'}`}>
+                            <input {...getInputProps()} required={!formData.fileName} />
+                            <p className="text-slate-500 dark:text-slate-400">
+                                {isDragActive ? 'Drop the file here...' : 'Drag & drop a file, or click to select'}
+                            </p>
+                            <p className="text-xs text-slate-400">(.pdf, .docx, .txt)</p>
+                        </div>
                         {isParsingFile && (
                             <div className="mt-2 flex items-center gap-2 text-sm text-slate-500">
                                 <svg className="animate-spin h-4 w-4 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

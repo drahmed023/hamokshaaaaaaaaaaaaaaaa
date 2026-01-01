@@ -3,13 +3,14 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { useTheme } from '../hooks/useTheme';
 import { useGamification } from '../hooks/useGamification';
-import { GamificationActionType, AvatarId, BackgroundName, Font, ButtonShape, Mood, AIPersona, AIVoice, PomodoroActionType } from '../types';
+import { GamificationActionType, AvatarId, BackgroundName, Font, ButtonShape, Mood, AIPersona, AIVoice, PomodoroActionType, AppDataActionType } from '../types';
 import { Avatar } from '../components/Avatar';
 import { useMusic } from '../hooks/useMusic';
 import { musicTracks } from '../data/music';
 import { useSmartSettings } from '../hooks/useSmartSettings';
 import { SmartSettingsActionType } from '../types';
 import { usePomodoro } from '../hooks/usePomodoro';
+import { useAppData } from '../context/AppDataContext';
 
 const ACCENT_COLORS = [
     { name: 'indigo', color: '#6366F1' },
@@ -114,31 +115,18 @@ function SettingsScreen() {
   const settings = useSmartSettings();
   const { state: pomodoroState, dispatch: pomodoroDispatch } = usePomodoro();
   const [phoneInput, setPhoneInput] = React.useState(phoneNumber);
+  const { dispatch: appDispatch } = useAppData();
 
   const handlePhoneSave = () => {
       setPhoneNumber(phoneInput);
       alert('Phone number saved!');
   };
 
-  const handleClearData = () => {
-    if (window.confirm('Are you sure you want to clear all data? This action cannot be undone. All data besides settings will be lost.')) {
-        // This is a simplified approach. A more robust solution would be to dispatch a "CLEAR_ALL_DATA" action.
-        const settingsKeys = ['studySparkBackend']; // Keep the main backend key
-        const keptSettings: { [key: string]: string | null } = {};
-        
-        const backendData = JSON.parse(localStorage.getItem('studySparkBackend') || '{}');
-        const settingsToKeep = {
-            themeState: backendData.themeState,
-            smartSettingsState: backendData.smartSettingsState,
-            musicState: backendData.musicState,
-            pomodoroState: backendData.pomodoroState,
-        };
-
-        localStorage.clear();
-        localStorage.setItem('studySparkBackend', JSON.stringify(settingsToKeep));
-      
-        alert('All study data has been cleared. Reloading the app.');
-        window.location.reload();
+  const handleLogoutAndClear = () => {
+    if (window.confirm('Are you sure you want to log out and clear all data? This cannot be undone.')) {
+        localStorage.removeItem('studySparkBackend');
+        appDispatch({ type: AppDataActionType.SET_AUTH_STATE, payload: { isLoggedIn: false, isInitialized: true } });
+        // No need to reload, the app state will handle the re-render to the login screen.
     }
   };
 
@@ -305,10 +293,10 @@ function SettingsScreen() {
               <Button onClick={handleExportData} variant="secondary" size="sm">Export</Button>
             </SettingsRow>
             <div className="mt-4 p-4 border border-red-300 dark:border-red-700 rounded-lg bg-red-50 dark:bg-red-900/20">
-              <SettingsRow label="Clear All Data">
-                <Button onClick={handleClearData} variant="danger" size="sm">Clear Data</Button>
+              <SettingsRow label="Logout & Clear All Data">
+                <Button onClick={handleLogoutAndClear} variant="danger" size="sm">Logout & Clear</Button>
               </SettingsRow>
-              <p className="text-sm text-red-600 dark:text-red-400 mt-1">This permanently deletes all exams, results, study aids, tasks, and progress. Your settings will be kept.</p>
+              <p className="text-sm text-red-600 dark:text-red-400 mt-1">This permanently deletes all your data and logs you out. This action cannot be undone.</p>
             </div>
         </SettingsSection>
       </div>

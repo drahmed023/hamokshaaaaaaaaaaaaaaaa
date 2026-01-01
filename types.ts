@@ -498,9 +498,25 @@ export type UpcomingExamsAction =
   | { type: UpcomingExamsActionType.ADD_UPCOMING_EXAM, payload: UpcomingExam }
   | { type: UpcomingExamsActionType.DELETE_UPCOMING_EXAM, payload: string };
 
+// Auth and Data Loading
+export interface AuthState {
+  isLoggedIn: boolean;
+  isInitialized: boolean;
+}
+
+export enum AppDataActionType {
+  SET_AUTH_STATE = 'SET_AUTH_STATE',
+  LOAD_STATE = 'LOAD_STATE',
+}
+
+export type AppDataGlobalAction =
+  | { type: AppDataActionType.SET_AUTH_STATE, payload: { isLoggedIn: boolean, isInitialized: boolean } }
+  | { type: AppDataActionType.LOAD_STATE, payload: Partial<AppDataState> };
+
 
 // Master state for the entire application
 export interface AppDataState {
+    authState: AuthState;
     examState: AppState;
     studyAidsState: StudyAidsState;
     studyPlanState: StudyPlanState;
@@ -531,4 +547,5 @@ export type AppDataAction =
     | BookmarksAction
     | NotesAction
     | HighlightsAction
-    | UpcomingExamsAction;
+    | UpcomingExamsAction
+    | AppDataGlobalAction;

@@ -2,8 +2,7 @@
 import { GoogleGenAI, Type, Modality, FunctionDeclaration } from "@google/genai";
 import { Exam, MindMapNodeData, Question, StudyPlan, StudyWeek, StudyDay, StudyTask, AIPersona, StudyResource } from '../types';
 
-// FIX: Initialize the GoogleGenAI client. Ensure API_KEY is set in the environment.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GOOGLE_API_KEY });
 
 const getSystemInstructionForPersona = (persona: AIPersona): string => {
     switch (persona) {

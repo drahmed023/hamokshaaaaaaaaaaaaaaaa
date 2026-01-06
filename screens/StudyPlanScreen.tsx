@@ -19,64 +19,8 @@ import { ChevronLeftIcon } from '../components/icons/ChevronLeftIcon';
 import { useDropzone } from 'react-dropzone';
 import { parseFileToText } from '../utils/fileParser';
 import jsPDF from 'jspdf';
+import { StudyPlanTableView } from '../components/StudyPlanTableView';
 
-const ResourceIcon = ({ type }: { type: string }) => {
-    const iconClass = "w-3 h-3";
-    if (type?.toLowerCase().includes('video') || type?.toLowerCase().includes('youtube')) 
-        return <YouTubeIcon className={`${iconClass} text-red-500`} />;
-    if (type?.toLowerCase().includes('pdf')) 
-        return <PdfIcon className={`${iconClass} text-orange-500`} />;
-    return <LinkIcon className={`${iconClass} text-sky-500`} />;
-};
-
-const ResourceLink: React.FC<{ resource: StudyResource }> = ({ resource }) => (
-    <div className="flex items-center gap-1 py-0.5 group cursor-pointer hover:opacity-80">
-        <ResourceIcon type={resource?.type} />
-        <span className="text-[9px] text-slate-400 font-bold truncate group-hover:text-primary-600 transition-colors">
-            ({resource?.source || 'Link'})
-        </span>
-    </div>
-);
-
-const PlannerColumn: React.FC<{ day: StudyDay, dateStr: string }> = ({ day, dateStr }) => (
-    <div className={`flex-1 min-w-[130px] flex flex-col rounded-xl overflow-hidden border transition-all ${day?.isRestDay ? 'bg-slate-50 dark:bg-slate-800/30 border-slate-200 dark:border-slate-800 opacity-60' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-sm'}`}>
-        {/* Day Header */}
-        <div className="p-3 border-b border-slate-50 dark:border-slate-800">
-            <h4 className="font-bold text-slate-900 dark:text-white text-xs leading-none">{day?.dayOfWeek}</h4>
-            <p className="text-[9px] font-medium text-slate-400 mt-1 uppercase tracking-tight">
-                {dateStr}
-            </p>
-        </div>
-
-        {/* Tasks List */}
-        <div className="p-3 flex-grow space-y-4">
-            {day?.isRestDay ? (
-                <div className="py-8 text-center">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Rest Day</p>
-                </div>
-            ) : (
-                (day?.tasks || []).map((task, idx) => (
-                    <div key={idx} className="group">
-                        <div className="flex items-start gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1 flex-shrink-0" />
-                            <div className="flex-grow">
-                                <p className="text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-tight">
-                                    {task.task} <span className="text-slate-400 font-medium italic text-[9px]">({task.duration || 0} min)</span>
-                                </p>
-                            </div>
-                        </div>
-                        {/* Compact Resources */}
-                        <div className="pl-3 mt-1 space-y-0.5">
-                            {(task.resources || []).map((res, rIdx) => (
-                                <ResourceLink key={rIdx} resource={res} />
-                            ))}
-                        </div>
-                    </div>
-                ))
-            )}
-        </div>
-    </div>
-);
 
 const CreatePlanForm = ({ onPlanCreated }: { onPlanCreated: (plan: StudyPlan) => void }) => {
     const { loading, dispatch } = useStudyPlan();
@@ -316,50 +260,31 @@ function StudyPlanScreen() {
                                 </div>
                                 
                                 {activePlan.weeks && activePlan.weeks.length > 0 ? (
-                                    <div className="space-y-10">
-                                        {activePlan.weeks.map((week, wIdx) => (
-                                            <div key={wIdx} className="space-y-4">
-                                                <div className="space-y-1">
-                                                    <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Week {week.weekNumber}</h3>
-                                                    <p className="text-slate-500 font-bold text-[10px] leading-relaxed max-w-2xl">{week.weeklyGoal || 'Weekly objectives scheduled.'}</p>
-                                                </div>
-                                                <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
-                                                    <div className="flex gap-3 min-w-max w-full">
-                                                        {(week.days || []).map((day, dIdx) => (
-                                                            <PlannerColumn 
-                                                                key={dIdx} 
-                                                                day={day} 
-                                                                dateStr={getMockDate(dIdx)} 
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    <StudyPlanTableView
+                                        title={activePlan.planTitle}
+                                        createdDate={activePlan.createdAt}
+                                        weeks={activePlan.weeks}
+                                    />
                                 ) : activePlan.rows && activePlan.rows.length > 0 ? (
-                                    <div className="space-y-4">
-                                        <h3 className="text-lg font-black text-slate-900 dark:text-white">Continuous Board</h3>
-                                        <div className="overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
-                                            <div className="flex gap-3 min-w-max">
-                                                {activePlan.rows.map((row, rIdx) => (
-                                                    <PlannerColumn 
-                                                        key={rIdx} 
-                                                        day={{
-                                                            dayOfWeek: row.day,
-                                                            isRestDay: false,
-                                                            tasks: [{
-                                                                task: row.topic,
-                                                                duration: row.duration || 45,
-                                                                resources: row.resource ? [row.resource] : []
-                                                            }]
-                                                        }}
-                                                        dateStr={getMockDate(rIdx)}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <StudyPlanTableView
+                                        title={activePlan.planTitle}
+                                        createdDate={activePlan.createdAt}
+                                        weeks={[{
+                                            weekNumber: 1,
+                                            weeklyGoal: 'Complete study topics',
+                                            days: Array.from({ length: 7 }).map((_, idx) => ({
+                                                dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][idx],
+                                                isRestDay: false,
+                                                tasks: activePlan.rows
+                                                    .filter((row, rIdx) => rIdx % 7 === idx)
+                                                    .map(row => ({
+                                                        task: row.topic,
+                                                        duration: row.duration || 45,
+                                                        resources: row.resource ? [row.resource] : []
+                                                    }))
+                                            }))
+                                        }]}
+                                    />
                                 ) : (
                                     <div className="py-20 text-center text-slate-400">
                                         <ClipboardListIcon className="w-10 h-10 mx-auto mb-4 opacity-10" />

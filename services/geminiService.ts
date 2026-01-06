@@ -3,7 +3,11 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { Exam, AIPersona } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+if (!apiKey) {
+  throw new Error('VITE_GOOGLE_API_KEY is not set');
+}
+const ai = new GoogleGenAI({ apiKey });
 
 const parseJsonOrThrow = (text: string, errorMessage: string) => {
     if (!text || typeof text !== 'string') throw new Error("Empty response.");

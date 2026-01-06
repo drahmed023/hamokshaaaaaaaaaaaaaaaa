@@ -1,3 +1,4 @@
+
 import React, { createContext, useReducer, ReactNode, Dispatch, useEffect, useContext, useCallback } from 'react';
 import {
     AppDataState, AppDataAction, AppDataActionType,
@@ -15,30 +16,39 @@ import {
     NotesState, NotesAction, NotesActionType,
     HighlightsState, HighlightsAction, HighlightsActionType,
     UpcomingExamsState, UpcomingExamsAction, UpcomingExamsActionType,
+    ProfileState, ProfileAction, ProfileActionType,
     AuthState
 } from '../types';
 import { getAchievement } from '../data/achievements';
 import { toastDispatcher } from './GamificationContext';
 
-// --- Default States for each slice ---
 const initialExamState: AppState = { exams: [], results: [], loading: false, error: null };
 const initialStudyAidsState: StudyAidsState = { summaries: [], flashcardDecks: [], mindMaps: [] };
-const initialStudyPlanState: StudyPlanState = { plans: [], activePlanId: null, loading: false, error: null };
+const initialStudyPlanState: StudyPlanState = { plans: [], activePlanId: null, loading: false };
 const initialTasksState: TasksState = { tasks: [] };
 const initialGamificationState: GamificationState = { xp: 0, level: 1, lastStudiedDate: null, streak: 0, unlockedAchievements: [] };
 const initialThemeState: ThemeState = { theme: 'light', accentColor: 'indigo', isAutoTheme: false, background: 'default', font: 'modern', buttonShape: 'rounded', focusMode: false, mood: 'neutral', avatarId: 'avatar1', phoneNumber: '', reduceMotion: false };
 const defaultSystemMessage: AIMessage = { role: 'model', parts: [{text: "Hello! I'm your AI Study Companion. How can I help you today?"}] };
 const initialAIInteractionState: AIInteractionState = { messages: [defaultSystemMessage], isThinking: false, isOpen: false, navigationPrompt: { isOpen: false, destination: '', message: '' }, schedulingModal: { isOpen: false, taskDescription: '', dueDate: undefined } };
 const initialMusicState: MusicState = { currentTrackId: null, isPlaying: false, volume: 0.5 };
-const initialSmartSettingsState: SmartSettingsState = { aiPersona: 'friendly', adaptiveLearning: false, autoPlanner: false, aiVoiceTutor: false, aiVoice: 'Kore' };
+const initialSmartSettingsState: SmartSettingsState = { aiPersona: 'friendly', adaptiveLearning: false, autoPlanner: false, aiVoiceTutor: false, aiVoice: 'Kore', aiThinkingBudget: 0, autoSaveResults: true, compactMode: false };
 const initialPomodoroState: PomodoroState = { mode: 'pomodoro', timeLeft: 25 * 60, isActive: false, cycles: 0, showSummary: false, sessionsToday: 0, totalFocusTime: 0, sessionType: 'focus', pomodoroDuration: 25, shortBreakDuration: 5, longBreakDuration: 15, lastSessionDate: null };
 const initialBookmarksState: BookmarksState = { bookmarks: [] };
 const initialNotesState: NotesState = { notes: [] };
 const initialHighlightsState: HighlightsState = { questionHighlights: [] };
 const initialUpcomingExamsState: UpcomingExamsState = { upcomingExams: [] };
 const initialAuthState: AuthState = { isLoggedIn: false, isInitialized: false };
+const initialProfileState: ProfileState = { 
+    fullName: 'Study Spark User', 
+    email: '', 
+    major: 'General Science', 
+    educationLevel: 'University', 
+    bio: 'Passionate about learning and AI.', 
+    studyGoal: 'Complete all courses with distinction.',
+    subjects: ['Artificial Intelligence', 'Medicine'],
+    links: {}
+};
 
-// --- Root Initial State ---
 const initialState: AppDataState = {
     authState: initialAuthState,
     examState: initialExamState,
@@ -55,9 +65,17 @@ const initialState: AppDataState = {
     notesState: initialNotesState,
     highlightsState: initialHighlightsState,
     upcomingExamsState: initialUpcomingExamsState,
+    profileState: initialProfileState,
 };
 
-// --- INDIVIDUAL REDUCERS ---
+const profileReducer = (state: ProfileState, action: ProfileAction): ProfileState => {
+  switch (action.type) {
+    case ProfileActionType.UPDATE_PROFILE:
+      return { ...state, ...action.payload };
+    default:
+      return state;
+  }
+};
 
 const examReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
@@ -66,7 +84,6 @@ const examReducer = (state: AppState, action: Action): AppState => {
     case ExamActionType.UPDATE_EXAM:
       return { ...state, exams: state.exams.map(e => e.id === action.payload.id ? action.payload : e) };
     case ExamActionType.ADD_RESULT:
-      // Replace result if one for the same exam already exists
       return { ...state, results: [...state.results.filter(r => r.examId !== action.payload.examId), action.payload] };
     case ExamActionType.SET_LOADING:
       return { ...state, loading: action.payload };
@@ -78,6 +95,16 @@ const examReducer = (state: AppState, action: Action): AppState => {
       return state;
   }
 };
+
+const studyPlanReducer = (state: StudyPlanState, action: StudyPlanAction): StudyPlanState => {
+    switch (action.type) {
+        case StudyPlanActionType.ADD_PLAN: return { ...state, plans: [...state.plans, action.payload], activePlanId: action.payload.id };
+        case StudyPlanActionType.SET_ACTIVE_PLAN: return { ...state, activePlanId: action.payload };
+        case StudyPlanActionType.DELETE_PLAN: return { ...state, plans: state.plans.filter(p => p.id !== action.payload), activePlanId: state.activePlanId === action.payload ? null : state.activePlanId };
+        case StudyPlanActionType.SET_LOADING: return { ...state, loading: action.payload };
+        default: return state;
+    }
+}
 
 const studyAidsReducer = (state: StudyAidsState, action: StudyAidsAction): StudyAidsState => {
     switch(action.type) {
@@ -94,20 +121,6 @@ const studyAidsReducer = (state: StudyAidsState, action: StudyAidsAction): Study
     }
 };
 
-const studyPlanReducer = (state: StudyPlanState, action: StudyPlanAction): StudyPlanState => {
-    switch (action.type) {
-        case StudyPlanActionType.ADD_PLAN: return { ...state, plans: [...state.plans, action.payload] };
-        case StudyPlanActionType.DELETE_PLAN: 
-            const newPlans = state.plans.filter(p => p.id !== action.payload);
-            const newActivePlanId = state.activePlanId === action.payload ? null : state.activePlanId;
-            return { ...state, plans: newPlans, activePlanId: newActivePlanId };
-        case StudyPlanActionType.SET_ACTIVE_PLAN: return { ...state, activePlanId: action.payload };
-        case StudyPlanActionType.SET_LOADING: return { ...state, loading: action.payload };
-        case StudyPlanActionType.SET_ERROR: return { ...state, error: action.payload };
-        default: return state;
-    }
-};
-
 const tasksReducer = (state: TasksState, action: TasksAction): TasksState => {
     switch (action.type) {
         case TasksActionType.ADD_TASK: return { ...state, tasks: [...state.tasks, action.payload] };
@@ -115,7 +128,6 @@ const tasksReducer = (state: TasksState, action: TasksAction): TasksState => {
         case TasksActionType.DELETE_TASK: return { ...state, tasks: state.tasks.filter(t => t.id !== action.payload) };
         case TasksActionType.EDIT_TASK: return { ...state, tasks: state.tasks.map(t => t.id === action.payload.id ? { ...t, text: action.payload.text } : t) };
         case TasksActionType.SET_TASKS: return { ...state, tasks: action.payload };
-        case TasksActionType.DELETE_PLAN_TASKS: return { ...state, tasks: state.tasks.filter(t => t.planId !== action.payload) };
         default: return state;
     }
 };
@@ -136,36 +148,20 @@ const fullGamificationReducer = (state: GamificationState, action: GamificationA
         case GamificationActionType.CHECK_STREAK: {
             const today = new Date().toISOString().split('T')[0];
             if (state.lastStudiedDate === today) return state;
-
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
             const yesterdayStr = yesterday.toISOString().split('T')[0];
-            
             const newStreak = state.lastStudiedDate === yesterdayStr ? state.streak + 1 : 1;
-            
             let newState = { ...state, streak: newStreak, lastStudiedDate: today };
-            
             if (newStreak === 3 && !state.unlockedAchievements.includes('streak_3')) {
                 newState.unlockedAchievements = [...newState.unlockedAchievements, 'streak_3'];
-                const ach = getAchievement('streak_3');
-                if(ach) toastDispatcher('Achievement Unlocked!', ach.name);
-            }
-            if (newStreak === 7 && !state.unlockedAchievements.includes('streak_7')) {
-                newState.unlockedAchievements = [...newState.unlockedAchievements, 'streak_7'];
-                const ach = getAchievement('streak_7');
-                if(ach) toastDispatcher('Achievement Unlocked!', ach.name);
             }
             return newState;
         }
         case GamificationActionType.UNLOCK_ACHIEVEMENT: {
             if (state.unlockedAchievements.includes(action.payload)) return state;
-            const achievement = getAchievement(action.payload);
-            if (achievement) {
-                toastDispatcher('Achievement Unlocked!', achievement.name);
-            }
             return { ...state, unlockedAchievements: [...state.unlockedAchievements, action.payload] };
         }
-        case GamificationActionType.RESET_GAMIFICATION: return initialGamificationState;
         default: return state;
     }
 };
@@ -217,6 +213,9 @@ const smartSettingsReducer = (state: SmartSettingsState, action: SmartSettingsAc
         case SmartSettingsActionType.SET_AUTO_PLANNER: return { ...state, autoPlanner: action.payload };
         case SmartSettingsActionType.SET_AI_VOICE_TUTOR: return { ...state, aiVoiceTutor: action.payload };
         case SmartSettingsActionType.SET_AI_VOICE: return { ...state, aiVoice: action.payload };
+        case SmartSettingsActionType.SET_THINKING_BUDGET: return { ...state, aiThinkingBudget: action.payload };
+        case SmartSettingsActionType.SET_AUTO_SAVE_RESULTS: return { ...state, autoSaveResults: action.payload };
+        case SmartSettingsActionType.SET_COMPACT_MODE: return { ...state, compactMode: action.payload };
         case SmartSettingsActionType.SET_ALL_SETTINGS: return action.payload;
         default: return state;
     }
@@ -245,7 +244,7 @@ const pomodoroReducer = (state: PomodoroState, action: PomodoroAction): Pomodoro
             } else {
                 nextMode = 'pomodoro';
             }
-            const nextTime = nextMode === 'pomodoro' ? state.pomodoroDuration * 60 : nextMode === 'shortBreak' ? state.shortBreakDuration * 60 : state.longBreakDuration * 60;
+            const nextTime = nextMode === 'pomodoro' ? state.pomodoroDuration * 60 : nextMode === 'shortBreak' ? state.shortBreakDuration * 60 : nextMode === 'longBreak' ? state.longBreakDuration * 60 : state.pomodoroDuration * 60;
             return { ...state, isActive: false, mode: nextMode, timeLeft: nextTime, cycles: newCycles, showSummary: state.mode === 'pomodoro', sessionsToday: state.mode === 'pomodoro' ? state.sessionsToday + 1 : state.sessionsToday };
         }
         case PomodoroActionType.CLOSE_SUMMARY: return { ...state, showSummary: false };
@@ -300,18 +299,14 @@ const upcomingExamsReducer = (state: UpcomingExamsState, action: UpcomingExamsAc
     }
 };
 
-// --- Combined Reducer Logic ---
 const rootReducer = (state: AppDataState, action: AppDataAction): AppDataState => {
-    // Global Actions
     if (action.type === AppDataActionType.SET_AUTH_STATE) {
-        // Clear all data on logout
         if (!action.payload.isLoggedIn) {
             return { ...initialState, authState: { isLoggedIn: false, isInitialized: true } };
         }
         return { ...state, authState: action.payload };
     }
     if (action.type === AppDataActionType.LOAD_STATE) {
-        // When loading, merge saved state with initial state to avoid missing properties
         return { 
             ...initialState, 
             ...action.payload, 
@@ -319,8 +314,7 @@ const rootReducer = (state: AppDataState, action: AppDataAction): AppDataState =
         };
     }
 
-    // Delegate to sub-reducers
-    const newState = {
+    return {
         ...state,
         examState: examReducer(state.examState, action as Action),
         studyAidsState: studyAidsReducer(state.studyAidsState, action as StudyAidsAction),
@@ -336,13 +330,10 @@ const rootReducer = (state: AppDataState, action: AppDataAction): AppDataState =
         notesState: notesReducer(state.notesState, action as NotesAction),
         highlightsState: highlightsReducer(state.highlightsState, action as HighlightsAction),
         upcomingExamsState: upcomingExamsReducer(state.upcomingExamsState, action as UpcomingExamsAction),
+        profileState: profileReducer(state.profileState, action as ProfileAction),
     };
-
-    return newState;
 };
 
-
-// --- Provider ---
 const AppDataStateContext = createContext<AppDataState>(initialState);
 const AppDataDispatchContext = createContext<Dispatch<AppDataAction>>(() => null);
 
@@ -351,9 +342,7 @@ const BACKEND_STORAGE_KEY = 'studySparkBackend';
 export function AppDataProvider({ children }: { children?: ReactNode }) {
     const [state, dispatch] = useReducer(rootReducer, initialState);
 
-    // Effect for initializing the app and checking auth status
     useEffect(() => {
-        // This simulates checking a token or session on app load
         const isLoggedIn = !!localStorage.getItem(BACKEND_STORAGE_KEY);
         if (isLoggedIn) {
             fetchDataFromStorage();
@@ -362,14 +351,12 @@ export function AppDataProvider({ children }: { children?: ReactNode }) {
         }
     }, []);
 
-    // Effect for saving data to our "backend" (localStorage) whenever state changes
     useEffect(() => {
         if (state.authState.isLoggedIn && state.authState.isInitialized) {
             saveDataToStorage(state);
         }
     }, [state]);
 
-    // --- Mock Backend Service Layer ---
     const fetchDataFromStorage = useCallback(() => {
         try {
             const stored = localStorage.getItem(BACKEND_STORAGE_KEY);
@@ -377,12 +364,9 @@ export function AppDataProvider({ children }: { children?: ReactNode }) {
                 const parsed = JSON.parse(stored);
                 dispatch({ type: AppDataActionType.LOAD_STATE, payload: parsed });
             } else {
-                 // First time login, just set auth state
                  dispatch({ type: AppDataActionType.SET_AUTH_STATE, payload: { isLoggedIn: true, isInitialized: true } });
             }
         } catch (error) {
-            console.error("Failed to load data from storage", error);
-            // If storage is corrupt, log out to be safe
             localStorage.removeItem(BACKEND_STORAGE_KEY);
             dispatch({ type: AppDataActionType.SET_AUTH_STATE, payload: { isLoggedIn: false, isInitialized: true } });
         }
@@ -391,14 +375,12 @@ export function AppDataProvider({ children }: { children?: ReactNode }) {
     const saveDataToStorage = useCallback((currentState: AppDataState) => {
         try {
             const stateToSave = {
-                // We don't save authState itself, its existence implies logged in
                 examState: { ...currentState.examState, loading: false, error: null },
                 studyAidsState: currentState.studyAidsState,
-                studyPlanState: { ...currentState.studyPlanState, loading: false, error: null },
+                studyPlanState: currentState.studyPlanState,
                 tasksState: currentState.tasksState,
                 gamificationState: currentState.gamificationState,
                 themeState: currentState.themeState,
-                // Do not persist volatile AI state
                 aiInteractionState: { ...initialAIInteractionState, isOpen: currentState.aiInteractionState.isOpen },
                 musicState: currentState.musicState,
                 smartSettingsState: currentState.smartSettingsState,
@@ -407,15 +389,12 @@ export function AppDataProvider({ children }: { children?: ReactNode }) {
                 notesState: currentState.notesState,
                 highlightsState: currentState.highlightsState,
                 upcomingExamsState: currentState.upcomingExamsState,
+                profileState: currentState.profileState,
             };
             localStorage.setItem(BACKEND_STORAGE_KEY, JSON.stringify(stateToSave));
-        } catch (error) {
-            console.error("Failed to save data to storage", error);
-        }
+        } catch (error) {}
     }, []);
 
-
-    // --- Theme side-effects ---
     useEffect(() => {
         const root = window.document.documentElement;
         root.classList.remove('light', 'dark', 'calm');
@@ -424,7 +403,6 @@ export function AppDataProvider({ children }: { children?: ReactNode }) {
         root.setAttribute('data-font', state.themeState.font);
         root.setAttribute('data-reduce-motion', String(state.themeState.reduceMotion));
     }, [state.themeState.theme, state.themeState.accentColor, state.themeState.font, state.themeState.reduceMotion]);
-
 
     return (
         <AppDataStateContext.Provider value={state}>
@@ -435,7 +413,6 @@ export function AppDataProvider({ children }: { children?: ReactNode }) {
     );
 }
 
-// --- Custom Hook ---
 export const useAppData = () => {
     const state = useContext(AppDataStateContext);
     const dispatch = useContext(AppDataDispatchContext);

@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-// FIX: Updated the import path for the useTheme hook.
 import { useTheme } from '../hooks/useTheme';
+import { useProfile } from '../hooks/useProfile';
 import { SunIcon } from './icons/SunIcon';
 import { MoonIcon } from './icons/MoonIcon';
 import { MenuIcon } from './icons/MenuIcon';
@@ -11,7 +11,6 @@ import { useGamification } from '../hooks/useGamification';
 import { useAvatar } from '../hooks/useAvatar';
 import { Avatar } from './Avatar';
 import { AppLogoIcon } from './icons/AppLogoIcon';
-// FIX: Import FireIcon to replace corrupted SVG
 import { FireIcon } from './icons/FireIcon';
 
 interface HeaderProps {
@@ -22,6 +21,7 @@ function Header({ onMenuClick }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { level, xp, streak } = useGamification();
   const { avatarId } = useAvatar();
+  const { profilePicture } = useProfile();
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
   const xpForNextLevel = 100 * Math.pow(2, level - 1);
@@ -70,12 +70,9 @@ function Header({ onMenuClick }: HeaderProps) {
           <div className="flex-1 flex justify-end items-center gap-4">
               <div className="hidden md:flex items-center gap-6">
                 <div className="flex items-center gap-2 text-orange-600 dark:text-orange-500 font-bold" title={`${streak} day streak`}>
-                    {/* FIX: Replaced corrupted SVG with FireIcon component */}
                     <FireIcon className="w-5 h-5" />
-                    {/* FIX: Display streak number */}
                     <span>{streak}</span>
                 </div>
-                {/* FIX: Reconstructed missing level progress bar */}
                 <div className="w-24" title={`${xp}/${xpForNextLevel} XP`}>
                     <div className="text-xs text-slate-600 dark:text-slate-300 mb-1 text-center font-bold">
                         Level {level}
@@ -85,7 +82,6 @@ function Header({ onMenuClick }: HeaderProps) {
                     </div>
                 </div>
               </div>
-              {/* FIX: Reconstructed missing theme toggle button */}
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 icon-container"
@@ -97,9 +93,12 @@ function Header({ onMenuClick }: HeaderProps) {
                   <SunIcon className="w-6 h-6 icon-interactive" />
                 )}
               </button>
-              {/* FIX: Reconstructed missing user avatar link to settings */}
-              <Link to="/settings" title="Settings">
-                  <Avatar avatarId={avatarId} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-700 shadow-sm" />
+              <Link to="/profile" title="Profile">
+                  {profilePicture ? (
+                      <img src={profilePicture} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-700 shadow-sm object-cover" alt="Profile" />
+                  ) : (
+                      <Avatar avatarId={avatarId} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-700 shadow-sm" />
+                  )}
               </Link>
           </div>
         </div>
@@ -108,5 +107,4 @@ function Header({ onMenuClick }: HeaderProps) {
   );
 }
 
-// FIX: Add default export to fix import error in App.tsx
 export default Header;

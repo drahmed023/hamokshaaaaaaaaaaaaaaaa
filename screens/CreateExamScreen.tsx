@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useExam } from '../hooks/useExam';
@@ -15,12 +16,15 @@ import { useDropzone } from 'react-dropzone';
 import { XCircleIcon } from '../components/icons/XCircleIcon';
 import { LinkIcon } from '../components/icons/LinkIcon';
 
+type Difficulty = 'Easy' | 'Medium' | 'Hard';
+
 function CreateExamScreen() {
   const [text, setText] = useState('');
   const [driveUrl, setDriveUrl] = useState('');
-  const [uploadedFile, setUploadedFile] = useState<{ base64: string, mimeType: string, name: string } | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<{ data: string, mimeType: string, name: string } | null>(null);
   const [numQuestions, setNumQuestions] = useState(10);
   const [numCaseQuestions, setNumCaseQuestions] = useState(2);
+  const [difficulty, setDifficulty] = useState<Difficulty>('Medium');
   const [fileName, setFileName] = useState('');
   const { exams, loading, error, dispatch } = useExam();
   const { adaptiveLearning } = useSmartSettings();
@@ -49,23 +53,20 @@ function CreateExamScreen() {
       dispatch({ type: ExamActionType.SET_ERROR, payload: null });
       
       try {
+        // التحليل المتعدد (Multimodal): للـ PDF والصور، نرسل الملف كاملاً للذكاء الاصطناعي
         if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
             const base64 = await blobToBase64(file);
-            setUploadedFile({
-                base64,
-                mimeType: file.type,
-                name: file.name
-            });
-            setText('');
-            setDriveUrl('');
+            setUploadedFile({ data: base64, mimeType: file.type, name: file.name });
+            setText(''); // تفريغ النص لأننا سنعتمد على الملف البصري
         } else {
+            // للملفات الأخرى مثل Word، نستمر في استخراج النص
             const content = await parseFileToText(file);
             setText(content);
             setUploadedFile(null);
-            setDriveUrl('');
         }
+        setDriveUrl('');
       } catch (err: any) {
-        dispatch({ type: ExamActionType.SET_ERROR, payload: err.message });
+        dispatch({ type: ExamActionType.SET_ERROR, payload: "عذراً، تعذر معالجة هذا الملف. حاول رفعه بصيغة PDF لأفضل النتائج." });
       } finally {
         dispatch({ type: ExamActionType.SET_LOADING, payload: false });
       }
@@ -75,29 +76,20 @@ function CreateExamScreen() {
   const processDriveUrl = async () => {
     const fileId = extractFileIdFromUrl(driveUrl);
     if (!fileId) {
-        dispatch({ type: ExamActionType.SET_ERROR, payload: 'Invalid Google Drive URL. Please check the link and try again.' });
+        dispatch({ type: ExamActionType.SET_ERROR, payload: 'رابط Google Drive غير صالح.' });
         return;
     }
-
     dispatch({ type: ExamActionType.SET_LOADING, payload: true });
-    dispatch({ type: ExamActionType.SET_ERROR, payload: null });
-
     try {
         const metadata = await getFileMetadata(fileId);
         setFileName(metadata.name);
-
+        
         if (metadata.mimeType === 'application/pdf' || metadata.mimeType.startsWith('image/')) {
-            // Fetch as blob for multimodal
             const blob = await getFileBlob(fileId);
             const base64 = await blobToBase64(blob);
-            setUploadedFile({
-                base64,
-                mimeType: metadata.mimeType,
-                name: metadata.name
-            });
+            setUploadedFile({ data: base64, mimeType: metadata.mimeType, name: metadata.name });
             setText('');
         } else {
-            // Try text extraction/export
             const content = await getFileContent(fileId, metadata.mimeType);
             setText(content);
             setUploadedFile(null);
@@ -110,225 +102,163 @@ function CreateExamScreen() {
     }
   };
 
-  const onDrop = (acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      handleFile(acceptedFiles[0]);
-    }
-  };
-
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
+    onDrop: (files) => handleFile(files[0]),
     multiple: false,
-    accept: {
-      'text/plain': ['.txt'],
-      'application/pdf': ['.pdf'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-      'application/msword': ['.doc'],
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
-      'application/vnd.ms-powerpoint': ['.ppt'],
-      'image/jpeg': ['.jpeg', '.jpg'],
-      'image/png': ['.png'],
-      'image/webp': ['.webp']
+    accept: { 
+        'text/plain': ['.txt'], 
+        'application/pdf': ['.pdf'], 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'], 
+        'image/*': [] 
     },
     disabled: loading,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // If user has a drive URL but hasn't "processed" it yet, do it now
-    if (driveUrl && !text && !uploadedFile) {
-        await processDriveUrl();
-        // The above sets loading to false, we need to check if it succeeded
-        return; 
-    }
-
-    if (!text.trim() && !uploadedFile) {
-      dispatch({ type: ExamActionType.SET_ERROR, payload: 'Please enter text, upload a file, or provide a Drive link.' });
+    if (!text.trim() && !uploadedFile && !driveUrl) {
+      dispatch({ type: ExamActionType.SET_ERROR, payload: 'يرجى توفير محتوى أولاً.' });
       return;
     }
 
     dispatch({ type: ExamActionType.SET_LOADING, payload: true });
-    dispatch({ type: ExamActionType.SET_ERROR, payload: null });
-    
     try {
-      const existingExamsFromFile = exams.filter(exam => exam.sourceFileName && exam.sourceFileName === fileName);
-      const existingQuestions = existingExamsFromFile.flatMap(exam => exam.questions.map(q => q.questionText));
+      const existingExams = exams.filter(e => e.sourceFileName === fileName);
+      const existingQs = existingExams.flatMap(e => e.questions.map(q => q.questionText));
 
       const input = uploadedFile 
-        ? { fileData: { base64: uploadedFile.base64, mimeType: uploadedFile.mimeType } }
+        ? { fileData: { data: uploadedFile.data, mimeType: uploadedFile.mimeType } }
         : { text: text };
 
-      const examData = await generateExamFromContent(input, numQuestions, numCaseQuestions, adaptiveLearning, existingQuestions);
+      const examData = await generateExamFromContent(input, numQuestions, numCaseQuestions, adaptiveLearning, existingQs, difficulty);
+      
       const newExam: Exam = {
         ...examData,
         id: Date.now().toString(),
-        questions: examData.questions.map((q, index) => ({...q, id: `${Date.now()}-${index}`})),
+        questions: (examData.questions || []).map((q, i) => ({...q, id: `${Date.now()}-${i}`})),
         sourceFileName: fileName || 'Manual Entry',
+        subject: fileName ? fileName.split('.')[0] : 'General'
       };
       
       dispatch({ type: ExamActionType.ADD_EXAM, payload: newExam });
       navigate(`/exam/${newExam.id}`);
-    } catch (err: any)      {
+    } catch (err: any) {
       dispatch({ type: ExamActionType.SET_ERROR, payload: err.message });
     } finally {
       dispatch({ type: ExamActionType.SET_LOADING, payload: false });
     }
   };
 
-  const handleClear = () => {
-      setUploadedFile(null);
-      setText('');
-      setFileName('');
-      setDriveUrl('');
-  };
-
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto pb-10" dir="rtl">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold">Create a New Exam</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Provide content via text, file upload, or Google Drive link.</p>
+        <h1 className="text-4xl font-black text-slate-900 dark:text-white">محول المناهج الذكي</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-2 font-bold">حلل الصور، المخططات، والـ PDF لعمل اختبار MCQ احترافي.</p>
       </div>
 
-      <Card>
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <Card className="border-none shadow-2xl">
+        <form onSubmit={handleSubmit} className="space-y-8">
           
-          {uploadedFile ? (
-              <div className="p-6 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                      <div className="p-3 bg-white dark:bg-slate-800 rounded-lg text-primary-600">
-                          <FileTextIcon className="w-8 h-8" />
-                      </div>
-                      <div>
-                          <p className="font-bold text-slate-800 dark:text-slate-100">{uploadedFile.name}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">Ready for visual analysis</p>
-                      </div>
+          {/* Difficulty Selection */}
+          <div className="space-y-3">
+            <label className="block text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">مستوى التحدي</label>
+            <div className="grid grid-cols-3 gap-3 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+              {(['Easy', 'Medium', 'Hard'] as Difficulty[]).map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => setDifficulty(level)}
+                  className={`py-3 px-4 rounded-xl text-sm font-black transition-all duration-300 flex flex-col items-center gap-1 ${
+                    difficulty === level 
+                    ? 'bg-white dark:bg-slate-700 shadow-xl text-primary-600 scale-105 ring-2 ring-primary-500/20' 
+                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full mb-1 ${level === 'Easy' ? 'bg-green-500' : level === 'Medium' ? 'bg-orange-500' : 'bg-red-500'}`}></span>
+                  {level === 'Easy' ? 'أساسي' : level === 'Medium' ? 'متعمق' : 'خبير'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {uploadedFile ? (
+              <div className="p-6 bg-primary-50 dark:bg-primary-900/20 border-2 border-primary-200 dark:border-primary-800 rounded-2xl flex items-center justify-between animate-fade-in">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm">
+                    <FileTextIcon className="w-8 h-8 text-primary-600" />
                   </div>
-                  <button type="button" onClick={handleClear} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
-                      <XCircleIcon className="w-6 h-6" />
-                  </button>
+                  <div>
+                    <p className="font-black text-slate-900 dark:text-white truncate max-w-[200px]">{uploadedFile.name}</p>
+                    <p className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">جاهز للتحليل البصري</p>
+                  </div>
+                </div>
+                <button type="button" onClick={() => setUploadedFile(null)} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><XCircleIcon className="w-6 h-6" /></button>
               </div>
-          ) : (
-            <div className="space-y-4">
-                <div>
-                    <label htmlFor="drive-url" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Google Drive URL
-                    </label>
-                    <div className="flex gap-2">
-                        <div className="relative flex-grow">
-                            <input
-                                id="drive-url"
-                                type="url"
-                                className="w-full p-3 pl-10 border border-slate-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-slate-700 dark:border-slate-600"
-                                placeholder="Paste link here (docs.google.com/... or drive.google.com/...)"
-                                value={driveUrl}
-                                onChange={(e) => setDriveUrl(e.target.value)}
-                                disabled={loading}
-                            />
-                            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        </div>
-                        <Button type="button" onClick={processDriveUrl} disabled={loading || !driveUrl} variant="secondary">
-                            Fetch
-                        </Button>
+            ) : text ? (
+                <div className="space-y-2 animate-fade-in">
+                    <div className="flex justify-between items-center px-1">
+                        <span className="text-[10px] font-black text-primary-600 uppercase tracking-[0.2em]">المحتوى النصي المستخرج</span>
+                        <button type="button" onClick={() => {setText(''); setFileName('');}} className="text-slate-400 hover:text-red-500 text-xs font-bold">تغيير</button>
                     </div>
+                    <textarea rows={6} className="w-full p-4 border-2 border-slate-100 dark:border-slate-800 rounded-2xl dark:bg-slate-900 resize-none text-sm font-medium leading-relaxed shadow-inner" value={text} onChange={(e) => setText(e.target.value)} disabled={loading} />
+                </div>
+            ) : (
+              <div className="space-y-5 animate-fade-in">
+                <div className="flex gap-2">
+                  <div className="relative flex-grow">
+                    <input type="url" className="w-full p-4 pr-12 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 ring-primary-500/20 transition-all font-bold" placeholder="رابط Google Drive..." value={driveUrl} onChange={(e) => setDriveUrl(e.target.value)} disabled={loading} />
+                    <LinkIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  </div>
+                  <Button type="button" onClick={processDriveUrl} disabled={loading || !driveUrl} variant="secondary" className="rounded-2xl px-6">جلب</Button>
                 </div>
 
                 {!driveUrl && (
-                    <>
-                        <div className="relative py-2">
-                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200 dark:border-slate-700"></div></div>
-                            <div className="relative flex justify-center text-xs uppercase"><span className="bg-white dark:bg-slate-900 px-2 text-slate-500">Or Paste Text</span></div>
-                        </div>
-
-                        <div>
-                            <textarea
-                                id="text-input"
-                                rows={6}
-                                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-slate-400 resize-none"
-                                placeholder="Paste your content here..."
-                                value={text}
-                                onChange={(e) => { setText(e.target.value); setUploadedFile(null); }}
-                                disabled={loading}
-                            />
-                        </div>
-
-                        <div className="relative py-2">
-                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200 dark:border-slate-700"></div></div>
-                            <div className="relative flex justify-center text-xs uppercase"><span className="bg-white dark:bg-slate-900 px-2 text-slate-500">Or Upload File</span></div>
-                        </div>
-
-                        <div {...getRootProps()} className={`p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 ${isDragActive ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 scale-[1.02]' : 'border-slate-300 dark:border-slate-600 hover:border-primary-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
-                            <input {...getInputProps()} />
-                            <div className="flex flex-col items-center justify-center gap-2 text-center">
-                                <FileTextIcon className="w-8 h-8 text-slate-400" />
-                                <p className="font-medium text-primary-600 dark:text-primary-400">
-                                    {isDragActive ? 'Drop file here...' : 'Click or Drag file to upload'}
-                                </p>
-                                <p className="text-xs text-slate-500">PDF, DOCX, PPTX, Images (up to 100MB)</p>
-                            </div>
-                        </div>
-                    </>
+                  <>
+                    <div {...getRootProps()} className={`p-12 border-4 border-dashed rounded-[40px] text-center cursor-pointer transition-all duration-500 ${isDragActive ? 'border-primary-500 bg-primary-50 scale-95 shadow-inner' : 'border-slate-100 dark:border-slate-800 hover:border-primary-300 hover:bg-slate-50/50'}`}>
+                      <input {...getInputProps()} />
+                      <div className="w-20 h-20 bg-primary-100 dark:bg-primary-900/30 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                        <FileTextIcon className="w-10 h-10 text-primary-600" />
+                      </div>
+                      <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">ارفع ملفك هنا</h3>
+                      <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest leading-relaxed">PDF, Images, Word or Text<br/>سيدعم الذكاء الاصطناعي الصور الموجودة بالداخل</p>
+                    </div>
+                    <div className="relative py-4">
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100 dark:border-slate-800"></div></div>
+                        <div className="relative flex justify-center"><span className="px-4 bg-white dark:bg-slate-900 text-[10px] font-black text-slate-400 uppercase tracking-widest">أو</span></div>
+                    </div>
+                    <textarea rows={4} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl resize-none text-sm font-medium shadow-inner" placeholder="الصق النص هنا مباشرة..." value={text} onChange={(e) => setText(e.target.value)} disabled={loading} />
+                  </>
                 )}
-            </div>
-          )}
-          
-          {(text || uploadedFile) && (
-             <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm flex items-center justify-between border border-green-100 dark:border-green-800 animate-fade-in">
-                <span className="text-green-800 dark:text-green-200 font-medium">✓ Content loaded from: {fileName || 'Manual Text'}</span>
-                <button type="button" onClick={handleClear} className="text-green-600 hover:text-green-800 underline text-xs">Clear</button>
-             </div>
-          )}
+              </div>
+            )}
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label htmlFor="num-questions" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Total Questions
-                </label>
-                <input
-                type="number"
-                id="num-questions"
-                min="1"
-                max="100"
-                value={numQuestions}
-                onChange={(e) => setNumQuestions(Math.max(1, parseInt(e.target.value, 10)))}
-                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-slate-700 dark:border-slate-600"
-                disabled={loading}
-                />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">إجمالي الأسئلة</label>
+              <input type="number" min="1" max="50" value={numQuestions} onChange={(e) => setNumQuestions(parseInt(e.target.value))} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl font-black" />
             </div>
-            <div>
-                <label htmlFor="num-case-questions" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Case/Scenario Questions
-                </label>
-                <input
-                type="number"
-                id="num-case-questions"
-                min="0"
-                max={numQuestions}
-                value={numCaseQuestions}
-                onChange={(e) => setNumCaseQuestions(Math.min(numQuestions, Math.max(0, parseInt(e.target.value, 10))))}
-                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-slate-700 dark:border-slate-600"
-                disabled={loading}
-                />
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">أسئلة سيناريوهات (Case Study)</label>
+              <input type="number" min="0" max={numQuestions} value={numCaseQuestions} onChange={(e) => setNumCaseQuestions(parseInt(e.target.value))} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl font-black" />
             </div>
           </div>
 
-
-          {error && <div className="text-red-500 text-sm p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800">{error}</div>}
-
-          <div className="pt-2">
-            <Button type="submit" size="lg" disabled={loading || (!text && !uploadedFile && !driveUrl)} className="w-full shadow-lg shadow-primary-500/20">
-              {loading ? <Loader text={uploadedFile ? "Analyzing file & generating exam..." : "Generating Exam..."}/> : (
-                <div className="flex items-center justify-center gap-2">
-                  <SparklesIcon className="w-5 h-5" />
-                  <span>{driveUrl && !text && !uploadedFile ? 'Fetch & Generate' : 'Generate Exam'}</span>
-                </div>
-              )}
-            </Button>
-          </div>
+          <Button type="submit" size="lg" disabled={loading || (!text && !uploadedFile && !driveUrl)} className="w-full h-16 rounded-[2rem] shadow-2xl shadow-primary-500/20 text-lg transition-all active:scale-95">
+            {loading ? <Loader text="جاري تحليل الصور والنصوص..." /> : (
+              <div className="flex items-center gap-3">
+                <SparklesIcon className="w-6 h-6" />
+                <span className="font-black uppercase tracking-widest">توليد الامتحان الآن</span>
+              </div>
+            )}
+          </Button>
         </form>
       </Card>
+      
+      <p className="text-center mt-8 text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-40">Powered by Gemini Multimodal Vision</p>
     </div>
   );
-};
+}
 
 export default CreateExamScreen;

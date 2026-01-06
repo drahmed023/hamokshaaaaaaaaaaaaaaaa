@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import Card from './Card';
 import Loader from './Loader';
 import { useExam } from '../hooks/useExam';
 import { useStudyAids } from '../hooks/useStudyAids';
-import { useStudyPlan } from '../hooks/useStudyPlan';
 import { useTasks } from '../hooks/useTasks';
 import { getDailyStudySuggestion } from '../services/geminiService';
 import { BrainCircuitIcon } from './icons/BrainCircuitIcon';
@@ -14,7 +14,6 @@ function AIStudyCoach() {
 
     const { results } = useExam();
     const { flashcardDecks } = useStudyAids();
-    const { plans, activePlanId } = useStudyPlan();
     const { tasks: allTasks } = useTasks();
 
     useEffect(() => {
@@ -33,31 +32,24 @@ function AIStudyCoach() {
                 }
 
                 const pendingTasks = allTasks.filter(t => !t.completed);
-                const activePlan = plans.find(p => p.id === activePlanId);
 
-                // Construct a context string for the AI
-                let context = "Here is the student's current status:\n";
+                let context = "Status: ";
                 
                 if (results && results.length > 0) {
-                    // Sort results to get the most recent one
                     const sortedResults = [...results].sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
                     const lastResult = sortedResults[0];
-                    context += `- Last exam score was ${Math.round(lastResult.score)}%.\n`;
+                    context += `Last score ${Math.round(lastResult.score)}%. `;
                 } else {
-                    context += "- The user has not taken any exams yet.\n";
+                    context += "New user. ";
                 }
                 
                 const dueCards = flashcardDecks.flatMap(d => d.cards.filter(c => new Date(c.nextReview) <= new Date())).length;
                 if (dueCards > 0) {
-                    context += `- There are ${dueCards} flashcards due for review.\n`;
-                }
-
-                if (activePlan && activePlan.weeks && activePlan.weeks.length > 0) {
-                    context += `- Current weekly goal: ${activePlan.weeks[0]?.weeklyGoal}\n`;
+                    context += `${dueCards} flashcards due. `;
                 }
 
                 if (pendingTasks.length > 0) {
-                    context += `- Pending tasks: ${pendingTasks.map((t) => t.text).join(', ')}\n`;
+                    context += `${pendingTasks.length} tasks pending. `;
                 }
 
                 const result = await getDailyStudySuggestion(context);
@@ -66,26 +58,27 @@ function AIStudyCoach() {
 
             } catch (error) {
                 console.error("Failed to get study suggestion:", error);
-                setSuggestion("Could not load a suggestion. What's your top priority today?");
+                setSuggestion("Keep going! You're making progress every day.");
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchSuggestion();
-    }, [results, flashcardDecks, plans, activePlanId, allTasks]);
+    }, [results, flashcardDecks, allTasks]);
 
     return (
-        // Fix: Added children to Card component to resolve missing prop error.
-        <Card className="w-full bg-primary-50 dark:bg-slate-800 border border-primary-200 dark:border-slate-700">
-            <div className="flex items-start gap-4">
-                <BrainCircuitIcon className="w-8 h-8 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-1" />
-                <div>
-                    <h2 className="text-xl font-bold text-start text-primary-800 dark:text-primary-200">Your AI Study Coach Says...</h2>
+        <Card className="w-full bg-primary-50/50 dark:bg-slate-800/50 border border-primary-100 dark:border-slate-700/50 rounded-[2rem] shadow-sm">
+            <div className="flex items-center gap-5">
+                <div className="p-3.5 bg-primary-600 dark:bg-primary-500 rounded-2xl shadow-lg shadow-primary-600/20 flex-shrink-0">
+                    <BrainCircuitIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-grow">
+                    <h2 className="text-sm font-black text-primary-600 dark:text-primary-400 uppercase tracking-widest">AI Study Coach</h2>
                     {isLoading ? (
-                        <div className="py-4"><Loader text="Thinking..." /></div>
+                        <div className="py-2"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse w-3/4"></div></div>
                     ) : (
-                        <p className="mt-2 text-slate-700 dark:text-slate-300 text-start">{suggestion}</p>
+                        <p className="mt-1 text-slate-700 dark:text-slate-200 text-base font-bold leading-tight">{suggestion}</p>
                     )}
                 </div>
             </div>

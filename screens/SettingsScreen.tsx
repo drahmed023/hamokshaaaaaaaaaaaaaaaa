@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Card from '../components/Card';
 import Button from '../components/Button';
@@ -18,6 +19,11 @@ const ACCENT_COLORS = [
     { name: 'rose', color: '#F43F5E' },
     { name: 'emerald', color: '#10B981' },
     { name: 'orange', color: '#F97316' },
+    { name: 'violet', color: '#8B5CF6' },
+    { name: 'amber', color: '#F59E0B' },
+    { name: 'teal', color: '#14B8A6' },
+    { name: 'pink', color: '#EC4899' },
+    { name: 'slate', color: '#64748B' },
 ] as const;
 
 const AVATAR_IDS: AvatarId[] = ['avatar1', 'avatar2', 'avatar3', 'avatar4', 'avatar5', 'avatar6'];
@@ -27,6 +33,10 @@ const BACKGROUNDS: { name: BackgroundName, label: string, style: React.CSSProper
     { name: 'sunset', label: 'Sunset', style: { background: 'linear-gradient(120deg, #f6d365 0%, #fda085 100%)'}},
     { name: 'galaxy', label: 'Galaxy', style: { background: '#00000c'}},
     { name: 'office', label: 'Office', style: { background: 'linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%)'}},
+    { name: 'forest', label: 'Forest', style: { background: 'linear-gradient(135deg, #134e4a 0%, #064e3b 100%)'}},
+    { name: 'ocean', label: 'Ocean', style: { background: 'linear-gradient(180deg, #0c4a6e 0%, #075985 100%)'}},
+    { name: 'minimal', label: 'Minimal', style: { background: '#f8fafc', border: '1px solid #e2e8f0'}},
+    { name: 'midnight', label: 'Midnight', style: { background: '#020617'}},
 ];
 
 const FONTS: { id: Font, name: string }[] = [
@@ -175,7 +185,7 @@ function SettingsScreen() {
               </div>
           </SettingsRow>
           <SettingsRow label="Accent Color">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                   {ACCENT_COLORS.map(color => ( <button key={color.name} onClick={() => setAccentColor(color.name)} className={`w-8 h-8 rounded-full focus:outline-none transition-transform hover:scale-110 ${accentColor === color.name ? 'ring-2 ring-offset-2 dark:ring-offset-slate-800 ring-primary-500' : ''}`} style={{ backgroundColor: color.color }} aria-label={`Set accent color to ${color.name}`} /> ))}
               </div>
           </SettingsRow>
@@ -199,10 +209,13 @@ function SettingsScreen() {
                   {MOODS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
           </SettingsRow>
+          <SettingsRow label="Compact UI Mode" description="Smaller elements for more screen space.">
+              <ToggleSwitch checked={settings.compactMode} onChange={val => settings.dispatch({type: SmartSettingsActionType.SET_COMPACT_MODE, payload: val})} />
+          </SettingsRow>
           <div>
             <p className="font-medium text-slate-800 dark:text-slate-100 mb-2">Background</p>
-            <div className="flex flex-wrap items-center gap-4">
-               {BACKGROUNDS.map(bg => ( <button key={bg.name} onClick={() => setBackground(bg.name)} className={`w-24 h-16 rounded-lg border-2 transition-all ${background === bg.name ? 'border-primary-500 scale-105' : 'border-slate-300 dark:border-slate-600'}`} style={bg.style} aria-label={`Set background to ${bg.label}`}><span className="px-2 py-1 text-xs font-semibold rounded-full bg-black/40 text-white">{bg.label}</span></button> ))}
+            <div className="grid grid-cols-2 sm:grid-cols-4 items-center gap-4">
+               {BACKGROUNDS.map(bg => ( <button key={bg.name} onClick={() => setBackground(bg.name)} className={`w-full h-16 rounded-lg border-2 transition-all ${background === bg.name ? 'border-primary-500 scale-105 shadow-md' : 'border-slate-300 dark:border-slate-600'}`} style={bg.style} aria-label={`Set background to ${bg.label}`}><span className="px-2 py-1 text-xs font-semibold rounded-full bg-black/40 text-white">{bg.label}</span></button> ))}
             </div>
           </div>
           <div>
@@ -240,6 +253,14 @@ function SettingsScreen() {
              <SettingsRow label="Auto Planner" description="AI adjusts your study plan if your schedule changes.">
                 <ToggleSwitch checked={settings.autoPlanner} onChange={val => settings.dispatch({type: SmartSettingsActionType.SET_AUTO_PLANNER, payload: val})} />
             </SettingsRow>
+            <SettingsRow label="AI Thinking Budget" description="Higher budget allows for deeper reasoning (Gemini 3).">
+                <select value={settings.aiThinkingBudget} onChange={e => settings.dispatch({type: SmartSettingsActionType.SET_THINKING_BUDGET, payload: parseInt(e.target.value)})} className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 bg-white">
+                    <option value="0">Standard</option>
+                    <option value="1000">Deep (1K)</option>
+                    <option value="5000">Advanced (5K)</option>
+                    <option value="16000">PhD Level (16K)</option>
+                </select>
+            </SettingsRow>
         </SettingsSection>
 
         <SettingsSection title="Study & Exam Defaults">
@@ -251,6 +272,9 @@ function SettingsScreen() {
             </SettingsRow>
             <SettingsRow label="Long Break Duration (minutes)">
                 <input type="number" value={pomodoroState.longBreakDuration} onChange={e => handlePomodoroDurationChange('long', e.target.value)} className="w-20 p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600" />
+            </SettingsRow>
+            <SettingsRow label="Auto-Save Results" description="Automatically save exam history when finished.">
+                <ToggleSwitch checked={settings.autoSaveResults} onChange={val => settings.dispatch({type: SmartSettingsActionType.SET_AUTO_SAVE_RESULTS, payload: val})} />
             </SettingsRow>
         </SettingsSection>
         
@@ -272,7 +296,7 @@ function SettingsScreen() {
             </p>
         </SettingsSection>
 
-        <SettingsSection title="Sound & Notifications">
+        <SettingsSection title="Sound & Audio">
             <SettingsRow label="Now Playing"><span>{musicTracks.find(t => t.id === currentTrackId)?.name || 'None'}</span></SettingsRow>
             <SettingsRow label="Master Volume">
                 <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="w-40" />

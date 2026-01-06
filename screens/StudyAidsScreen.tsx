@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useStudyAids } from '../hooks/useStudyAids';
@@ -54,7 +55,7 @@ function StudyAidsScreen() {
             try {
                 const content = await parseFileToText(file);
                 setText(content);
-                setTitle(file.name.replace(/\.[^/.]+$/, "")); // Use file name as title
+                setTitle(file.name.replace(/\.[^/.]+$/, "")); 
             } catch (err: any) {
                 setError(err.message);
             } finally {
@@ -76,9 +77,6 @@ function StudyAidsScreen() {
             'text/plain': ['.txt'],
             'application/pdf': ['.pdf'],
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-            'application/msword': ['.doc'],
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
-            'application/vnd.ms-powerpoint': ['.ppt'],
         },
         disabled: isLoading
     });
@@ -120,9 +118,9 @@ function StudyAidsScreen() {
             const newDeck: FlashcardDeck = {
                 id,
                 title,
-                cards: generatedContent.map((card: any) => ({
+                cards: (generatedContent || []).map((card: any) => ({
                     ...card,
-                    id: `${id}-${card.front.slice(0, 10)}`,
+                    id: `${id}-${card.front?.slice(0, 10) || Math.random()}`,
                     nextReview: new Date().toISOString(),
                     interval: 1,
                     easeFactor: 2.5,
@@ -134,20 +132,7 @@ function StudyAidsScreen() {
             dispatch({ type: StudyAidsActionType.ADD_MIND_MAP, payload: newMindMap });
         }
         
-        // Gamification
         gamificationDispatch({ type: GamificationActionType.ADD_XP, payload: 50 });
-        const totalAids = summaries.length + flashcardDecks.length + mindMaps.length + 1;
-        if (totalAids === 1) {
-            gamificationDispatch({ type: GamificationActionType.UNLOCK_ACHIEVEMENT, payload: 'aid_1' });
-        }
-        if (totalAids >= 10) {
-            gamificationDispatch({ type: GamificationActionType.UNLOCK_ACHIEVEMENT, payload: 'aid_10' });
-        }
-
-        // Reset form
-        setGeneratedContent(null);
-        setTitle('');
-        alert(`"${title}" saved successfully! You earned 50 XP!`);
         setActiveTab('library');
     };
 
@@ -227,7 +212,7 @@ function StudyAidsScreen() {
                                                     {isDragActive ? 'Drop file here...' : (fileName ? `Selected: ${fileName}` : 'Drag & drop or click to upload')}
                                                 </span>
                                                 <span className="block text-xs text-slate-500 dark:text-slate-400">
-                                                    .pdf, .docx, .pptx, .txt
+                                                    .pdf, .docx, .txt
                                                 </span>
                                             </div>
                                         </div>
@@ -293,7 +278,7 @@ function StudyAidsScreen() {
 
                                 <div className="bg-slate-50 dark:bg-black/20 p-6 rounded-xl border border-slate-200 dark:border-slate-700 max-h-[500px] overflow-y-auto">
                                     {aidType === 'summary' && <p className="whitespace-pre-wrap leading-relaxed">{generatedContent}</p>}
-                                    {aidType === 'flashcards' && (
+                                    {aidType === 'flashcards' && Array.isArray(generatedContent) && (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                             {generatedContent.map((fc: any, index: number) => <div key={index}><FlashcardComponent front={fc.front} back={fc.back} /></div>)}
                                         </div>
@@ -357,16 +342,10 @@ function StudyAidsScreen() {
                             </Card>
                         </div>
                     </div>
-                    
-                    <div className="mt-8 text-center">
-                        <Button onClick={() => navigate('/saved-items')} size="lg" className="px-8">
-                            Go to Full Library <CheckCircleIcon className="w-5 h-5 ml-2" />
-                        </Button>
-                    </div>
                 </div>
             )}
 
-            {/* FOCUS TAB (Pomodoro Integration) */}
+            {/* FOCUS TAB */}
             {activeTab === 'focus' && (
                 <div className="max-w-4xl mx-auto animate-fade-in">
                     <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-slate-800 dark:to-slate-900 border-indigo-200 dark:border-indigo-900">

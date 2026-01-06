@@ -1,3 +1,4 @@
+
 import { useAppData } from '../context/AppDataContext';
 import { ThemeActionType, AccentColorName, ThemeName, BackgroundName, Font, ButtonShape, Mood, AvatarId } from '../types';
 import { useEffect } from 'react';
@@ -8,6 +9,11 @@ const ACCENT_COLOR_HEX: Record<AccentColorName, string> = {
     rose: '#F43F5E',
     emerald: '#10B981',
     orange: '#F97316',
+    violet: '#8B5CF6',
+    amber: '#F59E0B',
+    teal: '#14B8A6',
+    pink: '#EC4899',
+    slate: '#64748B',
 };
 
 export const useTheme = () => {

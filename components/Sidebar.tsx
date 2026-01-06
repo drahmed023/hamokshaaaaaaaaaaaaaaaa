@@ -19,6 +19,8 @@ import { AppLogoIcon } from './icons/AppLogoIcon';
 import { LinkIcon } from './icons/LinkIcon';
 import { ImagePlusIcon } from './icons/ImagePlusIcon';
 import { BookmarkIcon } from './icons/BookmarkIcon';
+import { UserIcon } from './icons/UserIcon';
+import { GraduationCapIcon } from './icons/GraduationCapIcon';
 
 
 type SidebarProps = {
@@ -28,13 +30,15 @@ type SidebarProps = {
 
 const navItems = [
   { to: '/', text: 'Home', icon: HomeIcon },
+  { to: '/planner', text: 'Study Planner', icon: ClipboardListIcon },
+  { to: '/professor', text: 'AI Professor', icon: GraduationCapIcon },
+  { to: '/profile', text: 'Profile', icon: UserIcon },
   { to: '/history', text: 'History', icon: BarChartIcon },
   { to: '/analytics', text: 'Analytics', icon: TrendingUpIcon },
   { to: '/achievements', text: 'Achievements', icon: TrophyIcon },
   { to: '/drive', text: 'Drive Files', icon: FolderIcon },
   { to: '/notion', text: 'Notion', icon: LinkIcon },
   { to: '/study-aids', text: 'Study Aids', icon: BookOpenIcon },
-  { to: '/study-plan', text: 'Study Plan', icon: ClipboardListIcon },
   { to: '/saved-items', text: 'Saved Items', icon: CheckCircleIcon },
   { to: '/bookmarks', text: 'Bookmarked Questions', icon: BookmarkIcon },
   { to: '/explainer', text: 'AI Explainer', icon: LightbulbIcon },

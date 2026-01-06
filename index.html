@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -116,6 +117,37 @@
         --color-primary-900: 124 45 18;
         --color-primary-950: 69 10 7;
       }
+      html[data-accent="violet"] {
+        --color-primary-50: 245 243 255;
+        --color-primary-100: 237 233 254;
+        --color-primary-500: 139 92 246;
+        --color-primary-600: 124 58 237;
+        --color-primary-700: 109 40 217;
+      }
+      html[data-accent="amber"] {
+        --color-primary-50: 255 251 235;
+        --color-primary-500: 245 158 11;
+        --color-primary-600: 217 119 6;
+        --color-primary-700: 180 83 9;
+      }
+      html[data-accent="teal"] {
+        --color-primary-50: 240 253 250;
+        --color-primary-500: 20 184 166;
+        --color-primary-600: 13 148 136;
+        --color-primary-700: 15 118 110;
+      }
+      html[data-accent="pink"] {
+        --color-primary-50: 253 242 248;
+        --color-primary-500: 236 72 153;
+        --color-primary-600: 219 39 119;
+        --color-primary-700: 190 24 93;
+      }
+      html[data-accent="slate"] {
+        --color-primary-50: 248 250 252;
+        --color-primary-500: 100 116 139;
+        --color-primary-600: 71 85 105;
+        --color-primary-700: 51 65 85;
+      }
       html.dark {
         color-scheme: dark;
       }
@@ -200,11 +232,26 @@
       .bg-office {
           background: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
       }
+      .bg-forest {
+          background: linear-gradient(135deg, #134e4a 0%, #064e3b 100%);
+      }
+      .bg-ocean {
+          background: linear-gradient(180deg, #0c4a6e 0%, #075985 100%);
+      }
+      .bg-minimal {
+          background: #f8fafc;
+      }
+      .bg-midnight {
+          background: #020617;
+      }
       html.dark .bg-sunset {
           background: linear-gradient(120deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
       }
       html.dark .bg-office {
           background: linear-gradient(to top, #3a3a3a 0%, #1c1c1c 100%);
+      }
+      html.dark .bg-minimal {
+          background: #0f172a;
       }
 
       /* Avatar selection */

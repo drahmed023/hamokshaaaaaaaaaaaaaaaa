@@ -1,13 +1,38 @@
+
 import React, { SVGProps } from 'react';
 
 // General
 export type ThemeName = 'light' | 'dark' | 'calm';
-export type AccentColorName = 'indigo' | 'sky' | 'rose' | 'emerald' | 'orange';
-export type BackgroundName = 'default' | 'sunset' | 'galaxy' | 'office';
+export type AccentColorName = 'indigo' | 'sky' | 'rose' | 'emerald' | 'orange' | 'violet' | 'amber' | 'teal' | 'pink' | 'slate';
+export type BackgroundName = 'default' | 'sunset' | 'galaxy' | 'office' | 'forest' | 'ocean' | 'minimal' | 'midnight';
 export type Font = 'modern' | 'classic' | 'study';
 export type ButtonShape = 'rounded' | 'sharp' | 'pill';
 export type Mood = 'neutral' | 'focused' | 'relaxed' | 'motivated';
 export type AvatarId = 'avatar1' | 'avatar2' | 'avatar3' | 'avatar4' | 'avatar5' | 'avatar6';
+
+// Profile
+export interface ProfileState {
+  fullName: string;
+  email: string;
+  major: string;
+  educationLevel: string;
+  bio: string;
+  studyGoal: string;
+  profilePicture?: string;
+  subjects: string[];
+  links: {
+    linkedin?: string;
+    github?: string;
+    portfolio?: string;
+  };
+}
+
+export enum ProfileActionType {
+  UPDATE_PROFILE = 'UPDATE_PROFILE',
+}
+
+export type ProfileAction =
+  | { type: ProfileActionType.UPDATE_PROFILE; payload: Partial<ProfileState> };
 
 // Exam
 export interface Question {
@@ -55,6 +80,67 @@ export type Action =
   | { type: ExamActionType.SET_LOADING; payload: boolean }
   | { type: ExamActionType.SET_ERROR; payload: string | null }
   | { type: ExamActionType.DELETE_RESULT; payload: string };
+
+// Study Planner
+export interface StudyResource {
+  type: 'video' | 'article' | 'pdf' | 'web';
+  source: string;
+}
+
+export interface StudyTask {
+  task: string;
+  duration: number;
+  resources: StudyResource[];
+}
+
+export interface StudyDay {
+  dayOfWeek: string;
+  isRestDay: boolean;
+  tasks: StudyTask[];
+}
+
+export interface StudyWeek {
+  weekNumber: number;
+  weeklyGoal: string;
+  days: StudyDay[];
+}
+
+export interface SimplePlanRow {
+  day: string;
+  subject: string;
+  topic: string;
+  duration?: number;
+  resource?: StudyResource;
+  status: string;
+}
+
+export interface StudyPlan {
+  id: string;
+  planTitle: string;
+  weeks?: StudyWeek[];
+  rows?: SimplePlanRow[];
+  type: 'comprehensive' | 'simple' | 'hybrid';
+  createdAt: string;
+}
+
+export interface StudyPlanState {
+  plans: StudyPlan[];
+  activePlanId: string | null;
+  loading: boolean;
+}
+
+export enum StudyPlanActionType {
+  ADD_PLAN = 'ADD_PLAN',
+  SET_ACTIVE_PLAN = 'SET_ACTIVE_PLAN',
+  DELETE_PLAN = 'DELETE_PLAN',
+  SET_LOADING = 'SET_PLAN_LOADING',
+}
+
+export type StudyPlanAction =
+  | { type: StudyPlanActionType.ADD_PLAN; payload: StudyPlan }
+  | { type: StudyPlanActionType.SET_ACTIVE_PLAN; payload: string | null }
+  | { type: StudyPlanActionType.DELETE_PLAN; payload: string }
+  | { type: StudyPlanActionType.SET_LOADING; payload: boolean };
 
 // Study Aids
 export interface Flashcard {
@@ -119,64 +205,6 @@ export type StudyAidsAction =
   | { type: StudyAidsActionType.UPDATE_MIND_MAP, payload: MindMap }
   | { type: StudyAidsActionType.DELETE_MIND_MAP, payload: string };
 
-// Study Plan
-export interface StudyResource {
-  type: 'video' | 'article' | 'pdf';
-  title: string;
-  url?: string;
-  searchQuery?: string;
-  source: string; // e.g., 'YouTube', 'Amboss', 'Lecturio'
-}
-
-export interface StudyTask {
-    task: string;
-    duration: number; // in minutes
-    priority: 'High' | 'Medium' | 'Low';
-    resources?: StudyResource[];
-}
-
-export interface StudyDay {
-    dayOfWeek: string;
-    tasks: StudyTask[];
-    isRestDay: boolean;
-}
-
-export interface StudyWeek {
-    weekNumber: number;
-    weeklyGoal: string;
-    days: StudyDay[];
-}
-
-export interface StudyPlan {
-    id: string;
-    planTitle: string;
-    weeks: StudyWeek[];
-    createdAt: string;
-    groundingMetadata?: { web?: { uri: string, title: string } }[];
-}
-
-export interface StudyPlanState {
-    plans: StudyPlan[];
-    activePlanId: string | null;
-    loading: boolean;
-    error: string | null;
-}
-
-export enum StudyPlanActionType {
-    ADD_PLAN = 'ADD_PLAN',
-    DELETE_PLAN = 'DELETE_PLAN',
-    SET_ACTIVE_PLAN = 'SET_ACTIVE_PLAN',
-    SET_LOADING = 'SET_LOADING',
-    SET_ERROR = 'SET_ERROR',
-}
-
-export type StudyPlanAction =
-    | { type: StudyPlanActionType.ADD_PLAN, payload: StudyPlan }
-    | { type: StudyPlanActionType.DELETE_PLAN, payload: string }
-    | { type: StudyPlanActionType.SET_ACTIVE_PLAN, payload: string | null }
-    | { type: StudyPlanActionType.SET_LOADING, payload: boolean }
-    | { type: StudyPlanActionType.SET_ERROR, payload: string | null };
-
 // Tasks
 export interface Task {
   id: string;
@@ -184,7 +212,6 @@ export interface Task {
   completed: boolean;
   dueDate?: string;
   source: 'user' | 'study_plan';
-  planId?: string;
 }
 
 export interface TasksState {
@@ -197,7 +224,6 @@ export enum TasksActionType {
   DELETE_TASK = 'DELETE_TASK',
   EDIT_TASK = 'EDIT_TASK',
   SET_TASKS = 'SET_TASKS',
-  DELETE_PLAN_TASKS = 'DELETE_PLAN_TASKS',
 }
 
 export type TasksAction =
@@ -205,8 +231,7 @@ export type TasksAction =
   | { type: TasksActionType.TOGGLE_TASK, payload: string }
   | { type: TasksActionType.DELETE_TASK, payload: string }
   | { type: TasksActionType.EDIT_TASK, payload: { id: string, text: string } }
-  | { type: TasksActionType.SET_TASKS, payload: Task[] }
-  | { type: TasksActionType.DELETE_PLAN_TASKS, payload: string };
+  | { type: TasksActionType.SET_TASKS, payload: Task[] };
 
 // Gamification
 export type AchievementId = 'exam_1' | 'exam_5' | 'score_100' | 'aid_1' | 'aid_10' | 'streak_3' | 'streak_7' | 'pomodoro_1';
@@ -311,6 +336,9 @@ export interface SmartSettingsState {
   autoPlanner: boolean;
   aiVoiceTutor: boolean;
   aiVoice: AIVoice;
+  aiThinkingBudget: number;
+  autoSaveResults: boolean;
+  compactMode: boolean;
 }
 export enum SmartSettingsActionType {
   SET_AI_PERSONA = 'SET_AI_PERSONA',
@@ -318,6 +346,9 @@ export enum SmartSettingsActionType {
   SET_AUTO_PLANNER = 'SET_AUTO_PLANNER',
   SET_AI_VOICE_TUTOR = 'SET_AI_VOICE_TUTOR',
   SET_AI_VOICE = 'SET_AI_VOICE',
+  SET_THINKING_BUDGET = 'SET_THINKING_BUDGET',
+  SET_AUTO_SAVE_RESULTS = 'SET_AUTO_SAVE_RESULTS',
+  SET_COMPACT_MODE = 'SET_COMPACT_MODE',
   SET_ALL_SETTINGS = 'SET_ALL_SETTINGS',
 }
 export type SmartSettingsAction =
@@ -326,6 +357,9 @@ export type SmartSettingsAction =
   | { type: SmartSettingsActionType.SET_AUTO_PLANNER, payload: boolean }
   | { type: SmartSettingsActionType.SET_AI_VOICE_TUTOR, payload: boolean }
   | { type: SmartSettingsActionType.SET_AI_VOICE, payload: AIVoice }
+  | { type: SmartSettingsActionType.SET_THINKING_BUDGET, payload: number }
+  | { type: SmartSettingsActionType.SET_AUTO_SAVE_RESULTS, payload: boolean }
+  | { type: SmartSettingsActionType.SET_COMPACT_MODE, payload: boolean }
   | { type: SmartSettingsActionType.SET_ALL_SETTINGS, payload: SmartSettingsState };
 
 // Pomodoro
@@ -339,11 +373,11 @@ export interface PomodoroState {
   cycles: number;
   showSummary: boolean;
   sessionsToday: number;
-  totalFocusTime: number; // in seconds
+  totalFocusTime: number;
   sessionType: SessionType;
-  pomodoroDuration: number; // in minutes
-  shortBreakDuration: number; // in minutes
-  longBreakDuration: number; // in minutes
+  pomodoroDuration: number;
+  shortBreakDuration: number;
+  longBreakDuration: number;
   lastSessionDate: string | null;
 }
 export enum PomodoroActionType {
@@ -364,7 +398,7 @@ export type PomodoroAction =
   | { type: PomodoroActionType.RESET }
   | { type: PomodoroActionType.FINISH_SESSION }
   | { type: PomodoroActionType.CLOSE_SUMMARY }
-  | { type: PomodoroActionType.EXTEND_SESSION, payload: number } // seconds
+  | { type: PomodoroActionType.EXTEND_SESSION, payload: number }
   | { type: PomodoroActionType.SET_SESSION_TYPE, payload: SessionType }
   | { type: PomodoroActionType.SET_DURATIONS, payload: { pomodoro: number, short: number, long: number } };
 
@@ -434,7 +468,7 @@ export type HighlightsAction =
   | { type: HighlightsActionType.SET_HIGHLIGHTS_FOR_QUESTION, payload: Highlight }
   | { type: HighlightsActionType.CLEAR_HIGHLIGHTS_FOR_QUESTION, payload: { questionId: string } };
 
-// NEW: Unified state for settings, theme, avatar, etc.
+// Unified state for settings, theme, avatar, etc.
 export interface ThemeState {
   theme: ThemeName;
   accentColor: AccentColorName;
@@ -531,6 +565,7 @@ export interface AppDataState {
     notesState: NotesState;
     highlightsState: HighlightsState;
     upcomingExamsState: UpcomingExamsState;
+    profileState: ProfileState;
 }
 
 export type AppDataAction =
@@ -548,4 +583,5 @@ export type AppDataAction =
     | NotesAction
     | HighlightsAction
     | UpcomingExamsAction
+    | ProfileAction
     | AppDataGlobalAction;

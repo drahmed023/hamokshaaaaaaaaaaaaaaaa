@@ -1,6 +1,4 @@
 
-
-
 import React, { useState } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppDataProvider, useAppData } from './context/AppDataContext';
@@ -20,7 +18,6 @@ import TasksScreen from './screens/TasksScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import SummaryDetailScreen from './screens/SummaryDetailScreen';
 import MindMapScreen from './screens/MindMapScreen';
-import StudyPlanScreen from './screens/StudyPlanScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
 import ToastContainer from './components/ToastContainer';
 import AICompanion from './components/AICompanion';
@@ -39,17 +36,17 @@ import { ToastProvider } from './context/ToastContext';
 import { setGamificationToastDispatcher } from './context/GamificationContext';
 import { useToasts } from './context/ToastContext';
 import PomodoroScreen from './screens/PomodoroScreen';
+import ProfileScreen from './screens/ProfileScreen';
+import ProfessorScreen from './screens/ProfessorScreen';
 import LoginScreen from './screens/LoginScreen';
+import StudyPlanScreen from './screens/StudyPlanScreen';
 import Loader from './components/Loader';
 
-// This component contains the entire UI logic.
-// It sits inside all providers, so it has access to all contexts.
 function AppUI() {
     const { background, focusMode } = useTheme();
     const { level } = useGamification();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
-    // Setup toast dispatcher for gamification
     const { addToast } = useToasts();
     setGamificationToastDispatcher((title, message) => addToast(message, 'success', title));
     
@@ -67,6 +64,7 @@ function AppUI() {
                 <main className="container mx-auto px-4 py-8">
                     <Routes>
                         <Route path="/" element={<HomeScreen />} />
+                        <Route path="/planner" element={<StudyPlanScreen />} />
                         <Route path="/create-exam" element={<CreateExamScreen />} />
                         <Route path="/exam/:id" element={<TakeExamScreen />} />
                         <Route path="/results/:id" element={<ResultsScreen />} />
@@ -79,7 +77,6 @@ function AppUI() {
                         <Route path="/calendar" element={<CalendarScreen />} />
                         <Route path="/tasks" element={<TasksScreen />} />
                         <Route path="/settings" element={<SettingsScreen />} />
-                        <Route path="/study-plan" element={<StudyPlanScreen />} />
                         <Route path="/achievements" element={<AchievementsScreen />} />
                         <Route path="/analytics" element={<AnalyticsScreen />} />
                         <Route path="/explainer" element={<ExplainerScreen />} />
@@ -89,6 +86,8 @@ function AppUI() {
                         <Route path="/bookmarks" element={<BookmarkedQuestionsScreen />} />
                         <Route path="/question-bank/:fileName" element={<QuestionBankScreen />} />
                         <Route path="/pomodoro" element={<PomodoroScreen />} />
+                        <Route path="/profile" element={<ProfileScreen />} />
+                        <Route path="/professor" element={<ProfessorScreen />} />
                     </Routes>
                 </main>
                 <AICompanion />

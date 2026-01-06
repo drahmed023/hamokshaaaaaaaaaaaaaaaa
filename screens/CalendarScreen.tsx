@@ -1,16 +1,10 @@
 
-
-
-
-
-
 import React, { useState, useMemo } from 'react';
 import { ChevronLeftIcon } from '../components/icons/ChevronLeftIcon';
 import { ChevronRightIcon } from '../components/icons/ChevronRightIcon';
 import Button from '../components/Button';
 import { useTasks } from '../hooks/useTasks';
 import { Task, TasksActionType } from '../types';
-import { ListChecksIcon } from '../components/icons/ListChecksIcon';
 import { ClipboardListIcon } from '../components/icons/ClipboardListIcon';
 
 function CalendarScreen() {
@@ -62,29 +56,38 @@ function CalendarScreen() {
   }, [selectedDate, eventsByDate]);
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold">Study Calendar</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Your tasks and study plan, all in one place.</p>
+    <div className="max-w-5xl mx-auto pb-10">
+      <div className="text-center mb-10">
+        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Study Calendar</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">Coordinate your study sessions and milestones.</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
-          <div className="flex justify-between items-center mb-4">
-            {/* Fix: Added children to Button component to resolve missing prop error. */}
-            <Button onClick={prevMonth} variant="secondary" size="sm"><ChevronLeftIcon className="w-5 h-5" /></Button>
-            <h2 className="text-xl font-semibold">
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Calendar Main Grid */}
+        <div className="lg:col-span-8 bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-xl border border-slate-200 dark:border-slate-800">
+          <div className="flex justify-between items-center mb-8">
+            <Button onClick={prevMonth} variant="secondary" size="sm" className="!p-2 rounded-xl">
+              <ChevronLeftIcon className="w-6 h-6" />
+            </Button>
+            <h2 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-widest">
               {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
             </h2>
-            {/* Fix: Added children to Button component to resolve missing prop error. */}
-            <Button onClick={nextMonth} variant="secondary" size="sm"><ChevronRightIcon className="w-5 h-5" /></Button>
+            <Button onClick={nextMonth} variant="secondary" size="sm" className="!p-2 rounded-xl">
+              <ChevronRightIcon className="w-6 h-6" />
+            </Button>
           </div>
-          <div className="grid grid-cols-7 gap-1 text-center">
+
+          <div className="grid grid-cols-7 gap-2 text-center">
             {daysOfWeek.map(day => (
-              <div key={day} className="font-bold text-sm text-slate-500 dark:text-slate-400">{day}</div>
+              <div key={day} className="pb-4 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                {day}
+              </div>
             ))}
+            
             {Array.from({ length: startDay }).map((_, i) => (
-              <div key={`empty-${i}`} />
+              <div key={`empty-${i}`} className="aspect-square" />
             ))}
+
             {Array.from({ length: totalDays }).map((_, i) => {
               const day = i + 1;
               const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
@@ -93,55 +96,105 @@ function CalendarScreen() {
               const isSelected = isSameDay(date, selectedDate);
               const isTodayFlag = isSameDay(date, today);
 
+              const hasPending = dayEvents.some(e => !e.completed);
+              const hasCompleted = dayEvents.some(e => e.completed);
+
               return (
-                <div key={day} className="py-1">
+                <div key={day} className="aspect-square flex items-center justify-center">
                   <button
                     onClick={() => setSelectedDate(date)}
-                    className={`w-10 h-10 rounded-full flex flex-col items-center justify-center transition-colors
-                      ${isSelected ? 'bg-primary-600 text-white' : ''}
-                      ${!isSelected && isTodayFlag ? 'text-primary-600 font-bold' : ''}
-                      ${!isSelected ? 'hover:bg-slate-100 dark:hover:bg-slate-700' : ''}`}
+                    className={`relative w-full h-full max-w-[50px] max-h-[50px] rounded-2xl flex flex-col items-center justify-center transition-all duration-200 group
+                      ${isSelected ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/30 scale-110 z-10' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}
+                      ${!isSelected && isTodayFlag ? 'ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-slate-900' : ''}`}
                   >
-                    <span>{day}</span>
-                    <div className="flex gap-0.5 mt-1">
-                      {dayEvents.slice(0, 3).map(event => (
-                          <div key={event.id} className={`w-1 h-1 rounded-full ${event.completed ? (isSelected ? 'bg-white/50' : 'bg-green-500') : (isSelected ? 'bg-white' : 'bg-primary-500')}`}></div>
-                      ))}
-                    </div>
+                    <span className={`text-sm font-black ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-200'}`}>
+                      {day}
+                    </span>
+                    
+                    {/* Task Badge Indicators (Dots) */}
+                    {!isSelected && (
+                      <div className="absolute bottom-1.5 flex gap-1">
+                        {hasPending && <div className="w-1.5 h-1.5 rounded-full bg-primary-500 shadow-sm shadow-primary-500/50" />}
+                        {hasCompleted && <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-sm shadow-green-500/50" />}
+                      </div>
+                    )}
+                    {isSelected && dayEvents.length > 0 && (
+                      <div className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    )}
                   </button>
                 </div>
               );
             })}
           </div>
         </div>
-        <div className="md:col-span-1">
-          <h3 className="text-xl font-bold mb-4">
-            {selectedDate ? selectedDate.toLocaleDateString('default', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Select a date'}
-          </h3>
-          <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
-            {selectedDateEvents.length > 0 ? (
-              selectedDateEvents.map(task => (
-                <div key={task.id} className="p-3 bg-white dark:bg-slate-800 rounded-lg shadow flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={task.completed}
-                    onChange={() => dispatch({ type: TasksActionType.TOGGLE_TASK, payload: task.id })}
-                    className="w-5 h-5 mt-1 rounded text-primary-600 focus:ring-primary-500"
-                  />
-                  <div>
-                    <p className={`font-medium ${task.completed ? 'line-through text-slate-500' : ''}`}>{task.text}</p>
-                    {task.source === 'study_plan' && (
-                      <div className="flex items-center gap-1 text-xs text-slate-400 mt-1">
-                        <ClipboardListIcon className="w-3 h-3" />
-                        <span>From Study Plan</span>
+
+        {/* Selected Date Details */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="bg-slate-50 dark:bg-slate-800/40 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 min-h-[300px]">
+            <h3 className="text-xl font-black text-slate-800 dark:text-white mb-6 uppercase tracking-tight">
+              {selectedDate ? selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }) : 'Select Date'}
+            </h3>
+            
+            <div className="space-y-4">
+              {selectedDateEvents.length > 0 ? (
+                selectedDateEvents.map(task => (
+                  <div key={task.id} className="group p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-start gap-4 transition-all hover:shadow-md">
+                    <div className="pt-1">
+                      <input
+                        type="checkbox"
+                        checked={task.completed}
+                        onChange={() => dispatch({ type: TasksActionType.TOGGLE_TASK, payload: task.id })}
+                        className="w-5 h-5 rounded-lg border-2 border-slate-300 dark:border-slate-700 text-primary-600 focus:ring-primary-500/20 transition-all cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <p className={`font-bold text-sm leading-tight break-words ${task.completed ? 'line-through text-slate-400 dark:text-slate-600' : 'text-slate-800 dark:text-slate-100'}`}>
+                        {task.text}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {/* Source Badge */}
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                          task.source === 'study_plan' 
+                            ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 border-primary-100 dark:border-primary-900/30' 
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-500 border-slate-100 dark:border-slate-800'
+                        }`}>
+                          {task.source === 'study_plan' && <ClipboardListIcon className="w-3 h-3" />}
+                          {task.source === 'study_plan' ? 'Planner' : 'Manual'}
+                        </span>
+                        
+                        {/* Status Badge */}
+                        {task.completed && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-green-50 dark:bg-green-900/10 text-green-600 border border-green-100 dark:border-green-900/20">
+                            Completed
+                          </span>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 opacity-30">
+                  <div className="p-4 bg-slate-200 dark:bg-slate-700 rounded-full mb-4">
+                    <ClipboardListIcon className="w-10 h-10 text-slate-500" />
+                  </div>
+                  <p className="text-xs font-black uppercase tracking-widest text-slate-600">No scheduled tasks</p>
                 </div>
-              ))
-            ) : (
-              <p className="text-slate-500 dark:text-slate-400">No tasks scheduled for this day.</p>
-            )}
+              )}
+            </div>
+          </div>
+
+          {/* Quick Stats Card */}
+          <div className="bg-primary-600 text-white p-6 rounded-[2rem] shadow-lg shadow-primary-600/20">
+            <h4 className="font-black text-xs uppercase tracking-[0.2em] opacity-80 mb-4">Month Progress</h4>
+            <div className="flex items-end gap-3">
+              <span className="text-4xl font-black">
+                {tasks.filter(t => {
+                  const d = t.dueDate ? new Date(t.dueDate) : null;
+                  return d && d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear() && t.completed;
+                }).length}
+              </span>
+              <span className="text-sm font-bold opacity-60 mb-1">Tasks Completed</span>
+            </div>
           </div>
         </div>
       </div>

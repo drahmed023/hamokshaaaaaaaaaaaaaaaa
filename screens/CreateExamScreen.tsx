@@ -53,20 +53,18 @@ function CreateExamScreen() {
       dispatch({ type: ExamActionType.SET_ERROR, payload: null });
       
       try {
-        // التحليل المتعدد (Multimodal): للـ PDF والصور، نرسل الملف كاملاً للذكاء الاصطناعي
         if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
             const base64 = await blobToBase64(file);
             setUploadedFile({ data: base64, mimeType: file.type, name: file.name });
-            setText(''); // تفريغ النص لأننا سنعتمد على الملف البصري
+            setText('');
         } else {
-            // للملفات الأخرى مثل Word، نستمر في استخراج النص
             const content = await parseFileToText(file);
             setText(content);
             setUploadedFile(null);
         }
         setDriveUrl('');
       } catch (err: any) {
-        dispatch({ type: ExamActionType.SET_ERROR, payload: "عذراً، تعذر معالجة هذا الملف. حاول رفعه بصيغة PDF لأفضل النتائج." });
+        dispatch({ type: ExamActionType.SET_ERROR, payload: "Sorry, failed to process this file. Try PDF for better results." });
       } finally {
         dispatch({ type: ExamActionType.SET_LOADING, payload: false });
       }
@@ -76,7 +74,7 @@ function CreateExamScreen() {
   const processDriveUrl = async () => {
     const fileId = extractFileIdFromUrl(driveUrl);
     if (!fileId) {
-        dispatch({ type: ExamActionType.SET_ERROR, payload: 'رابط Google Drive غير صالح.' });
+        dispatch({ type: ExamActionType.SET_ERROR, payload: 'Invalid Google Drive link.' });
         return;
     }
     dispatch({ type: ExamActionType.SET_LOADING, payload: true });
@@ -117,7 +115,7 @@ function CreateExamScreen() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim() && !uploadedFile && !driveUrl) {
-      dispatch({ type: ExamActionType.SET_ERROR, payload: 'يرجى توفير محتوى أولاً.' });
+      dispatch({ type: ExamActionType.SET_ERROR, payload: 'Please provide content first.' });
       return;
     }
 
@@ -150,10 +148,10 @@ function CreateExamScreen() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto pb-10" dir="rtl">
+    <div className="max-w-3xl mx-auto pb-10" dir="ltr">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-black text-slate-900 dark:text-white">محول المناهج الذكي</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-2 font-bold">حلل الصور، المخططات، والـ PDF لعمل اختبار MCQ احترافي.</p>
+        <h1 className="text-4xl font-black text-slate-900 dark:text-white">Smart Exam Generator</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-2 font-bold">Analyze images, charts, and PDFs to create professional MCQ tests.</p>
       </div>
 
       <Card className="border-none shadow-2xl">
@@ -161,7 +159,7 @@ function CreateExamScreen() {
           
           {/* Difficulty Selection */}
           <div className="space-y-3">
-            <label className="block text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">مستوى التحدي</label>
+            <label className="block text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Challenge Level</label>
             <div className="grid grid-cols-3 gap-3 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl">
               {(['Easy', 'Medium', 'Hard'] as Difficulty[]).map((level) => (
                 <button
@@ -175,7 +173,7 @@ function CreateExamScreen() {
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full mb-1 ${level === 'Easy' ? 'bg-green-500' : level === 'Medium' ? 'bg-orange-500' : 'bg-red-500'}`}></span>
-                  {level === 'Easy' ? 'أساسي' : level === 'Medium' ? 'متعمق' : 'خبير'}
+                  {level === 'Easy' ? 'Basic' : level === 'Medium' ? 'Intermediate' : 'Expert'}
                 </button>
               ))}
             </div>
@@ -190,7 +188,7 @@ function CreateExamScreen() {
                   </div>
                   <div>
                     <p className="font-black text-slate-900 dark:text-white truncate max-w-[200px]">{uploadedFile.name}</p>
-                    <p className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">جاهز للتحليل البصري</p>
+                    <p className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">Ready for analysis</p>
                   </div>
                 </div>
                 <button type="button" onClick={() => setUploadedFile(null)} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><XCircleIcon className="w-6 h-6" /></button>
@@ -198,8 +196,8 @@ function CreateExamScreen() {
             ) : text ? (
                 <div className="space-y-2 animate-fade-in">
                     <div className="flex justify-between items-center px-1">
-                        <span className="text-[10px] font-black text-primary-600 uppercase tracking-[0.2em]">المحتوى النصي المستخرج</span>
-                        <button type="button" onClick={() => {setText(''); setFileName('');}} className="text-slate-400 hover:text-red-500 text-xs font-bold">تغيير</button>
+                        <span className="text-[10px] font-black text-primary-600 uppercase tracking-[0.2em]">Extracted Content</span>
+                        <button type="button" onClick={() => {setText(''); setFileName('');}} className="text-slate-400 hover:text-red-500 text-xs font-bold">Change</button>
                     </div>
                     <textarea rows={6} className="w-full p-4 border-2 border-slate-100 dark:border-slate-800 rounded-2xl dark:bg-slate-900 resize-none text-sm font-medium leading-relaxed shadow-inner" value={text} onChange={(e) => setText(e.target.value)} disabled={loading} />
                 </div>
@@ -207,10 +205,10 @@ function CreateExamScreen() {
               <div className="space-y-5 animate-fade-in">
                 <div className="flex gap-2">
                   <div className="relative flex-grow">
-                    <input type="url" className="w-full p-4 pr-12 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 ring-primary-500/20 transition-all font-bold" placeholder="رابط Google Drive..." value={driveUrl} onChange={(e) => setDriveUrl(e.target.value)} disabled={loading} />
+                    <input type="url" className="w-full p-4 pr-12 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 ring-primary-500/20 transition-all font-bold" placeholder="Paste Google Drive Link..." value={driveUrl} onChange={(e) => setDriveUrl(e.target.value)} disabled={loading} />
                     <LinkIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   </div>
-                  <Button type="button" onClick={processDriveUrl} disabled={loading || !driveUrl} variant="secondary" className="rounded-2xl px-6">جلب</Button>
+                  <Button type="button" onClick={processDriveUrl} disabled={loading || !driveUrl} variant="secondary" className="rounded-2xl px-6">Fetch</Button>
                 </div>
 
                 {!driveUrl && (
@@ -220,14 +218,14 @@ function CreateExamScreen() {
                       <div className="w-20 h-20 bg-primary-100 dark:bg-primary-900/30 rounded-3xl flex items-center justify-center mx-auto mb-6">
                         <FileTextIcon className="w-10 h-10 text-primary-600" />
                       </div>
-                      <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">ارفع ملفك هنا</h3>
-                      <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest leading-relaxed">PDF, Images, Word or Text<br/>سيدعم الذكاء الاصطناعي الصور الموجودة بالداخل</p>
+                      <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">Upload your file here</h3>
+                      <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest leading-relaxed">PDF, Images, Word or Text</p>
                     </div>
                     <div className="relative py-4">
                         <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100 dark:border-slate-800"></div></div>
-                        <div className="relative flex justify-center"><span className="px-4 bg-white dark:bg-slate-900 text-[10px] font-black text-slate-400 uppercase tracking-widest">أو</span></div>
+                        <div className="relative flex justify-center"><span className="px-4 bg-white dark:bg-slate-900 text-[10px] font-black text-slate-400 uppercase tracking-widest">OR</span></div>
                     </div>
-                    <textarea rows={4} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl resize-none text-sm font-medium shadow-inner" placeholder="الصق النص هنا مباشرة..." value={text} onChange={(e) => setText(e.target.value)} disabled={loading} />
+                    <textarea rows={4} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl resize-none text-sm font-medium shadow-inner" placeholder="Paste text here..." value={text} onChange={(e) => setText(e.target.value)} disabled={loading} />
                   </>
                 )}
               </div>
@@ -236,27 +234,27 @@ function CreateExamScreen() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">إجمالي الأسئلة</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">Total Questions</label>
               <input type="number" min="1" max="50" value={numQuestions} onChange={(e) => setNumQuestions(parseInt(e.target.value))} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl font-black" />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">أسئلة سيناريوهات (Case Study)</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">Case Study Questions</label>
               <input type="number" min="0" max={numQuestions} value={numCaseQuestions} onChange={(e) => setNumCaseQuestions(parseInt(e.target.value))} className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl font-black" />
             </div>
           </div>
 
           <Button type="submit" size="lg" disabled={loading || (!text && !uploadedFile && !driveUrl)} className="w-full h-16 rounded-[2rem] shadow-2xl shadow-primary-500/20 text-lg transition-all active:scale-95">
-            {loading ? <Loader text="جاري تحليل الصور والنصوص..." /> : (
+            {loading ? <Loader text="Analyzing content..." /> : (
               <div className="flex items-center gap-3">
                 <SparklesIcon className="w-6 h-6" />
-                <span className="font-black uppercase tracking-widest">توليد الامتحان الآن</span>
+                <span className="font-black uppercase tracking-widest">Generate Exam Now</span>
               </div>
             )}
           </Button>
         </form>
       </Card>
       
-      <p className="text-center mt-8 text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-40">Powered by Gemini Multimodal Vision</p>
+      <p className="text-center mt-8 text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-40">Powered by Gemini AI</p>
     </div>
   );
 }

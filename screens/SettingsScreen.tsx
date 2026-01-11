@@ -4,7 +4,7 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { useTheme } from '../hooks/useTheme';
 import { useGamification } from '../hooks/useGamification';
-import { GamificationActionType, AvatarId, BackgroundName, Font, ButtonShape, Mood, AIPersona, AIVoice, PomodoroActionType, AppDataActionType } from '../types';
+import { GamificationActionType, AvatarId, BackgroundName, Font, ButtonShape, Mood, AIPersona, AIVoice, PomodoroActionType, AppDataActionType, FontSize, ContainerWidth } from '../types';
 import { Avatar } from '../components/Avatar';
 import { useMusic } from '../hooks/useMusic';
 import { musicTracks } from '../data/music';
@@ -95,9 +95,9 @@ function SettingsSection({ title, children }: { title: string; children?: React.
 function SettingsRow({ label, children, description }: { label: string; children?: React.ReactNode; description?: string }) {
     return (
         <div>
-            <div className="flex items-center justify-between">
-                <label className="font-medium text-slate-800 dark:text-slate-100">{label}</label>
-                {children}
+            <div className="flex items-center justify-between gap-4">
+                <label className="font-medium text-slate-800 dark:text-slate-100 flex-shrink-0">{label}</label>
+                <div className="flex-grow flex justify-end">{children}</div>
             </div>
             {description && <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{description}</p>}
         </div>
@@ -119,49 +119,23 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (chec
 
 
 function SettingsScreen() {
-  const { theme, toggleTheme, accentColor, setAccentColor, isAutoTheme, toggleAutoTheme, background, setBackground, font, setFont, buttonShape, setButtonShape, focusMode, setFocusMode, mood, setMood, avatarId, setAvatarId, phoneNumber, setPhoneNumber, reduceMotion, setReduceMotion } = useTheme();
-  const { dispatch: gamificationDispatch } = useGamification();
-  const { currentTrackId, isPlaying, volume, setTrack, togglePlay, setVolume } = useMusic();
+  const { theme, toggleTheme, accentColor, setAccentColor, isAutoTheme, toggleAutoTheme, background, setBackground, font, setFont, customFontSize, setCustomFontSize, customContainerWidth, setCustomContainerWidth, containerWidth, setContainerWidth, buttonShape, setButtonShape, focusMode, setFocusMode, mood, setMood, avatarId, setAvatarId, phoneNumber, setPhoneNumber, reduceMotion, setReduceMotion } = useTheme();
+  const { currentTrackId, volume, setTrack, setVolume } = useMusic();
   const settings = useSmartSettings();
   const { state: pomodoroState, dispatch: pomodoroDispatch } = usePomodoro();
   const [phoneInput, setPhoneInput] = React.useState(phoneNumber);
   const { dispatch: appDispatch } = useAppData();
 
-  const handlePhoneSave = () => {
-      setPhoneNumber(phoneInput);
-      alert('Phone number saved!');
-  };
-
   const handleLogoutAndClear = () => {
     if (window.confirm('Are you sure you want to log out and clear all data? This cannot be undone.')) {
         localStorage.removeItem('studySparkBackend');
         appDispatch({ type: AppDataActionType.SET_AUTH_STATE, payload: { isLoggedIn: false, isInitialized: true } });
-        // No need to reload, the app state will handle the re-render to the login screen.
-    }
-  };
-
-  const handleExportData = () => {
-    try {
-        const dataToExport = localStorage.getItem('studySparkBackend');
-        if (!dataToExport) {
-            alert("No data to export.");
-            return;
-        }
-        const blob = new Blob([dataToExport], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `study-spark-ai-backup-${new Date().toISOString().split('T')[0]}.json`;
-        a.click(); a.remove(); URL.revokeObjectURL(url);
-    } catch (error) {
-        console.error("Failed to export data", error);
-        alert("An error occurred while exporting your data.");
     }
   };
 
   const handlePomodoroDurationChange = (type: 'pomodoro' | 'short' | 'long', value: string) => {
     const numValue = parseInt(value, 10);
     if (isNaN(numValue) || numValue < 1) return;
-
     pomodoroDispatch({
         type: PomodoroActionType.SET_DURATIONS,
         payload: {
@@ -173,156 +147,127 @@ function SettingsScreen() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold text-center mb-8">Smart Settings</h1>
+    <div className="max-w-3xl mx-auto pb-20 px-4">
+      <h1 className="text-4xl font-black text-center mb-10 tracking-tight">System Configuration</h1>
       <div className="space-y-6">
         
-        <SettingsSection title="UI & Theme">
-          <SettingsRow label="Theme">
+        <SettingsSection title="Visual Identity">
+          <SettingsRow label="Theme Mode">
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm"><ToggleSwitch checked={isAutoTheme} onChange={toggleAutoTheme} /> <label>Auto</label></div>
-                <Button onClick={toggleTheme} variant="secondary" size="sm" disabled={isAutoTheme}>Switch to {theme === 'light' ? 'Dark' : 'Light'}</Button>
+                <div className="flex items-center gap-2 text-sm"><ToggleSwitch checked={isAutoTheme} onChange={toggleAutoTheme} /> <label>Auto-sync</label></div>
+                <Button onClick={toggleTheme} variant="secondary" size="sm" disabled={isAutoTheme}>Set {theme === 'light' ? 'Dark' : 'Light'}</Button>
               </div>
           </SettingsRow>
-          <SettingsRow label="Accent Color">
+          <SettingsRow label="Accent Palette">
               <div className="flex flex-wrap items-center gap-3">
-                  {ACCENT_COLORS.map(color => ( <button key={color.name} onClick={() => setAccentColor(color.name)} className={`w-8 h-8 rounded-full focus:outline-none transition-transform hover:scale-110 ${accentColor === color.name ? 'ring-2 ring-offset-2 dark:ring-offset-slate-800 ring-primary-500' : ''}`} style={{ backgroundColor: color.color }} aria-label={`Set accent color to ${color.name}`} /> ))}
+                  {ACCENT_COLORS.map(color => ( <button key={color.name} onClick={() => setAccentColor(color.name)} className={`w-8 h-8 rounded-full focus:outline-none transition-transform hover:scale-110 ${accentColor === color.name ? 'ring-2 ring-offset-2 dark:ring-offset-slate-800 ring-primary-500 shadow-lg' : ''}`} style={{ backgroundColor: color.color }} aria-label={`Set accent color to ${color.name}`} /> ))}
               </div>
           </SettingsRow>
-          <SettingsRow label="Font">
-              <select value={font} onChange={(e) => setFont(e.target.value as Font)} className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 bg-white">
+          <SettingsRow label="Typography Family">
+              <select value={font} onChange={(e) => setFont(e.target.value as Font)} className="p-2 border-2 border-slate-100 rounded-xl dark:bg-slate-800 dark:border-slate-700 bg-white font-bold">
                   {FONTS.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
           </SettingsRow>
-           <SettingsRow label="Button Shape">
-              <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-700 rounded-md">
-                {BUTTON_SHAPES.map(s => <React.Fragment key={s.id}>
-                  <Button size="sm" variant={buttonShape === s.id ? 'primary' : 'secondary'} onClick={() => setButtonShape(s.id)}>{s.name}</Button>
-                </React.Fragment>)}
+           <SettingsRow label="Button Styling">
+              <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-700 rounded-xl">
+                {BUTTON_SHAPES.map(s => (
+                  <Button key={s.id} size="sm" variant={buttonShape === s.id ? 'primary' : 'secondary'} className="!text-xs font-black uppercase" onClick={() => setButtonShape(s.id)}>{s.name}</Button>
+                ))}
               </div>
           </SettingsRow>
-           <SettingsRow label="Focus Mode" description="Hides distracting elements during study sessions.">
-              <ToggleSwitch checked={focusMode} onChange={setFocusMode} />
-          </SettingsRow>
-          <SettingsRow label="Mood Tracker" description="Adjusts the app's mood to match yours.">
-              <select value={mood} onChange={(e) => setMood(e.target.value as Mood)} className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 bg-white">
-                  {MOODS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-              </select>
-          </SettingsRow>
-          <SettingsRow label="Compact UI Mode" description="Smaller elements for more screen space.">
-              <ToggleSwitch checked={settings.compactMode} onChange={val => settings.dispatch({type: SmartSettingsActionType.SET_COMPACT_MODE, payload: val})} />
-          </SettingsRow>
-          <div>
-            <p className="font-medium text-slate-800 dark:text-slate-100 mb-2">Background</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 items-center gap-4">
-               {BACKGROUNDS.map(bg => ( <button key={bg.name} onClick={() => setBackground(bg.name)} className={`w-full h-16 rounded-lg border-2 transition-all ${background === bg.name ? 'border-primary-500 scale-105 shadow-md' : 'border-slate-300 dark:border-slate-600'}`} style={bg.style} aria-label={`Set background to ${bg.label}`}><span className="px-2 py-1 text-xs font-semibold rounded-full bg-black/40 text-white">{bg.label}</span></button> ))}
-            </div>
-          </div>
-          <div>
-            <p className="font-medium text-slate-800 dark:text-slate-100 mb-2">Avatar</p>
-            <div className="flex flex-wrap items-center gap-4">
-              {AVATAR_IDS.map(id => ( <button key={id} onClick={() => setAvatarId(id)} className={`avatar-picker-item w-16 h-16 p-1 rounded-full ${avatarId === id ? 'selected' : ''}`}><Avatar avatarId={id} /></button> ))}
-            </div>
-          </div>
         </SettingsSection>
-        
-        <SettingsSection title="AI Settings">
-            <SettingsRow label="AI Persona" description="Choose the assistant's style.">
-              <select value={settings.aiPersona} onChange={e => settings.dispatch({type: SmartSettingsActionType.SET_AI_PERSONA, payload: e.target.value as AIPersona})} className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 bg-white">
+
+        <SettingsSection title="Interface Scaling">
+            <SettingsRow label="Interactive Font Scale" description="Drag to adjust the global readability level of the application.">
+                <div className="flex items-center gap-4 w-full">
+                    <input 
+                        type="range" min="12" max="32" step="1" 
+                        value={customFontSize} 
+                        onChange={(e) => setCustomFontSize(parseInt(e.target.value))} 
+                        className="flex-grow accent-primary-600 h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer" 
+                    />
+                    <span className="w-12 text-center font-black bg-primary-100 text-primary-700 px-2 py-1 rounded-lg text-xs">{customFontSize}px</span>
+                </div>
+            </SettingsRow>
+            <SettingsRow label="Workspace Canvas Width" description="Adjust the maximum horizontal reach of the study dashboards.">
+                <div className="flex items-center gap-4 w-full">
+                    <input 
+                        type="range" min="600" max="1920" step="20" 
+                        value={customContainerWidth} 
+                        onChange={(e) => {
+                            setCustomContainerWidth(parseInt(e.target.value));
+                            if (containerWidth === 'full') setContainerWidth('standard');
+                        }} 
+                        className="flex-grow accent-primary-600 h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer" 
+                    />
+                    <span className="w-16 text-center font-black bg-primary-100 text-primary-700 px-2 py-1 rounded-lg text-xs">{customContainerWidth}px</span>
+                </div>
+            </SettingsRow>
+            <SettingsRow label="Full Width Display">
+                 <ToggleSwitch checked={containerWidth === 'full'} onChange={(val) => setContainerWidth(val ? 'full' : 'standard')} />
+            </SettingsRow>
+            <SettingsRow label="Compact UI Rendering" description="Aggressive space optimization for high-density academic data.">
+              <ToggleSwitch checked={settings.compactMode} onChange={val => settings.dispatch({type: SmartSettingsActionType.SET_COMPACT_MODE, payload: val})} />
+            </SettingsRow>
+            <SettingsRow label="Immersive Focus Mode" description="Automatically hides non-essential dashboard widgets during focus sessions.">
+              <ToggleSwitch checked={focusMode} onChange={setFocusMode} />
+            </SettingsRow>
+        </SettingsSection>
+
+        <SettingsSection title="Ambience & Persona">
+          <SettingsRow label="AI Companion Persona" description="How Dr. Zayn interacts with your study requests.">
+              <select value={settings.aiPersona} onChange={e => settings.dispatch({type: SmartSettingsActionType.SET_AI_PERSONA, payload: e.target.value as AIPersona})} className="p-2 border-2 border-slate-100 rounded-xl dark:bg-slate-800 dark:border-slate-700 bg-white font-bold">
                   {AI_PERSONAS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
-            </SettingsRow>
-            <SettingsRow label="Adaptive Learning" description="AI changes question difficulty based on your level.">
-                <ToggleSwitch checked={settings.adaptiveLearning} onChange={val => settings.dispatch({type: SmartSettingsActionType.SET_ADAPTIVE_LEARNING, payload: val})} />
-            </SettingsRow>
-            <SettingsRow label="AI Voice Tutor" description="Enable audio explanations for complex topics.">
-                <ToggleSwitch checked={settings.aiVoiceTutor} onChange={val => settings.dispatch({type: SmartSettingsActionType.SET_AI_VOICE_TUTOR, payload: val})} />
-            </SettingsRow>
-             <div className={`transition-all duration-300 ease-in-out ${settings.aiVoiceTutor ? 'opacity-100 max-h-20 pt-4' : 'opacity-0 max-h-0 overflow-hidden'}`}>
-                <SettingsRow label="AI Voice">
-                    <select 
-                    value={settings.aiVoice} 
-                    onChange={e => settings.dispatch({type: SmartSettingsActionType.SET_AI_VOICE, payload: e.target.value as AIVoice})} 
-                    className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 bg-white"
-                    disabled={!settings.aiVoiceTutor}
-                    >
-                        {AI_VOICES.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                    </select>
-                </SettingsRow>
-             </div>
-             <SettingsRow label="Auto Planner" description="AI adjusts your study plan if your schedule changes.">
-                <ToggleSwitch checked={settings.autoPlanner} onChange={val => settings.dispatch({type: SmartSettingsActionType.SET_AUTO_PLANNER, payload: val})} />
-            </SettingsRow>
-            <SettingsRow label="AI Thinking Budget" description="Higher budget allows for deeper reasoning (Gemini 3).">
-                <select value={settings.aiThinkingBudget} onChange={e => settings.dispatch({type: SmartSettingsActionType.SET_THINKING_BUDGET, payload: parseInt(e.target.value)})} className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 bg-white">
-                    <option value="0">Standard</option>
-                    <option value="1000">Deep (1K)</option>
-                    <option value="5000">Advanced (5K)</option>
-                    <option value="16000">PhD Level (16K)</option>
-                </select>
-            </SettingsRow>
-        </SettingsSection>
-
-        <SettingsSection title="Study & Exam Defaults">
-            <SettingsRow label="Pomodoro Duration (minutes)">
-                <input type="number" value={pomodoroState.pomodoroDuration} onChange={e => handlePomodoroDurationChange('pomodoro', e.target.value)} className="w-20 p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600" />
-            </SettingsRow>
-            <SettingsRow label="Short Break Duration (minutes)">
-                <input type="number" value={pomodoroState.shortBreakDuration} onChange={e => handlePomodoroDurationChange('short', e.target.value)} className="w-20 p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600" />
-            </SettingsRow>
-            <SettingsRow label="Long Break Duration (minutes)">
-                <input type="number" value={pomodoroState.longBreakDuration} onChange={e => handlePomodoroDurationChange('long', e.target.value)} className="w-20 p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600" />
-            </SettingsRow>
-            <SettingsRow label="Auto-Save Results" description="Automatically save exam history when finished.">
-                <ToggleSwitch checked={settings.autoSaveResults} onChange={val => settings.dispatch({type: SmartSettingsActionType.SET_AUTO_SAVE_RESULTS, payload: val})} />
-            </SettingsRow>
+          </SettingsRow>
+          <div>
+            <p className="font-black text-sm text-slate-500 uppercase tracking-widest mb-3 ml-1">Study Soundscapes</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+                <Button variant={!currentTrackId ? 'primary' : 'secondary'} size="sm" onClick={() => setTrack(null)}>Silent Mode</Button>
+                {musicTracks.map(track => (
+                  <Button key={track.id} size="sm" variant={currentTrackId === track.id ? 'primary' : 'secondary'} onClick={() => setTrack(track.id)}>{track.name}</Button>
+                ))}
+            </div>
+            <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl">
+                <span className="text-xs font-black uppercase text-slate-400">Master Volume</span>
+                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="flex-grow accent-primary-600" />
+            </div>
+          </div>
+          <div className="mt-6">
+            <p className="font-black text-sm text-slate-500 uppercase tracking-widest mb-3 ml-1">Atmospheric Backgrounds</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+               {BACKGROUNDS.map(bg => ( <button key={bg.name} onClick={() => setBackground(bg.name)} className={`w-full h-16 rounded-2xl border-4 transition-all ${background === bg.name ? 'border-primary-500 scale-105 shadow-xl' : 'border-slate-100 dark:border-slate-800'}`} style={bg.style} aria-label={`Set background to ${bg.label}`}><span className="px-2 py-1 text-[10px] font-black uppercase rounded-lg bg-black/40 text-white">{bg.label}</span></button> ))}
+            </div>
+          </div>
         </SettingsSection>
         
-        <SettingsSection title="Accessibility">
-            <SettingsRow label="Reduce Motion" description="Disables animations and transitions for a simpler interface.">
-                <ToggleSwitch checked={reduceMotion} onChange={setReduceMotion} />
+        <SettingsSection title="Advanced Academic Engine">
+            <SettingsRow label="Adaptive Difficulty" description="AI will dynamically scale complexity based on your accuracy trends.">
+                <ToggleSwitch checked={settings.adaptiveLearning} onChange={val => settings.dispatch({type: SmartSettingsActionType.SET_ADAPTIVE_LEARNING, payload: val})} />
             </SettingsRow>
-        </SettingsSection>
-
-        <SettingsSection title="Notifications">
-            <SettingsRow label="WhatsApp Number" description="Used for sending task reminders. Include country code.">
-                <div className="flex gap-2">
-                    <input type="tel" value={phoneInput} onChange={e => setPhoneInput(e.target.value)} placeholder="+11234567890" className="p-1 border border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 w-40" />
-                    <Button onClick={handlePhoneSave} size="sm">Save</Button>
+            <SettingsRow label="AI Voice Synthesis" description="Enable neural text-to-speech for interactive audio explanations.">
+                <ToggleSwitch checked={settings.aiVoiceTutor} onChange={val => settings.dispatch({type: SmartSettingsActionType.SET_AI_VOICE_TUTOR, payload: val})} />
+            </SettingsRow>
+            {settings.aiVoiceTutor && (
+                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl animate-fade-in">
+                    <SettingsRow label="Select Voice Profile">
+                        <select 
+                            value={settings.aiVoice} 
+                            onChange={e => settings.dispatch({type: SmartSettingsActionType.SET_AI_VOICE, payload: e.target.value as AIVoice})} 
+                            className="p-2 border-2 border-slate-200 rounded-xl dark:bg-slate-700 bg-white font-bold text-sm"
+                        >
+                            {AI_VOICES.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                        </select>
+                    </SettingsRow>
                 </div>
-            </SettingsRow>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 p-2 bg-slate-100 dark:bg-slate-700/50 rounded-md">
-                Note: This feature opens WhatsApp on your device with a pre-filled message for you to send to yourself as a reminder. No messages are sent automatically.
-            </p>
+            )}
         </SettingsSection>
 
-        <SettingsSection title="Sound & Audio">
-            <SettingsRow label="Now Playing"><span>{musicTracks.find(t => t.id === currentTrackId)?.name || 'None'}</span></SettingsRow>
-            <SettingsRow label="Master Volume">
-                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="w-40" />
-            </SettingsRow>
-             <div>
-                <p className="font-medium text-slate-800 dark:text-slate-100 mb-2">Focus Music</p>
-                <div className="flex flex-wrap gap-2">
-                    <Button variant={!currentTrackId ? 'primary' : 'secondary'} size="sm" onClick={() => setTrack(null)}>None</Button>
-                    {musicTracks.map(track => <React.Fragment key={track.id}>
-                      <Button size="sm" variant={currentTrackId === track.id ? 'primary' : 'secondary'} onClick={() => setTrack(track.id)}>{track.name}</Button>
-                    </React.Fragment>)}
-                </div>
-            </div>
-        </SettingsSection>
-
-        <SettingsSection title="Data Management">
-            <SettingsRow label="Export Data" description="Save all your app data to a JSON file.">
-              <Button onClick={handleExportData} variant="secondary" size="sm">Export</Button>
-            </SettingsRow>
-            <div className="mt-4 p-4 border border-red-300 dark:border-red-700 rounded-lg bg-red-50 dark:bg-red-900/20">
-              <SettingsRow label="Logout & Clear All Data">
-                <Button onClick={handleLogoutAndClear} variant="danger" size="sm">Logout & Clear</Button>
-              </SettingsRow>
-              <p className="text-sm text-red-600 dark:text-red-400 mt-1">This permanently deletes all your data and logs you out. This action cannot be undone.</p>
-            </div>
-        </SettingsSection>
+        <Card className="!bg-rose-50 dark:!bg-rose-950/20 border-rose-100 dark:border-rose-900">
+            <h3 className="font-black text-rose-800 dark:text-rose-400 uppercase tracking-tighter text-xl mb-4">Danger Zone</h3>
+            <p className="text-sm font-bold text-rose-700 dark:text-rose-300 mb-6">Resetting will permanently delete all exams, study plans, and achievement progress stored on this device.</p>
+            <Button onClick={handleLogoutAndClear} variant="danger" className="w-full h-12 rounded-xl font-black uppercase tracking-widest shadow-xl shadow-rose-500/20">Purge All Data & Logout</Button>
+        </Card>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { MouseEventHandler } from 'react';
 // FIX: Updated the import path for the useTheme hook.
@@ -11,6 +12,8 @@ type ButtonProps = {
   disabled?: boolean;
   className?: string;
   type?: 'button' | 'submit' | 'reset';
+  // FIX: Added optional key to ButtonProps to resolve TypeScript errors in list renderings (SettingsScreen line 174, 228).
+  key?: React.Key;
 };
 
 function Button({

@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Card from './Card';
-import Loader from './Loader';
 import { useExam } from '../hooks/useExam';
 import { useStudyAids } from '../hooks/useStudyAids';
 import { useTasks } from '../hooks/useTasks';
 import { getDailyStudySuggestion } from '../services/geminiService';
-import { BrainCircuitIcon } from './icons/BrainCircuitIcon';
+import { BotIcon } from './icons/BotIcon';
+import { SparklesIcon } from './icons/SparklesIcon';
 
 function AIStudyCoach() {
     const [suggestion, setSuggestion] = useState('');
@@ -31,58 +31,58 @@ function AIStudyCoach() {
                     }
                 }
 
-                const pendingTasks = allTasks.filter(t => !t.completed);
-
-                let context = "Status: ";
-                
-                if (results && results.length > 0) {
-                    const sortedResults = [...results].sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
-                    const lastResult = sortedResults[0];
-                    context += `Last score ${Math.round(lastResult.score)}%. `;
-                } else {
-                    context += "New user. ";
+                let context = "";
+                if (results?.length > 0) {
+                    const avg = results.reduce((a, b) => a + b.score, 0) / results.length;
+                    context += `Avg Score: ${Math.round(avg)}%. `;
                 }
-                
-                const dueCards = flashcardDecks.flatMap(d => d.cards.filter(c => new Date(c.nextReview) <= new Date())).length;
-                if (dueCards > 0) {
-                    context += `${dueCards} flashcards due. `;
-                }
-
-                if (pendingTasks.length > 0) {
-                    context += `${pendingTasks.length} tasks pending. `;
-                }
+                const pending = allTasks.filter(t => !t.completed).length;
+                context += `${pending} pending tasks.`;
 
                 const result = await getDailyStudySuggestion(context);
                 setSuggestion(result);
                 localStorage.setItem('aiStudyCoachSuggestion', JSON.stringify({ date: today, suggestion: result }));
-
             } catch (error) {
-                console.error("Failed to get study suggestion:", error);
-                setSuggestion("Keep going! You're making progress every day.");
+                setSuggestion("You are doing great! Keep up the deep study sessions today.");
             } finally {
                 setIsLoading(false);
             }
         };
-
         fetchSuggestion();
     }, [results, flashcardDecks, allTasks]);
 
     return (
-        <Card className="w-full bg-primary-50/50 dark:bg-slate-800/50 border border-primary-100 dark:border-slate-700/50 rounded-[2rem] shadow-sm">
-            <div className="flex items-center gap-5">
-                <div className="p-3.5 bg-primary-600 dark:bg-primary-500 rounded-2xl shadow-lg shadow-primary-600/20 flex-shrink-0">
-                    <BrainCircuitIcon className="w-6 h-6 text-white" />
+        <div className="relative group overflow-hidden rounded-[2.5rem] p-[1.5px] bg-gradient-to-br from-primary-400 via-indigo-500 to-purple-600 shadow-2xl transition-all duration-500 hover:shadow-primary-500/20">
+            <div className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl rounded-[calc(2.5rem-1.5px)] p-8 flex flex-col md:flex-row items-center gap-8">
+                <div className="relative flex-shrink-0">
+                    <div className="w-20 h-20 bg-primary-600 dark:bg-primary-500 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-primary-600/40 group-hover:scale-105 group-hover:rotate-3 transition-all duration-500">
+                        <BotIcon className="w-11 h-11 text-white" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 bg-amber-400 rounded-full p-1.5 shadow-lg animate-bounce">
+                        <SparklesIcon className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-white dark:border-slate-900 rounded-full animate-pulse"></div>
                 </div>
-                <div className="flex-grow">
-                    <h2 className="text-sm font-black text-primary-600 dark:text-primary-400 uppercase tracking-widest">AI Study Coach</h2>
+                
+                <div className="flex-grow text-center md:text-left space-y-2">
+                    <div className="flex items-center justify-center md:justify-start gap-2">
+                        <span className="text-[11px] font-black uppercase tracking-[0.4em] text-primary-600 dark:text-primary-400 opacity-80">Dr. Zayn Academia</span>
+                    </div>
                     {isLoading ? (
-                        <div className="py-2"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse w-3/4"></div></div>
+                        <div className="space-y-3 animate-pulse">
+                            <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded-full w-full mx-auto md:mx-0"></div>
+                            <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-full w-2/3 mx-auto md:mx-0"></div>
+                        </div>
                     ) : (
-                        <p className="mt-1 text-slate-700 dark:text-slate-200 text-base font-bold leading-tight">{suggestion}</p>
+                        <p className="text-slate-900 dark:text-slate-100 text-xl font-black leading-tight tracking-tight">
+                            "{suggestion}"
+                        </p>
                     )}
                 </div>
             </div>
-        </Card>
+            {/* Subtle background decoration */}
+            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-primary-500/5 rounded-full blur-3xl pointer-events-none group-hover:bg-primary-500/10 transition-colors"></div>
+        </div>
     );
 };
 

@@ -8,6 +8,8 @@ import Button from '../components/Button';
 import { SearchIcon } from '../components/icons/SearchIcon';
 import { DatabaseIcon } from '../components/icons/DatabaseIcon';
 import { ChevronLeftIcon } from '../components/icons/ChevronLeftIcon';
+import { ChevronRightIcon } from '../components/icons/ChevronRightIcon';
+import { MenuIcon } from '../components/icons/MenuIcon';
 import jsPDF from 'jspdf';
 import { DownloadIcon } from '../components/icons/DownloadIcon';
 
@@ -17,6 +19,7 @@ function QuestionBankScreen() {
     const { exams } = useExam();
     const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     const uniqueQuestions = useMemo(() => {
         if (!fileName) return [];
@@ -44,6 +47,23 @@ function QuestionBankScreen() {
             q.questionText?.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [uniqueQuestions, searchTerm]);
+
+    const currentIndex = useMemo(() => {
+        if (!selectedQuestion) return -1;
+        return filteredQuestions.findIndex(q => q.id === selectedQuestion.id);
+    }, [selectedQuestion, filteredQuestions]);
+
+    const handleNext = () => {
+        if (currentIndex < filteredQuestions.length - 1) {
+            setSelectedQuestion(filteredQuestions[currentIndex + 1]);
+        }
+    };
+
+    const handlePrev = () => {
+        if (currentIndex > 0) {
+            setSelectedQuestion(filteredQuestions[currentIndex - 1]);
+        }
+    };
     
     const handleDownloadPdf = () => {
         const doc = new jsPDF();
@@ -75,6 +95,13 @@ function QuestionBankScreen() {
             <header className="flex-shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 z-30 relative px-4 md:px-8">
                 <div className="container mx-auto h-14 flex items-center justify-between">
                     <div className="flex items-center gap-3 overflow-hidden">
+                        <button 
+                            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
+                            title={isSidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}
+                        >
+                            <MenuIcon className="w-5 h-5" />
+                        </button>
                         <div className="p-1.5 bg-primary-100 dark:bg-primary-900/30 rounded-lg hidden sm:block">
                             <DatabaseIcon className="w-4 h-4 text-primary-600 dark:text-primary-400" />
                         </div>
@@ -97,12 +124,12 @@ function QuestionBankScreen() {
 
             <div className="flex flex-grow overflow-hidden relative">
                 {/* Sidebar - Compact Questions List */}
-                <aside className="w-64 md:w-80 bg-white dark:bg-slate-900 flex flex-col flex-shrink-0 border-r border-slate-200 dark:border-slate-800 shadow-sm z-20">
+                <aside className={`${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-64 md:w-80 opacity-100'} bg-white dark:bg-slate-900 flex flex-col flex-shrink-0 border-r border-slate-200 dark:border-slate-800 shadow-sm z-20 transition-all duration-300 overflow-hidden`}>
                     <div className="p-4 border-b border-slate-100 dark:border-slate-800">
                         <div className="relative">
                             <input
                                 type="text"
-                                placeholder="Filter questions..."
+                                placeholder="Search repository..."
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
                                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 font-bold transition-all"
@@ -128,9 +155,9 @@ function QuestionBankScreen() {
                 </aside>
 
                 {/* Main Content Area - Question Detail */}
-                <main className="flex-grow p-4 md:p-10 overflow-y-auto bg-slate-50 dark:bg-[#020617]">
+                <main className="flex-grow p-4 md:p-10 overflow-y-auto bg-slate-50 dark:bg-[#020617] transition-all duration-300">
                     {selectedQuestion ? (
-                        <div className="max-w-3xl mx-auto animate-fade-in">
+                        <div className="max-w-3xl mx-auto animate-fade-in space-y-6">
                             <Card className="border-none shadow-2xl p-6 md:p-12 rounded-[2rem] bg-white dark:bg-slate-900">
                                  <div className="mb-8 pb-6 border-b border-slate-50 dark:border-slate-800">
                                     <span className="inline-block px-3 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-md text-[9px] font-black uppercase tracking-[0.2em] mb-4">Question Analysis</span>
@@ -160,6 +187,32 @@ function QuestionBankScreen() {
                                         );
                                     })}
                                  </div>
+
+                                 {/* Navigation Footer */}
+                                 <div className="mt-12 pt-8 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center">
+                                    <Button 
+                                        variant="secondary" 
+                                        disabled={currentIndex === 0} 
+                                        onClick={handlePrev}
+                                        className="h-11 px-6 rounded-xl border-slate-200 group"
+                                    >
+                                        <ChevronLeftIcon className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Previous Item</span>
+                                    </Button>
+                                    
+                                    <div className="hidden sm:block text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">
+                                        Item {currentIndex + 1} of {filteredQuestions.length}
+                                    </div>
+
+                                    <Button 
+                                        disabled={currentIndex === filteredQuestions.length - 1} 
+                                        onClick={handleNext}
+                                        className="h-11 px-6 rounded-xl shadow-lg shadow-primary-500/20 group"
+                                    >
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Next Item</span>
+                                        <ChevronRightIcon className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                                    </Button>
+                                 </div>
                             </Card>
                         </div>
                     ) : (
@@ -169,8 +222,8 @@ function QuestionBankScreen() {
                                     <DatabaseIcon className="w-8 h-8 text-slate-200 dark:text-slate-700" />
                                 </div>
                                 <div className="space-y-2">
-                                    <h2 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Repository Entry</h2>
-                                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest leading-loose">Select a question from the explorer to preview the verified academic content and solutions.</p>
+                                    <h2 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Repository Explorer</h2>
+                                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest leading-loose">Select a question from the vault to review academic content and verified solutions.</p>
                                 </div>
                             </div>
                         </div>

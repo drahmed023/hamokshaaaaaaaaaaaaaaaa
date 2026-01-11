@@ -28,7 +28,7 @@
 </script>
   <script>
     tailwind.config = {
-      darkMode: 'class', // Enable class-based dark mode
+      darkMode: 'class', 
       theme: {
         extend: {
           colors: {
@@ -52,6 +52,19 @@
   </script>
   <style type="text/tailwindcss">
     @layer base {
+      :root {
+        --app-font-size: 16px;
+        --app-container-width: 1024px;
+      }
+      
+      html {
+        font-size: var(--app-font-size);
+      }
+
+      .container {
+        max-width: var(--app-container-width) !important;
+      }
+
       :root, html[data-accent="indigo"] {
         --color-primary-50: 238 242 255;
         --color-primary-100: 224 231 255;
@@ -151,6 +164,10 @@
       html.dark {
         color-scheme: dark;
       }
+      
+      /* Global UI Scaling - DEPRECATED in favor of variable control */
+      /* html[data-font-size="sm"] { font-size: 14px; } */
+
       /* Font settings */
       html[data-font="modern"] body { font-family: 'Inter', sans-serif; }
       html[data-font="classic"] body { font-family: 'Lora', serif; }
@@ -193,12 +210,12 @@
 
       /* Level-based backgrounds */
       .level-bg { transition: background-color 1s ease-in-out; }
-      .level-bg-1 { --bg-color: 248 250 252; } /* slate-50 */
-      .level-bg-2 { --bg-color: 240 249 255; } /* sky-50 */
-      .level-bg-3 { --bg-color: 236 253 245; } /* emerald-50 */
-      .level-bg-4 { --bg-color: 255 247 237; } /* orange-50 */
-      .level-bg-5 { --bg-color: 255 241 242; } /* rose-50 */
-      html.dark .level-bg-1 { --bg-color: 15 23 42; } /* slate-900 */
+      .level-bg-1 { --bg-color: 248 250 252; } 
+      .level-bg-2 { --bg-color: 240 249 255; } 
+      .level-bg-3 { --bg-color: 236 253 245; } 
+      .level-bg-4 { --bg-color: 255 247 237; } 
+      .level-bg-5 { --bg-color: 255 241 242; } 
+      html.dark .level-bg-1 { --bg-color: 15 23 42; } 
       html.dark .level-bg-2 { --bg-color: 12 74 110; opacity: 0.2; }
       html.dark .level-bg-3 { --bg-color: 6 78 59; opacity: 0.2; }
       html.dark .level-bg-4 { --bg-color: 124 45 18; opacity: 0.2; }

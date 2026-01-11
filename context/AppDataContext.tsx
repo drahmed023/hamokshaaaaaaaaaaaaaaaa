@@ -4,7 +4,6 @@ import {
     AppDataState, AppDataAction, AppDataActionType,
     AppState, Action, ExamActionType,
     StudyAidsState, StudyAidsAction, StudyAidsActionType,
-    StudyPlanState, StudyPlanAction, StudyPlanActionType,
     TasksState, TasksAction, TasksActionType,
     GamificationState, GamificationAction, GamificationActionType,
     ThemeState, ThemeAction, ThemeActionType,
@@ -17,6 +16,7 @@ import {
     HighlightsState, HighlightsAction, HighlightsActionType,
     UpcomingExamsState, UpcomingExamsAction, UpcomingExamsActionType,
     ProfileState, ProfileAction, ProfileActionType,
+    StudyPlanState, StudyPlanAction, StudyPlanActionType,
     AuthState
 } from '../types';
 import { getAchievement } from '../data/achievements';
@@ -24,10 +24,26 @@ import { toastDispatcher } from './GamificationContext';
 
 const initialExamState: AppState = { exams: [], results: [], loading: false, error: null };
 const initialStudyAidsState: StudyAidsState = { summaries: [], flashcardDecks: [], mindMaps: [] };
-const initialStudyPlanState: StudyPlanState = { plans: [], activePlanId: null, loading: false };
 const initialTasksState: TasksState = { tasks: [] };
 const initialGamificationState: GamificationState = { xp: 0, level: 1, lastStudiedDate: null, streak: 0, unlockedAchievements: [] };
-const initialThemeState: ThemeState = { theme: 'light', accentColor: 'indigo', isAutoTheme: false, background: 'default', font: 'modern', buttonShape: 'rounded', focusMode: false, mood: 'neutral', avatarId: 'avatar1', phoneNumber: '', reduceMotion: false };
+const initialThemeState: ThemeState = { 
+    theme: 'light', 
+    accentColor: 'indigo', 
+    isAutoTheme: false, 
+    background: 'default', 
+    font: 'modern', 
+    fontSize: 'base', 
+    customFontSize: 16, 
+    containerWidth: 'standard', 
+    customContainerWidth: 1024,
+    buttonShape: 'rounded', 
+    focusMode: false, 
+    mood: 'neutral', 
+    avatarId: 'avatar1', 
+    phoneNumber: '', 
+    reduceMotion: false 
+};
+
 const defaultSystemMessage: AIMessage = { role: 'model', parts: [{text: "Hello! I'm your AI Study Companion. How can I help you today?"}] };
 const initialAIInteractionState: AIInteractionState = { messages: [defaultSystemMessage], isThinking: false, isOpen: false, navigationPrompt: { isOpen: false, destination: '', message: '' }, schedulingModal: { isOpen: false, taskDescription: '', dueDate: undefined } };
 const initialMusicState: MusicState = { currentTrackId: null, isPlaying: false, volume: 0.5 };
@@ -38,13 +54,19 @@ const initialNotesState: NotesState = { notes: [] };
 const initialHighlightsState: HighlightsState = { questionHighlights: [] };
 const initialUpcomingExamsState: UpcomingExamsState = { upcomingExams: [] };
 const initialAuthState: AuthState = { isLoggedIn: false, isInitialized: false };
+const initialStudyPlanState: StudyPlanState = { plans: [], activePlanId: null, loading: false };
 const initialProfileState: ProfileState = { 
     fullName: 'Study Spark User', 
     email: '', 
     major: 'General Science', 
+    institution: 'University of Knowledge',
+    graduationYear: '2026',
+    country: 'Global',
     educationLevel: 'University', 
     bio: 'Passionate about learning and AI.', 
     studyGoal: 'Complete all courses with distinction.',
+    learningStyle: 'Visual',
+    preferredStudyTime: 'Evening',
     subjects: ['Artificial Intelligence', 'Medicine'],
     links: {}
 };
@@ -53,7 +75,6 @@ const initialState: AppDataState = {
     authState: initialAuthState,
     examState: initialExamState,
     studyAidsState: initialStudyAidsState,
-    studyPlanState: initialStudyPlanState,
     tasksState: initialTasksState,
     gamificationState: initialGamificationState,
     themeState: initialThemeState,
@@ -66,6 +87,7 @@ const initialState: AppDataState = {
     highlightsState: initialHighlightsState,
     upcomingExamsState: initialUpcomingExamsState,
     profileState: initialProfileState,
+    studyPlanState: initialStudyPlanState,
 };
 
 const profileReducer = (state: ProfileState, action: ProfileAction): ProfileState => {
@@ -75,6 +97,25 @@ const profileReducer = (state: ProfileState, action: ProfileAction): ProfileStat
     default:
       return state;
   }
+};
+
+const studyPlanReducer = (state: StudyPlanState, action: StudyPlanAction): StudyPlanState => {
+    switch (action.type) {
+        case StudyPlanActionType.ADD_PLAN:
+            return { 
+                ...state, 
+                plans: [...state.plans.filter(p => p.id !== action.payload.id), action.payload], 
+                activePlanId: action.payload.id 
+            };
+        case StudyPlanActionType.DELETE_PLAN:
+            return { ...state, plans: state.plans.filter(p => p.id !== action.payload), activePlanId: state.activePlanId === action.payload ? null : state.activePlanId };
+        case StudyPlanActionType.SET_ACTIVE_PLAN:
+            return { ...state, activePlanId: action.payload };
+        case StudyPlanActionType.SET_LOADING:
+            return { ...state, loading: action.payload };
+        default:
+            return state;
+    }
 };
 
 const examReducer = (state: AppState, action: Action): AppState => {
@@ -95,16 +136,6 @@ const examReducer = (state: AppState, action: Action): AppState => {
       return state;
   }
 };
-
-const studyPlanReducer = (state: StudyPlanState, action: StudyPlanAction): StudyPlanState => {
-    switch (action.type) {
-        case StudyPlanActionType.ADD_PLAN: return { ...state, plans: [...state.plans, action.payload], activePlanId: action.payload.id };
-        case StudyPlanActionType.SET_ACTIVE_PLAN: return { ...state, activePlanId: action.payload };
-        case StudyPlanActionType.DELETE_PLAN: return { ...state, plans: state.plans.filter(p => p.id !== action.payload), activePlanId: state.activePlanId === action.payload ? null : state.activePlanId };
-        case StudyPlanActionType.SET_LOADING: return { ...state, loading: action.payload };
-        default: return state;
-    }
-}
 
 const studyAidsReducer = (state: StudyAidsState, action: StudyAidsAction): StudyAidsState => {
     switch(action.type) {
@@ -174,6 +205,10 @@ const themeReducer = (state: ThemeState, action: ThemeAction): ThemeState => {
         case ThemeActionType.SET_THEME_AND_ACCENT: return { ...state, theme: action.payload.theme, accentColor: action.payload.accent };
         case ThemeActionType.SET_BACKGROUND: return { ...state, background: action.payload };
         case ThemeActionType.SET_FONT: return { ...state, font: action.payload };
+        case ThemeActionType.SET_FONT_SIZE: return { ...state, fontSize: action.payload };
+        case ThemeActionType.SET_CUSTOM_FONT_SIZE: return { ...state, customFontSize: action.payload };
+        case ThemeActionType.SET_CONTAINER_WIDTH: return { ...state, containerWidth: action.payload };
+        case ThemeActionType.SET_CUSTOM_CONTAINER_WIDTH: return { ...state, customContainerWidth: action.payload };
         case ThemeActionType.SET_BUTTON_SHAPE: return { ...state, buttonShape: action.payload };
         case ThemeActionType.SET_FOCUS_MODE: return { ...state, focusMode: action.payload };
         case ThemeActionType.SET_MOOD: return { ...state, mood: action.payload };
@@ -318,7 +353,6 @@ const rootReducer = (state: AppDataState, action: AppDataAction): AppDataState =
         ...state,
         examState: examReducer(state.examState, action as Action),
         studyAidsState: studyAidsReducer(state.studyAidsState, action as StudyAidsAction),
-        studyPlanState: studyPlanReducer(state.studyPlanState, action as StudyPlanAction),
         tasksState: tasksReducer(state.tasksState, action as TasksAction),
         gamificationState: fullGamificationReducer(state.gamificationState, action as GamificationAction),
         themeState: themeReducer(state.themeState, action as ThemeAction),
@@ -331,6 +365,7 @@ const rootReducer = (state: AppDataState, action: AppDataAction): AppDataState =
         highlightsState: highlightsReducer(state.highlightsState, action as HighlightsAction),
         upcomingExamsState: upcomingExamsReducer(state.upcomingExamsState, action as UpcomingExamsAction),
         profileState: profileReducer(state.profileState, action as ProfileAction),
+        studyPlanState: studyPlanReducer(state.studyPlanState, action as StudyPlanAction),
     };
 };
 
@@ -377,7 +412,6 @@ export function AppDataProvider({ children }: { children?: ReactNode }) {
             const stateToSave = {
                 examState: { ...currentState.examState, loading: false, error: null },
                 studyAidsState: currentState.studyAidsState,
-                studyPlanState: currentState.studyPlanState,
                 tasksState: currentState.tasksState,
                 gamificationState: currentState.gamificationState,
                 themeState: currentState.themeState,
@@ -390,6 +424,7 @@ export function AppDataProvider({ children }: { children?: ReactNode }) {
                 highlightsState: currentState.highlightsState,
                 upcomingExamsState: currentState.upcomingExamsState,
                 profileState: currentState.profileState,
+                studyPlanState: currentState.studyPlanState,
             };
             localStorage.setItem(BACKEND_STORAGE_KEY, JSON.stringify(stateToSave));
         } catch (error) {}
@@ -401,8 +436,16 @@ export function AppDataProvider({ children }: { children?: ReactNode }) {
         root.classList.add(state.themeState.theme);
         root.setAttribute('data-accent', state.themeState.accentColor);
         root.setAttribute('data-font', state.themeState.font);
+        
+        // Applying custom scale via CSS variables
+        root.style.setProperty('--app-font-size', `${state.themeState.customFontSize}px`);
+        const widthVal = state.themeState.containerWidth === 'full' ? '100%' : `${state.themeState.customContainerWidth}px`;
+        root.style.setProperty('--app-container-width', widthVal);
+        
+        root.setAttribute('data-font-size', state.themeState.fontSize);
+        root.setAttribute('data-content-width', state.themeState.containerWidth);
         root.setAttribute('data-reduce-motion', String(state.themeState.reduceMotion));
-    }, [state.themeState.theme, state.themeState.accentColor, state.themeState.font, state.themeState.reduceMotion]);
+    }, [state.themeState]);
 
     return (
         <AppDataStateContext.Provider value={state}>

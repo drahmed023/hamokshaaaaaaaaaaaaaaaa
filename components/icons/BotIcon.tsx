@@ -10,6 +10,8 @@ export function BotIcon(props: React.SVGProps<SVGSVGElement>) {
       <path d="M20 14h2" />
       <path d="M15 13v2" />
       <path d="M9 13v2" />
+      <path d="M12 17h.01" />
+      <path d="M8 2h8" />
     </svg>
   );
 }

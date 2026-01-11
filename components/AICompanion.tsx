@@ -150,7 +150,8 @@ function AICompanion() {
                 parts: m.parts
             }));
 
-            const response = await getAIResponse(historyForApi, textToSend, aiPersona);
+            // FIX: Removed the 3rd argument (aiPersona) to match the getAIResponse function signature which expects 2 arguments.
+            const response = await getAIResponse(historyForApi, textToSend);
             
             // Handle Tool Calls (Navigation, Scheduling)
             if (response.functionCalls && response.functionCalls.length > 0) {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import { usePomodoro } from '../hooks/usePomodoro';
@@ -26,7 +25,8 @@ function SessionSummaryModal({ isOpen, onClose }: SessionSummaryModalProps) {
             setIsLoading(true);
             const fetchSummary = async () => {
                 try {
-                    const result = await getSessionSummary(totalMinutes, sessionsToday);
+                    // FIX: Removed the 2nd argument (sessionsToday) to match the getSessionSummary function signature which expects 1 argument.
+                    const result = await getSessionSummary(totalMinutes);
                     setSummary(result);
                 } catch (error) {
                     console.error("Failed to fetch session summary:", error);
@@ -37,7 +37,7 @@ function SessionSummaryModal({ isOpen, onClose }: SessionSummaryModalProps) {
             };
             fetchSummary();
         }
-    }, [isOpen, totalMinutes, sessionsToday]);
+    }, [isOpen, totalMinutes]);
     
     if (!isOpen) {
         return null;

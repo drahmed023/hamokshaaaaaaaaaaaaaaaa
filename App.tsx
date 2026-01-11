@@ -37,10 +37,9 @@ import { setGamificationToastDispatcher } from './context/GamificationContext';
 import { useToasts } from './context/ToastContext';
 import PomodoroScreen from './screens/PomodoroScreen';
 import ProfileScreen from './screens/ProfileScreen';
-import ProfessorScreen from './screens/ProfessorScreen';
 import LoginScreen from './screens/LoginScreen';
-import StudyPlanScreen from './screens/StudyPlanScreen';
 import Loader from './components/Loader';
+import StudyPlanScreen from './screens/StudyPlanScreen';
 
 function AppUI() {
     const { background, focusMode } = useTheme();
@@ -64,7 +63,6 @@ function AppUI() {
                 <main className="container mx-auto px-4 py-8">
                     <Routes>
                         <Route path="/" element={<HomeScreen />} />
-                        <Route path="/planner" element={<StudyPlanScreen />} />
                         <Route path="/create-exam" element={<CreateExamScreen />} />
                         <Route path="/exam/:id" element={<TakeExamScreen />} />
                         <Route path="/results/:id" element={<ResultsScreen />} />
@@ -87,7 +85,7 @@ function AppUI() {
                         <Route path="/question-bank/:fileName" element={<QuestionBankScreen />} />
                         <Route path="/pomodoro" element={<PomodoroScreen />} />
                         <Route path="/profile" element={<ProfileScreen />} />
-                        <Route path="/professor" element={<ProfessorScreen />} />
+                        <Route path="/planner" element={<StudyPlanScreen />} />
                     </Routes>
                 </main>
                 <AICompanion />

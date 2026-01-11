@@ -5,7 +5,6 @@ import { APP_NAME } from '../constants';
 import { BarChartIcon } from './icons/BarChartIcon';
 import { BookOpenIcon } from './icons/BookOpenIcon';
 import { CalendarIcon } from './icons/CalendarIcon';
-import { ClipboardListIcon } from './icons/ClipboardListIcon';
 import { HomeIcon } from './icons/HomeIcon';
 import { ListChecksIcon } from './icons/ListChecksIcon';
 import { SettingsIcon } from './icons/SettingsIcon';
@@ -20,8 +19,7 @@ import { LinkIcon } from './icons/LinkIcon';
 import { ImagePlusIcon } from './icons/ImagePlusIcon';
 import { BookmarkIcon } from './icons/BookmarkIcon';
 import { UserIcon } from './icons/UserIcon';
-import { GraduationCapIcon } from './icons/GraduationCapIcon';
-
+import { ClipboardListIcon } from './icons/ClipboardListIcon';
 
 type SidebarProps = {
   isOpen: boolean;
@@ -31,7 +29,6 @@ type SidebarProps = {
 const navItems = [
   { to: '/', text: 'Home', icon: HomeIcon },
   { to: '/planner', text: 'Study Planner', icon: ClipboardListIcon },
-  { to: '/professor', text: 'AI Professor', icon: GraduationCapIcon },
   { to: '/profile', text: 'Profile', icon: UserIcon },
   { to: '/history', text: 'History', icon: BarChartIcon },
   { to: '/analytics', text: 'Analytics', icon: TrendingUpIcon },
@@ -40,7 +37,7 @@ const navItems = [
   { to: '/notion', text: 'Notion', icon: LinkIcon },
   { to: '/study-aids', text: 'Study Aids', icon: BookOpenIcon },
   { to: '/saved-items', text: 'Saved Items', icon: CheckCircleIcon },
-  { to: '/bookmarks', text: 'Bookmarked Questions', icon: BookmarkIcon },
+  { to: '/bookmarks', text: 'Bookmarks', icon: BookmarkIcon },
   { to: '/explainer', text: 'AI Explainer', icon: LightbulbIcon },
   { to: '/diagram-explainer', text: 'Diagram Explainer', icon: ImagePlusIcon },
   { to: '/tasks', text: 'Tasks', icon: ListChecksIcon },

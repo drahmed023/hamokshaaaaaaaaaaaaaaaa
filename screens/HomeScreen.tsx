@@ -17,9 +17,9 @@ import AddUpcomingExamModal from '../components/AddUpcomingExamModal';
 import { useUpcomingExams } from '../hooks/useUpcomingExams';
 import { UpcomingExamsActionType } from '../types';
 import { TrashIcon } from '../components/icons/TrashIcon';
-// Fix: Added missing icon imports.
 import { BotIcon } from '../components/icons/BotIcon';
 import { CheckCircleIcon } from '../components/icons/CheckCircleIcon';
+import { GraduationCapIcon } from '../components/icons/GraduationCapIcon';
 
 function HomeScreen() {
   const navigate = useNavigate();
@@ -218,10 +218,16 @@ function HomeScreen() {
               <div className="relative z-10">
                   <h1 className="text-4xl font-black tracking-tight">Welcome back!</h1>
                   <p className="mt-2 text-primary-100 font-medium max-w-sm">Ready to learn today?</p>
-                  <Button onClick={() => navigate('/create-exam')} className="mt-8 !bg-white/20 !text-white hover:!bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl h-12 px-6">
-                      <SparklesIcon className="w-5 h-5 mr-2"/>
-                      Create Quiz
-                  </Button>
+                  <div className="flex gap-4 mt-8">
+                      <Button onClick={() => navigate('/create-exam')} className="!bg-white/20 !text-white hover:!bg-white/30 backdrop-blur-md border border-white/30 rounded-2xl h-12 px-6">
+                          <SparklesIcon className="w-5 h-5 mr-2"/>
+                          Create Quiz
+                      </Button>
+                      <Button onClick={() => navigate('/professor')} className="!bg-amber-400 !text-amber-950 hover:!bg-amber-300 rounded-2xl h-12 px-6 shadow-xl shadow-amber-400/20">
+                          <GraduationCapIcon className="w-5 h-5 mr-2"/>
+                          Go to Lecture Arena
+                      </Button>
+                  </div>
               </div>
               <div className="absolute -right-12 -bottom-8 opacity-20 transform rotate-12 scale-110">
                 <BotIcon className="w-64 h-64 text-white" />
@@ -229,6 +235,23 @@ function HomeScreen() {
           </div>
 
           <AIStudyCoach />
+
+          {/* Dr. Zein Mini Access Card */}
+          <Card className="rounded-[2.5rem] bg-gradient-to-br from-slate-900 to-indigo-950 border-none text-white p-8 relative overflow-hidden group">
+               <div className="absolute right-0 top-0 h-full w-1/2 opacity-10 bg-no-repeat bg-right-bottom group-hover:scale-110 transition-transform duration-700" style={{backgroundImage: "url('https://cdn-icons-png.flaticon.com/512/3304/3304567.png')"}}></div>
+               <div className="relative z-10 space-y-4">
+                  <div className="flex items-center gap-3">
+                      <div className="p-3 bg-amber-400 rounded-2xl"><GraduationCapIcon className="w-6 h-6 text-indigo-900"/></div>
+                      <h2 className="text-2xl font-black uppercase tracking-tighter">Live Lecture Arena</h2>
+                  </div>
+                  <p className="text-slate-400 max-w-md font-medium text-sm leading-relaxed">
+                      Upload your material and let <span className="text-amber-400 font-black italic">Dr. Zayn</span> explain it step-by-step in Egyptian Arabic.
+                  </p>
+                  <Button onClick={() => navigate('/professor')} className="!bg-white !text-slate-900 hover:!bg-slate-100 rounded-xl px-8 font-black uppercase text-xs tracking-widest h-11">
+                      Start Learning Now
+                  </Button>
+               </div>
+          </Card>
 
           <Card className="rounded-[2.5rem]">
             <div className="p-2">

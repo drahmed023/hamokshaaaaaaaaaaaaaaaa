@@ -20,6 +20,7 @@ import { ImagePlusIcon } from './icons/ImagePlusIcon';
 import { BookmarkIcon } from './icons/BookmarkIcon';
 import { UserIcon } from './icons/UserIcon';
 import { ClipboardListIcon } from './icons/ClipboardListIcon';
+import { GraduationCapIcon } from './icons/GraduationCapIcon';
 
 type SidebarProps = {
   isOpen: boolean;
@@ -28,6 +29,7 @@ type SidebarProps = {
 
 const navItems = [
   { to: '/', text: 'Home', icon: HomeIcon },
+  { to: '/professor', text: "Dr. Zein's Arena", icon: GraduationCapIcon },
   { to: '/planner', text: 'Study Planner', icon: ClipboardListIcon },
   { to: '/profile', text: 'Profile', icon: UserIcon },
   { to: '/history', text: 'History', icon: BarChartIcon },

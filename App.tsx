@@ -40,6 +40,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import LoginScreen from './screens/LoginScreen';
 import Loader from './components/Loader';
 import StudyPlanScreen from './screens/StudyPlanScreen';
+import ProfessorScreen from './screens/ProfessorScreen';
 
 function AppUI() {
     const { background, focusMode } = useTheme();
@@ -86,6 +87,7 @@ function AppUI() {
                         <Route path="/pomodoro" element={<PomodoroScreen />} />
                         <Route path="/profile" element={<ProfileScreen />} />
                         <Route path="/planner" element={<StudyPlanScreen />} />
+                        <Route path="/professor" element={<ProfessorScreen />} />
                     </Routes>
                 </main>
                 <AICompanion />

@@ -127,7 +127,7 @@ function ResultsScreen() {
 
   if (!exam || !result) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] p-8 text-center">
+      <div className="flex flex-col items-center justify-center h-[50vh] p-8 text-center" dir="ltr">
         <div className="bg-slate-100 dark:bg-slate-800 p-6 rounded-full mb-4">
             <XCircleIcon className="w-12 h-12 text-slate-400" />
         </div>
@@ -194,7 +194,11 @@ function ResultsScreen() {
     doc.save(`exam-report-${exam.id}.pdf`);
   };
 
-  const currentQuestion = exam.questions[currentQuestionIndex];
+  const currentQuestion: Question | undefined = exam.questions[currentQuestionIndex];
+
+  // SAFETY GUARD
+  if (!currentQuestion) return null;
+
   const userAnswer = result.answers.find(a => a.questionId === currentQuestion.id)?.answer;
   const isCurrentCorrect = userAnswer === currentQuestion.correctAnswer;
   const currentNote = notes.find(n => n.questionId === currentQuestion.id)?.text || '';
@@ -214,7 +218,6 @@ function ResultsScreen() {
   const handlePrev = () => currentQuestionIndex > 0 && setCurrentQuestionIndex(prev => prev - 1);
   
   const handleToggleBookmark = () => {
-    if (!exam) return;
     const isBookmarked = bookmarks.some(b => b.questionId === currentQuestion.id);
     if (isBookmarked) {
         bookmarkDispatch({ type: BookmarksActionType.REMOVE_BOOKMARK, payload: { questionId: currentQuestion.id } });
@@ -238,7 +241,6 @@ function ResultsScreen() {
           </div>
         </div>
 
-        {/* Scrollable Navigation Area */}
         <nav className="flex-1 overflow-y-auto p-2">
             <ul className="space-y-1">
                 {filteredQuestions.map((q, index) => {
@@ -269,14 +271,14 @@ function ResultsScreen() {
   );
 
   return (
-    <div className="-mx-4 -my-8 h-[calc(100vh-4rem)] flex flex-col bg-slate-50 dark:bg-black">
+    <div className="-mx-4 -my-8 h-[calc(100vh-4rem)] flex flex-col bg-slate-50 dark:bg-black" dir="ltr">
        <header className="flex-shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 relative z-30 shadow-sm">
            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-2 overflow-hidden">
                     <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
                         <MenuIcon className="w-6 h-6"/>
                     </button>
-                    <h1 className="font-bold text-lg truncate text-slate-900 dark:text-slate-100">Exam Results</h1>
+                    <h1 className="font-bold text-lg truncate text-slate-900 dark:text-100">Exam Results</h1>
                 </div>
                 <div className="flex items-center gap-2">
                     <Button onClick={handleDownloadPdf} variant="secondary" size="sm" className="border-slate-300 dark:border-slate-600">
@@ -291,15 +293,12 @@ function ResultsScreen() {
        <div className="flex flex-grow overflow-hidden relative">
            <Sidebar />
            
-           {/* Mobile overlay */}
            {isSidebarOpen && (
                 <div className="absolute inset-0 bg-black/50 z-10 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>
            )}
 
            <main className="flex-grow p-4 md:p-8 overflow-y-auto">
                <div className="max-w-4xl mx-auto pb-20">
-                   
-                   {/* Dashboard Style Summary Card */}
                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 mb-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                             <div className="flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 pb-4 md:pb-0 md:pr-6">

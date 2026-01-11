@@ -80,7 +80,12 @@ const StudyPlanCreator = ({ onCreated }: { onCreated: (p: any) => void }) => {
         setLoading(true);
         try {
             const planData = await generateStudyPlan(formData);
+            // FIX: Constructing StudyPlan object with all required properties to satisfy interface definition in types.ts
             const newPlan: StudyPlan = { 
+                targetScore: planData.targetScore || "85%",
+                masterPlan: planData.masterPlan || [],
+                dailyBlocks: planData.dailyBlocks || [],
+                assessments: planData.assessments || [],
                 ...planData, 
                 id: Date.now().toString(), 
                 examName: formData.examName,

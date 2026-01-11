@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAIInteraction } from '../hooks/useAIInteraction';
 import { AIInteractionActionType } from '../types';
@@ -150,17 +151,18 @@ function AICompanion() {
                 parts: m.parts
             }));
 
-            // FIX: Removed the 3rd argument (aiPersona) to match the getAIResponse function signature which expects 2 arguments.
+            // FIX: response is now a full GenerateContentResponse object from services/geminiService.ts
             const response = await getAIResponse(historyForApi, textToSend);
             
             // Handle Tool Calls (Navigation, Scheduling)
+            // FIX: Ensured functionCalls property is checked on response object to resolve TS errors
             if (response.functionCalls && response.functionCalls.length > 0) {
                 for (const call of response.functionCalls) {
                     if (call.name === 'navigateTo') {
                         dispatch({ 
                             type: AIInteractionActionType.SHOW_NAVIGATION_PROMPT, 
                             payload: { 
-                                destination: call.args.page, 
+                                destination: call.args.page as string, 
                                 message: `I can take you to the ${call.args.page} page. Would you like to go?` 
                             } 
                         });
@@ -168,20 +170,22 @@ function AICompanion() {
                         dispatch({
                             type: AIInteractionActionType.SHOW_SCHEDULING_MODAL,
                             payload: {
-                                taskDescription: call.args.description,
-                                dueDate: call.args.dueDate
+                                taskDescription: call.args.description as string,
+                                dueDate: call.args.dueDate as string
                             }
                         });
                     }
                 }
             }
 
-            const modelMessage = { role: 'model' as const, parts: [{ text: response.text }] };
+            // FIX: Safely accessing response.text getter which returns string | undefined
+            const responseText = response.text || '';
+            const modelMessage = { role: 'model' as const, parts: [{ text: responseText }] };
             dispatch({ type: AIInteractionActionType.ADD_MESSAGE, payload: modelMessage });
             
             // Trigger TTS if enabled
-            if (aiVoiceTutor && response.text) {
-                playAudioResponse(response.text);
+            if (aiVoiceTutor && responseText) {
+                playAudioResponse(responseText);
             }
 
         } catch (error) {
